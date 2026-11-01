@@ -1,4 +1,37 @@
-# 0.4.0 publication audit
+# StreamGlass release audit
+
+## Android 0.5.0
+
+[Validation run 41290194733](https://github.com/skaz101/streamglass/actions/runs/41290194733)
+passed at `271891b6a7ecdd4e2cbd494f1deef4f33b4f0afb`:
+
+- 40 shared Node tests, three Android JVM tests and the source-export regression.
+- Six browser suites: real core, player, remote dialog, motion, TV and mobile.
+- Android debug and release compilation, lint for both variants, and TV packaging.
+- Mobile screenshots reviewed at 320, 390 and 800 pixels, plus 844 × 390 landscape.
+  Fixtures are fictional and isolated; native playback is mocked in browser tests.
+- Mobile tests cover bottom navigation, login/search, My List, episodes, accessible
+  stream sheets, Back, focus restoration, progress/resume and stale native events.
+
+The tested unsigned release APK was signed locally with the original private
+preview key. Android SDK `apksigner` verified APK v2 and v3 signatures. The signer
+certificate matches the original 0.4.0 APK exactly; all ZIP entries were unchanged
+by signing, and the bundled mobile source matches the validated commit.
+
+APK SHA-256: `6957dbd11965d6cd9ce064df174cf5596ecb8374788fb3e4bdf8e8168bb83235`.
+Certificate SHA-256: `167c739ded0846e2e7e31884cef42ec58d1154e1145740c1a6ced15d4f9f3ead`.
+Package: `com.streamglass.mobile`; version: `0.5.0`; version code: `500`.
+
+The source snapshot's only subsequent changes are publication documentation and
+removal of temporary build-transfer tooling. Runtime sources are unchanged.
+The signing key never entered GitHub or the source archive. Routine CI has
+read-only repository permissions and uploads the unsigned release build.
+
+Native Android decoding, keyboard/insets, rotation and lifecycle still require
+physical-device testing. This remains a preview, with WebView debugging disabled
+in the distributed release-configured APK. LG's installer remains on 0.4.0.
+
+## Historical 0.4.0 publication audit
 
 This records the recovered release and publication cleanup. Original release
 notes and validation JSON files are historical results, not fresh CI results.
