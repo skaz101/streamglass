@@ -6,10 +6,12 @@ Version **0.4.0** is a preview. Android native playback still needs device testi
 
 ## Downloads (0.4.0 preview)
 
-- [LG TV installer (.ipk)](https://github.com/skaz101/streamglass/raw/refs/heads/main/downloads/0.4.0/com.streamglass.tv_0.4.0_all.ipk)
-- [Android development APK](https://github.com/skaz101/streamglass/raw/refs/heads/main/downloads/0.4.0/streamglass-android-0.4.0.apk)
-- [Corresponding source snapshot](https://github.com/skaz101/streamglass/archive/cc18d7afd3e61fa92c731430b75c673bd0e5e49e.zip)
-- [SHA-256 checksums](downloads/0.4.0/SHA256SUMS)
+[**StreamGlass 0.4.0 Release**](https://github.com/skaz101/streamglass/releases/tag/v0.4.0)
+
+- [LG TV installer (.ipk)](https://github.com/skaz101/streamglass/releases/download/v0.4.0/com.streamglass.tv_0.4.0_all.ipk)
+- [Android development APK](https://github.com/skaz101/streamglass/releases/download/v0.4.0/streamglass-android-0.4.0.apk)
+- [Corresponding source ZIP](https://github.com/skaz101/streamglass/releases/download/v0.4.0/streamglass-0.4.0-source.zip)
+- [SHA-256 checksums](https://github.com/skaz101/streamglass/releases/download/v0.4.0/SHA256SUMS)
 
 These are the original 0.4.0 installers. The Android APK retains its original
 development signature so it is not silently replaced by a differently signed

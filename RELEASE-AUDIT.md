@@ -76,3 +76,18 @@ The inherited DX.BI workflows and funding metadata are retained in
 `upstream-workflows/` as inactive reference files. Only StreamGlass validation
 is active. The first import briefly triggered the upstream desktop checks;
 they do not validate this port.
+
+## GitHub Release publication
+
+[StreamGlass 0.4.0 Preview](https://github.com/skaz101/streamglass/releases/tag/v0.4.0)
+contains the unchanged original APK/IPK, the cleaned corresponding source ZIP,
+and SHA256SUMS. The release is marked as a prerelease pending physical-device
+validation. The source snapshot and tag point to
+`63709d73b88099ffc2f21ebbded199f07288ec2a`.
+
+[Publish run 41288666947](https://github.com/skaz101/streamglass/actions/runs/41288666947)
+verified the existing successful validation run, checked the original installer
+checksums, tested source-export exclusions, and compared all uploaded asset
+sizes and SHA-256 digests before publishing the draft. The temporary publication
+workflow and duplicate installers were then removed from main. Git history
+retains the original source snapshot; no history was rewritten.
