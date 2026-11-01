@@ -1,26 +1,26 @@
 # StreamGlass
 
-An unofficial Stremio client for **LG webOS TVs and Android phones/tablets**, with a DX.BI-derived theme, remote navigation, live search, local recommendations, and watch-progress sync.
+An unofficial Stremio client for **LG webOS TVs and Android phones/tablets**, with a dedicated Android interface, a DX.BI-derived TV theme, live search, local recommendations, and watch-progress sync.
 
-Version **0.4.0** is a preview. Android native playback still needs device testing; automated browser tests do not establish hardware compatibility.
+Android **0.5.0** introduces a dedicated mobile interface with cinematic artwork,
+compact poster rows, bottom navigation, My List, and stream selection in a
+slide-up sheet. LG webOS remains on **0.4.0**. Both are previews; Android native
+playback still needs physical-device testing.
 
-## Downloads (0.4.0 preview)
+## Downloads
 
-[**StreamGlass 0.4.0 Release**](https://github.com/skaz101/streamglass/releases/tag/v0.4.0)
+- [**Android 0.5.0 APK**](https://github.com/skaz101/streamglass/releases/download/v0.5.0/streamglass-android-0.5.0.apk) — updates the original preview installation.
+- [Android 0.5.0 release, source and checksums](https://github.com/skaz101/streamglass/releases/tag/v0.5.0)
+- [LG TV 0.4.0 installer (.ipk)](https://github.com/skaz101/streamglass/releases/download/v0.4.0/com.streamglass.tv_0.4.0_all.ipk)
+- [LG 0.4.0 release, source and checksums](https://github.com/skaz101/streamglass/releases/tag/v0.4.0)
 
-- [LG TV installer (.ipk)](https://github.com/skaz101/streamglass/releases/download/v0.4.0/com.streamglass.tv_0.4.0_all.ipk)
-- [Android development APK](https://github.com/skaz101/streamglass/releases/download/v0.4.0/streamglass-android-0.4.0.apk)
-- [Corresponding source ZIP](https://github.com/skaz101/streamglass/releases/download/v0.4.0/streamglass-0.4.0-source.zip)
-- [SHA-256 checksums](https://github.com/skaz101/streamglass/releases/download/v0.4.0/SHA256SUMS)
-
-These are the original 0.4.0 installers. The Android APK retains its original
-development signature so it is not silently replaced by a differently signed
-CI build. Device playback testing remains required.
+The Android update retains the original application ID and preview certificate.
+Install it over the existing app to preserve local account data.
 
 ## Install
 
 - **LG TV:** [installation and updating](webos/INSTALL.md), including rooted TVs. Keep app ID `com.streamglass.tv` and install updates over the existing app.
-- **Android:** [installation, signing, and device checks](android/README.md). Package ID `com.streamglass.mobile`; Android 8.0 or later. The original APK is a development build.
+- **Android:** [installation, signing, and device checks](android/README.md). Package ID `com.streamglass.mobile`; Android 8.0 or later. Updates retain the preview signing certificate.
 - **Validation:** [release audit](RELEASE-AUDIT.md) distinguishes fresh checks from historical reports.
 
 Configure addons in your Stremio account, then sign in to StreamGlass. Playback requires direct HTTP/HTTPS media compatible with the device. No torrent engine, transcoder, or debrid credentials are bundled.

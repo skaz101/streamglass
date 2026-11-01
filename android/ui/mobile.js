@@ -29,7 +29,7 @@
     doc.removeEventListener('keydown',state.keydown,true);
     if(state.remove)state.overlay.remove();
     doc.body.classList.remove('sg-dialog-open');
-    if(restore&&state.previous?.isConnected)state.previous.focus({preventScroll:true});
+    if(restore){const target=state.previous?.isConnected?state.previous:doc.querySelector('[data-action="focus-streams"]');if(target)target.focus({preventScroll:true});}
     if(state.resolve)state.resolve();
     return true;
   }
@@ -128,6 +128,7 @@
     overlay.append(panel);detail.append(overlay);
   }
   window.StreamGlassMobile={mobile:true,mount,renderHero,screenChanged,detailReady,libraryChanged,showStreams,showMessage,dismiss,
+    rowTitle(title){return title.replace(/\s·\s(movie|series|anime)$/i,(suffix,type)=>{const label=type==='movie'?'movies':type,base=title.slice(0,-suffix.length);return base.toLowerCase().endsWith(label)?'':' '+label;});},
     accountChanged(signedIn){const button=doc.getElementById('sg-profile');if(button){button.classList.toggle('signed-in',signedIn);button.setAttribute('aria-label',signedIn?'Open account and settings':'Open profile and sign in');}}
   };
 })();

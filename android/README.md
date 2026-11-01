@@ -1,8 +1,10 @@
-# StreamGlass for Android phones and tablets, 0.4.0
+# StreamGlass for Android phones and tablets, 0.5.0
 
-An installable Android test app using the same independent StreamGlass shell,
-MIT Stremio core, account sync, live search and local recommendations as the LG
-version. The layout adapts to phones and tablets. Playback uses native AndroidX
+An installable Android preview with a dedicated mobile interface: artwork-led
+home, compact poster rows, Home / For You / Search / My List tabs, a profile
+menu, and stream selection in an accessible bottom sheet. It shares the MIT
+Stremio core, account sync, live search and recommendations with the LG version.
+The layout adapts to phones, tablets and landscape. Playback uses native AndroidX
 Media3/ExoPlayer with seeking, audio selection, embedded/external subtitles and
 watch-progress callbacks. It is not the upstream DX.BI Android TV wrapper.
 
@@ -12,7 +14,7 @@ first hardware test device. This version is designed for touch, not Android TV.
 
 ## Install
 
-Download streamglass-android-0.4.0.apk on your phone and open it. Allow installation
+Download [streamglass-android-0.5.0.apk](https://github.com/skaz101/streamglass/releases/download/v0.5.0/streamglass-android-0.5.0.apk) on your phone and open it. Allow installation
 from that browser or file manager when Android asks. Open StreamGlass and sign
 in with the same Stremio account used on your TV. This is a separate installation;
 it does not replace Stremio or the LG app. Account library/addons/progress sync
@@ -21,15 +23,17 @@ through Stremio. Recommendations are computed separately on each device.
 Alternatively, with Android platform-tools and USB debugging authorized:
 
 ```sh
-adb install -r streamglass-android-0.4.0.apk
+adb install -r streamglass-android-0.5.0.apk
 adb shell am start -n com.streamglass.mobile/.MainActivity
 ```
 
 ## Signing and updates
 
-The supplied 0.4.0 APK is a debug/test build. Its original development key is
-kept outside the public source. Debug builds permit WebView inspection through
-an authorized USB connection.
+The 0.5.0 APK is built with the release configuration and signed locally with
+the original preview certificate, so it can update 0.4.0 without uninstalling.
+The key remains private. This is still a preview signed with a development
+certificate, not a Play Store release. Release builds disable WebView debugging;
+local debug builds permit inspection through an authorized USB connection.
 
 The maintainer can place the original key at
 `android/signing/streamglass-development.jks` locally to build compatible test
@@ -63,12 +67,13 @@ A production release needs a separate private release-signing configuration.
 
 ## Verification and real-device checklist
 
-The APK compiles and passes Android lint with no errors. Three JVM tests cover
-URL rules and subtitle format selection. The mobile Chromium 119 integration
-uses real Stremio core WASM with fake account/addon services and a simulated
-native-player bridge. It passes touch login/search, phone/tablet layouts at
-320/390/800 CSS pixels, playback handoff, progress, resume, stale-session event
-rejection, recommendations and Back navigation. Screenshots were inspected.
+CI builds debug and release variants, runs Android lint and three JVM tests
+covering URL rules and subtitle formats. The mobile browser integration uses
+real Stremio core WASM with fake account/addon services and a simulated native
+player. It covers login, touch search, 320/390/800-pixel layouts, landscape,
+bottom navigation, My List, episodes, sheet dismissal and focus restoration,
+playback handoff, progress, resume, stale events, and recommendations.
+See [0.5.0 release notes](RELEASE-0.5.0.md) for the verified release checks.
 
 No Android emulator or physical Android device has run this APK yet. Native
 Media3 decoding, audio/subtitle selection, WebView-to-native messaging on Android,
@@ -86,7 +91,7 @@ First phone test:
 5. Check progress on the TV after account sync. Report the playback error code
    if a link fails, and whether that same link works in official Stremio.
 
-For UI/core logs, connect the phone by USB, authorize USB debugging, open
+For UI/core logs in a locally built debug APK, connect the phone by USB, authorize USB debugging, open
 chrome://inspect/#devices in desktop Chrome and inspect the StreamGlass WebView.
 In its Console run:
 
@@ -120,7 +125,10 @@ cd ../android
 ```
 
 APK: app/build/outputs/apk/debug/app-debug.apk. preBuild rebuilds and copies the
-shared shell into generated assets, then applies the Android host and stylesheet.
+shared shell into generated assets, then applies the Android host, mobile
+presentation module and stylesheet. Android does not load the TV theme CSS.
+`assembleRelease` produces an unsigned APK under `app/build/outputs/apk/release/`
+for local signing with the privately held preview key.
 The prebuilt MIT core is included. To reproduce that core, see webos/README.md.
 
 ```sh
@@ -129,7 +137,7 @@ CHROME_BIN=/path/to/chromium node tests/mobile-browser.mjs
 python3 scripts/collect-sources.py
 ```
 
-Browser tests need ffmpeg and the webos npm dependencies. vendor/ includes the
+Mobile browser tests need Chromium and the webos npm dependencies. vendor/ includes the
 resolved runtime sources and notices; one Guava conflict-placeholder JAR contains
 no classes and has no source JAR. See THIRD_PARTY.md and the root GPL license.
 Redistribute the corresponding combined source with the APK/IPK.

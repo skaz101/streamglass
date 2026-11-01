@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """Create the corresponding source archive. GPL-3.0-or-later."""
+import argparse
+import re
 import hashlib
 import os
 import pathlib
@@ -27,10 +29,15 @@ def source_files(repo):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--version', default='0.4.0')
+    args = parser.parse_args()
+    if not re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+(?:-[a-z0-9.]+)?', args.version):
+        parser.error('version must be a semantic version without path separators')
     repo = pathlib.Path(__file__).resolve().parents[2]
     out = repo / 'webos' / 'dist'
     out.mkdir(exist_ok=True)
-    target = out / 'streamglass-0.4.0-source.zip'
+    target = out / ('streamglass-' + args.version + '-source.zip')
     with zipfile.ZipFile(target, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as archive:
         for item in source_files(repo):
             archive.write(item, pathlib.Path('streamglass-tv-source') / item.relative_to(repo))

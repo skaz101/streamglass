@@ -71,3 +71,14 @@ late subtitle updates, lifecycle pause and progress/resume integration. Retained
 the shared GPL shell, MIT core, account and recommendation behavior. Added pinned
 Android build scripts, JVM/mobile browser tests and runtime source/license
 inventory. See RELEASE-0.4.0.md and ../android/README.md for validation and limits.
+
+## Android 0.5.0 (2026-11-01)
+
+- Add an original Android presentation module and stylesheet; do not load the TV
+  theme on mobile. Retain shared Stremio state, routing and playback integration.
+- Provide optional host hooks for navigation, featured artwork, title actions
+  and account state. The TV host continues to use its original rendering.
+- Replace mobile top tabs with bottom navigation, use compact poster rows, and
+  put stream choices in a focus-managed sheet with Android Back support.
+- Keep the StreamGlass name and stable application IDs. The preview signing key
+  is excluded from source and remains local.

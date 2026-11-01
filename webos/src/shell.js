@@ -183,6 +183,7 @@
       (progress>0?'<span class="sg-progress"><i style="width:'+Math.round(progress*100)+'%"></i></span>':'')+'</div><span class="sg-card-title title-label">'+e(meta.name||id)+'</span><span class="sg-card-caption">'+e(caption)+'</span></a>';
   }
   function row(title, items, index, options={}) {
+    if(host().rowTitle)title=host().rowTitle(title);
     return '<section class="sg-row meta-row-container" data-row-key="'+e(Number.isInteger(index)?'catalog:'+index:title)+'"><div class="sg-row-heading"><h2>'+e(title)+'</h2><span class="sg-row-count" aria-live="off"></span>'+(Number.isInteger(index)?'<a class="sg-see-all" href="#/discover?catalog='+index+'">See All <span>›</span></a>':'')+'</div><div class="sg-cards meta-items-container">'+items.map(item=>card(item,options)).join('')+'</div></section>';
   }
   function hero(meta,index=0) {
