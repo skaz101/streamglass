@@ -1,0 +1,110 @@
+name: Publish StreamGlass 0.4.0 preview
+
+on:
+  workflow_dispatch:
+  # Bootstrap this migration once; removed after the release is verified.
+  push:
+    branches: [main]
+    paths: [.github/workflows/release-0.4.0.yml]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-streamglass-0.4.0
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'skaz101/streamglass' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: skaz101/streamglass
+      SOURCE_COMMIT: 63709d73b88099ffc2f21ebbded199f07288ec2a
+      TAG: v0.4.0
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 63709d73b88099ffc2f21ebbded199f07288ec2a
+          persist-credentials: false
+      - name: Verify validation and preserve published releases
+        run: |
+          set -euo pipefail
+          gh api repos/skaz101/streamglass/actions/runs/41288138848 > "$RUNNER_TEMP/validation.json"
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          result = json.loads((Path(os.environ['RUNNER_TEMP']) / 'validation.json').read_text())
+          assert result['conclusion'] == 'success'
+          assert result['head_sha'] == 'cc18d7afd3e61fa92c731430b75c673bd0e5e49e'
+          PY
+          gh api repos/skaz101/streamglass/releases --paginate > "$RUNNER_TEMP/releases.json"
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          releases = json.loads((Path(os.environ['RUNNER_TEMP']) / 'releases.json').read_text())
+          assert not any(r['tag_name'] == os.environ['TAG'] for r in releases), 'Release already exists; leave it unchanged.'
+          PY
+      - name: Prepare original installers and corresponding source
+        run: |
+          set -euo pipefail
+          (cd downloads/0.4.0 && sha256sum --check SHA256SUMS)
+          python3 webos/tests/source_archive_test.py
+          python3 webos/scripts/source-archive.py
+          mkdir -p "$RUNNER_TEMP/streamglass-release"
+          cp downloads/0.4.0/*.ipk downloads/0.4.0/*.apk webos/dist/streamglass-0.4.0-source.zip "$RUNNER_TEMP/streamglass-release/"
+          python3 - <<'PY'
+          import hashlib, os, zipfile
+          from pathlib import Path
+          folder = Path(os.environ['RUNNER_TEMP']) / 'streamglass-release'
+          with zipfile.ZipFile(folder / 'streamglass-0.4.0-source.zip') as archive:
+              assert archive.testzip() is None
+              assert not any('/signing/' in n or Path(n).suffix.lower() in {'.jks', '.keystore', '.p12', '.pfx', '.pem', '.key'} for n in archive.namelist())
+          entries = [f'{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.name}' for p in sorted(folder.iterdir())]
+          (folder / 'SHA256SUMS').write_text('\n'.join(entries) + '\n')
+          PY
+      - name: Draft, verify assets, and publish prerelease
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/release-notes.md" <<'NOTES'
+          StreamGlass 0.4.0 preview for LG webOS TVs and Android phones/tablets.
+
+          - **LG TV:** download `com.streamglass.tv_0.4.0_all.ipk`. Close StreamGlass and install over the existing app; keep app ID `com.streamglass.tv`. [Installation guide](https://github.com/skaz101/streamglass/blob/63709d73b88099ffc2f21ebbded199f07288ec2a/webos/INSTALL.md).
+          - **Android:** download `streamglass-android-0.4.0.apk`. Android 8.0 or later; this is the original development-signed APK. [Installation and signing details](https://github.com/skaz101/streamglass/blob/63709d73b88099ffc2f21ebbded199f07288ec2a/android/README.md).
+          - **Source:** `streamglass-0.4.0-source.zip` contains the corresponding source and dependency notices, with signing keys excluded.
+          - **Integrity:** `SHA256SUMS` covers both installers and the source ZIP.
+
+          This release adds short, interruptible TV row animations and an Android touch host with native Media3 playback. It retains search, recommendations, library and watch-progress sync.
+
+          The installers are unchanged from the original 0.4.0 preview. No update is needed if you already installed those files. The Android signing certificate is unchanged.
+
+          [Validation passed](https://github.com/skaz101/streamglass/actions/runs/41288138848): 40 shared tests, three Android JVM tests, source-export regression, six browser suites, TV packaging, Android compilation and lint. Physical LG/Android playback and lifecycle testing remain outstanding, so this is a **prerelease**.
+
+          GPL-3.0-or-later; preserve the included upstream and third-party notices. StreamGlass is not an official Stremio, DX.BI or LG app.
+          NOTES
+          gh release create "$TAG" "$RUNNER_TEMP/streamglass-release/"* \
+            --target "$SOURCE_COMMIT" --title 'StreamGlass 0.4.0 Preview' \
+            --notes-file "$RUNNER_TEMP/release-notes.md" --draft --prerelease
+          gh api "repos/$GH_REPO/releases" --jq '.[] | select(.tag_name == "v0.4.0")' > "$RUNNER_TEMP/release.json"
+          python3 - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+          root = Path(os.environ['RUNNER_TEMP'])
+          release = json.loads((root / 'release.json').read_text())
+          assert release['draft'] and release['prerelease']
+          assets = {a['name']: a for a in release['assets']}
+          files = list((root / 'streamglass-release').iterdir())
+          assert set(assets) == {p.name for p in files}
+          for path in files:
+              asset = assets[path.name]
+              assert asset['state'] == 'uploaded'
+              assert asset['size'] == path.stat().st_size
+              assert asset['digest'] == 'sha256:' + hashlib.sha256(path.read_bytes()).hexdigest()
+          PY
+          gh release edit "$TAG" --draft=false --prerelease
+          gh release view "$TAG" --json url,isDraft,isPrerelease,assets
