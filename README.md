@@ -4,6 +4,17 @@ An unofficial Stremio client for **LG webOS TVs and Android phones/tablets**, wi
 
 Version **0.4.0** is a preview. Android native playback still needs device testing; automated browser tests do not establish hardware compatibility.
 
+## Downloads (0.4.0 preview)
+
+- [LG TV installer (.ipk)](https://github.com/skaz101/streamglass/raw/refs/heads/main/downloads/0.4.0/com.streamglass.tv_0.4.0_all.ipk)
+- [Android development APK](https://github.com/skaz101/streamglass/raw/refs/heads/main/downloads/0.4.0/streamglass-android-0.4.0.apk)
+- [Corresponding source snapshot](https://github.com/skaz101/streamglass/archive/bb5a6b209cc488b566a2b3316bc20ec7b9d107b8.zip)
+- [SHA-256 checksums](downloads/0.4.0/SHA256SUMS)
+
+These are the original 0.4.0 installers. The Android APK retains its original
+development signature so it is not silently replaced by a differently signed
+CI build. Device playback testing remains required.
+
 ## Install
 
 - **LG TV:** [installation and updating](webos/INSTALL.md), including rooted TVs. Keep app ID `com.streamglass.tv` and install updates over the existing app.

@@ -243,7 +243,10 @@ try {
   assert.ok(await page.evaluate(()=>{const r=document.activeElement.getBoundingClientRect();return r.top>=100&&r.bottom<=1080;}),'Saved selection stays visible after Continue Watching adds a row');
   assert.ok(await page.locator('[data-row-key="catalog:0"] .sg-cards').evaluate(el=>el.scrollLeft>0),'Catalog horizontal position survives new Continue Watching row');
   await page.locator('.sg-filter').filter({hasText:'Series'}).click();
-  await page.locator('.sg-card').first().waitFor();
+  // Hash navigation is asynchronous: an old movie card can still be visible
+  // when click() resolves. Wait for the new filter and its actual catalog.
+  await page.locator('.sg-filter.selected[href="#/board?type=series"]').waitFor();
+  await page.locator('.sg-card[data-card^="series:"]').first().waitFor();
   assert.equal(await page.locator('[data-row-key="Continue Watching"]').count(),0,'No empty Continue Watching heading in a different type filter');
   await page.locator('[data-nav="library"]').click();await page.locator('.sg-card').first().waitFor();
   await page.screenshot({path:path.join(shots,'library.png')});

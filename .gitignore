@@ -35,3 +35,7 @@ runtime-inventory.json
 *.ipk
 *.aab
 chat.txt
+
+# Reviewed original preview installers
+!downloads/**/*.apk
+!downloads/**/*.ipk

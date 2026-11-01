@@ -54,3 +54,8 @@ as an update to the original preview installation.
 
 Physical LG and Android playback, subtitle/audio selection, resume, rotation,
 keyboard behavior and lifecycle handling still require device validation.
+
+The inherited DX.BI workflows and funding metadata are retained in
+`upstream-workflows/` as inactive reference files. Only StreamGlass validation
+is active. The first import briefly triggered the upstream desktop checks;
+they do not validate this port.
