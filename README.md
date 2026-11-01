@@ -8,7 +8,7 @@ Version **0.4.0** is a preview. Android native playback still needs device testi
 
 - [LG TV installer (.ipk)](https://github.com/skaz101/streamglass/raw/refs/heads/main/downloads/0.4.0/com.streamglass.tv_0.4.0_all.ipk)
 - [Android development APK](https://github.com/skaz101/streamglass/raw/refs/heads/main/downloads/0.4.0/streamglass-android-0.4.0.apk)
-- [Corresponding source snapshot](https://github.com/skaz101/streamglass/archive/bb5a6b209cc488b566a2b3316bc20ec7b9d107b8.zip)
+- [Corresponding source snapshot](https://github.com/skaz101/streamglass/archive/cc18d7afd3e61fa92c731430b75c673bd0e5e49e.zip)
 - [SHA-256 checksums](downloads/0.4.0/SHA256SUMS)
 
 These are the original 0.4.0 installers. The Android APK retains its original
@@ -24,6 +24,8 @@ CI build. Device playback testing remains required.
 Configure addons in your Stremio account, then sign in to StreamGlass. Playback requires direct HTTP/HTTPS media compatible with the device. No torrent engine, transcoder, or debrid credentials are bundled.
 
 ## Build
+
+[CI: TV/browser and Android validation](https://github.com/skaz101/streamglass/actions/workflows/validate.yml).
 
 Use Node.js 22 or 24.
 

@@ -43,12 +43,29 @@ Runtime app behavior is unchanged; the original installers retain version 0.4.0.
 Android signer certificate SHA-256:
 `167c739ded0846e2e7e31884cef42ec58d1154e1145740c1a6ced15d4f9f3ead`.
 
-## Checks requiring CI or hardware
+## Fresh CI validation
+
+[Run 41288138848](https://github.com/skaz101/streamglass/actions/runs/41288138848)
+passed both jobs at commit `cc18d7afd3e61fa92c731430b75c673bd0e5e49e`.
+
+- Clean npm installation, 40 shared Node tests, and the source-export regression.
+- Core rebundling, TV app assembly and IPK packaging.
+- All six browser suites: real-core state, video player, remote dialog, animation,
+  full TV app, and mobile layout/native-bridge simulation.
+- Android debug compilation, three JVM tests, and lint.
+- Build/source artifacts and browser/Android reports uploaded by CI.
+
+The original browser suite had two assertions that read the previous screen
+before hash navigation rendered the new one. The tests now wait for the new
+filter and results, retaining their original behavior assertions. The Android
+SDK setup now requests platform-tools instead of the retired tools package.
+
+## Local environment and remaining hardware checks
 
 The local environment lacked an Android SDK/JDK 17 and a complete Playwright
 installation. Android compilation/lint/JVM tests and browser integration were
-not rerun locally. The validation workflow runs these checks on GitHub and
-publishes build/report artifacts; its result is separate from this record.
+not rerun locally. The successful CI run above supplies those checks and publishes build/report
+artifacts.
 CI uses an ephemeral debug signing key, so its Android APK is not distributed
 as an update to the original preview installation.
 
