@@ -1,0 +1,132 @@
+name: Publish StreamGlass Android 0.5.0 preview
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [.github/workflows/release-0.5.0.yml]
+permissions:
+  contents: read
+concurrency:
+  group: publish-streamglass-0.5.0
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.repository == 'skaz101/streamglass' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: skaz101/streamglass
+      SOURCE_COMMIT: 4eea0882b6a6a691d73f66e9443653f84155a078
+      VALIDATED_COMMIT: 271891b6a7ecdd4e2cbd494f1deef4f33b4f0afb
+      VALIDATION_RUN: 41290194733
+      APK_BLOB: ca7a7289d0b9fb0989edf31c464a53ae5a389b8c
+      APK_SHA256: 6957dbd11965d6cd9ce064df174cf5596ecb8374788fb3e4bdf8e8168bb83235
+      PREVIEW_BLOB: 75ba8b77dc6792d3aedbffec5c87d2663394614d
+      TAG: v0.5.0
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 4eea0882b6a6a691d73f66e9443653f84155a078
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Verify tested source and preserve published releases
+        run: |
+          set -euo pipefail
+          gh api "repos/$GH_REPO/actions/runs/$VALIDATION_RUN" > "$RUNNER_TEMP/validation.json"
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          result=json.loads((Path(os.environ['RUNNER_TEMP'])/'validation.json').read_text())
+          assert result['conclusion']=='success'
+          assert result['head_sha']==os.environ['VALIDATED_COMMIT']
+          PY
+          git diff --exit-code "$VALIDATED_COMMIT" "$SOURCE_COMMIT" -- android webos dxbi.theme.css
+          gh api "repos/$GH_REPO/releases" --paginate > "$RUNNER_TEMP/releases.json"
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          releases=json.loads((Path(os.environ['RUNNER_TEMP'])/'releases.json').read_text())
+          assert not any(r['tag_name']==os.environ['TAG'] for r in releases), 'Release exists; preserve it.'
+          PY
+      - name: Prepare locally signed APK and corresponding source
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/streamglass-release"
+          gh api "repos/$GH_REPO/git/blobs/$APK_BLOB" > "$RUNNER_TEMP/apk-blob.json"
+          gh api "repos/$GH_REPO/git/blobs/$PREVIEW_BLOB" > "$RUNNER_TEMP/preview-blob.json"
+          python3 - <<'PY'
+          import base64,hashlib,json,os,zipfile
+          from pathlib import Path
+          root=Path(os.environ['RUNNER_TEMP']);folder=root/'streamglass-release'
+          for kind,name in [('apk','streamglass-android-0.5.0.apk'),('preview','android-home-preview.webp')]:
+              blob=json.loads((root/(kind+'-blob.json')).read_text())
+              assert blob['encoding']=='base64'
+              data=base64.b64decode(blob['content'])
+              if kind=='apk':assert hashlib.sha256(data).hexdigest()==os.environ['APK_SHA256']
+              (folder/name).write_bytes(data)
+          with zipfile.ZipFile(folder/'streamglass-android-0.5.0.apk') as archive:
+              assert archive.testzip() is None
+              for member,source in [('assets/app/mobile.js','android/ui/mobile.js'),('assets/app/mobile.css','android/ui/mobile.css'),('assets/app/android-host.js','android/ui/android-host.js')]:
+                  assert archive.read(member)==Path(source).read_bytes(), member+' differs from source'
+          PY
+          python3 webos/tests/source_archive_test.py
+          python3 webos/scripts/source-archive.py --version 0.5.0
+          cp webos/dist/streamglass-0.5.0-source.zip "$RUNNER_TEMP/streamglass-release/"
+          python3 - <<'PY'
+          import hashlib,os,zipfile
+          from pathlib import Path
+          folder=Path(os.environ['RUNNER_TEMP'])/'streamglass-release'
+          with zipfile.ZipFile(folder/'streamglass-0.5.0-source.zip') as archive:
+              assert archive.testzip() is None
+              assert not any('/signing/' in n or Path(n).suffix.lower() in {'.jks','.keystore','.p12','.pfx','.pem','.key','.apk','.ipk'} for n in archive.namelist())
+          entries=[f'{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.name}' for p in sorted(folder.iterdir())]
+          (folder/'SHA256SUMS').write_text('\n'.join(entries)+'\n')
+          PY
+      - name: Draft, verify asset digests, and publish preview
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/release-notes.md" <<'NOTES'
+          A new phone and tablet experience for StreamGlass.
+
+          **Install:** download **streamglass-android-0.5.0.apk** below and install it over 0.4.0. Android 8.0 or later. The original application ID and signing certificate are preserved—no uninstall needed.
+
+          - Artwork-led Home with Movies / Series filters and compact poster rows.
+          - Bottom tabs for Home, For You, Search and My List.
+          - Profile menu for account, catalog browsing, addons and settings.
+          - Cleaner title pages with Play / Resume, My List and episodes.
+          - Stream selection in a slide-up sheet, with Android Back and focus restoration.
+          - Phone, tablet and landscape layouts, reduced motion and a matching launcher icon.
+          - Existing Stremio sync and native playback integration retained.
+
+          **Brand:** stays StreamGlass. **LG:** remains on [0.4.0](https://github.com/skaz101/streamglass/releases/tag/v0.4.0).
+
+          [Validation passed](https://github.com/skaz101/streamglass/actions/runs/41290194733): 40 shared tests, three Android JVM tests, source-export regression, six browser suites, webOS packaging, Android debug/release compilation and lint. Screenshots were reviewed. Physical Android playback, keyboard and lifecycle testing remain outstanding; this is a **prerelease**.
+
+          This release-configured APK disables WebView debugging but retains the original development certificate for preview updates. Certificate SHA-256: `167c739ded0846e2e7e31884cef42ec58d1154e1145740c1a6ced15d4f9f3ead`.
+
+          `streamglass-0.5.0-source.zip` is the corresponding source with notices and no signing keys. `SHA256SUMS` covers all other assets. The home preview uses fictional test artwork; real titles come from your addons.
+
+          [Install and build guide](https://github.com/skaz101/streamglass/blob/4eea0882b6a6a691d73f66e9443653f84155a078/android/README.md) · [Full release notes](https://github.com/skaz101/streamglass/blob/4eea0882b6a6a691d73f66e9443653f84155a078/android/RELEASE-0.5.0.md)
+
+          GPL-3.0-or-later. StreamGlass is independent and is not affiliated with Netflix, Stremio, DX.BI or LG.
+          NOTES
+          gh release create "$TAG" "$RUNNER_TEMP/streamglass-release/"* --target "$SOURCE_COMMIT" --title 'StreamGlass Android 0.5.0 Preview' --notes-file "$RUNNER_TEMP/release-notes.md" --draft --prerelease
+          gh api "repos/$GH_REPO/releases" --jq '.[] | select(.tag_name == "v0.5.0")' > "$RUNNER_TEMP/release.json"
+          python3 - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          root=Path(os.environ['RUNNER_TEMP']);release=json.loads((root/'release.json').read_text())
+          assert release['draft'] and release['prerelease']
+          assets={a['name']:a for a in release['assets']};files=list((root/'streamglass-release').iterdir())
+          assert set(assets)=={p.name for p in files}
+          for path in files:
+              asset=assets[path.name]
+              assert asset['state']=='uploaded' and asset['size']==path.stat().st_size
+              assert asset['digest']=='sha256:'+hashlib.sha256(path.read_bytes()).hexdigest()
+          PY
+          gh release edit "$TAG" --draft=false --prerelease
+          gh release view "$TAG" --json url,isDraft,isPrerelease,assets
