@@ -1,11 +1,11 @@
 <resources>
     <style name="AppTheme" parent="android:style/Theme.Material.NoActionBar">
         <item name="android:fontFamily">sans</item>
-        <item name="android:colorAccent">#f24457</item>
+        <item name="android:colorAccent">#ef233c</item>
         <item name="android:windowLightStatusBar">false</item>
-        <item name="android:statusBarColor">#0b0c10</item>
-        <item name="android:navigationBarColor">#0b0c10</item>
+        <item name="android:statusBarColor">#080808</item>
+        <item name="android:navigationBarColor">#080808</item>
         <item name="android:windowActionModeOverlay">true</item>
-        <item name="android:windowBackground">#0b0c10</item>
+        <item name="android:windowBackground">#080808</item>
     </style>
 </resources>

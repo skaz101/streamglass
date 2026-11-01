@@ -43,6 +43,16 @@ jobs:
           npm run test:browser
           node ../android/scripts/sync-assets.mjs
           node ../android/tests/mobile-browser.mjs
+      - name: Mobile visual review
+        if: always()
+        run: |
+          for file in android/test-results/*.png; do
+            [ -f "$file" ] || continue
+            ffmpeg -v error -y -i "$file" -frames:v 1 -quality 72 /tmp/preview.webp
+            printf 'MOBILE_PREVIEW:%s:' "$(basename "$file" .png)"
+            base64 -w0 /tmp/preview.webp
+            printf '\n'
+          done
       - run: python3 webos/scripts/source-archive.py
       - uses: actions/upload-artifact@v4
         with:
@@ -58,6 +68,8 @@ jobs:
           if-no-files-found: ignore
 
   android:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -78,7 +90,7 @@ jobs:
       - run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
       - run: npm ci
         working-directory: webos
-      - run: ./gradlew --no-daemon assembleDebug testDebugUnitTest lintDebug
+      - run: ./gradlew --no-daemon assembleDebug assembleRelease testDebugUnitTest lintDebug lintRelease
         working-directory: android
       - uses: actions/upload-artifact@v4
         if: always()
@@ -86,5 +98,12 @@ jobs:
           name: android-validation-reports
           path: android/app/build/reports/
           if-no-files-found: ignore
-      # CI's ephemeral debug key cannot update the original preview APK.
-      # Deliberately do not offer that differently signed APK as an app update.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-unsigned-build
+          path: android/app/build/outputs/apk/release/app-release-unsigned.apk
+      - name: Stage unsigned build for local preview signing
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/stage-android-build.py

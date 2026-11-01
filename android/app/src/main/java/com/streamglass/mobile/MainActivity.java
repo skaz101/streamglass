@@ -78,7 +78,7 @@ public class MainActivity extends Activity {
     @Override public void onCreate(Bundle saved) {
         super.onCreate(saved);
         root = new FrameLayout(this);
-        root.setBackgroundColor(Color.rgb(11,12,16));
+        root.setBackgroundColor(Color.rgb(8,8,8));
         setContentView(root);
         if (Build.VERSION.SDK_INT >= 30) {
             getWindow().setDecorFitsSystemWindows(false);
@@ -89,7 +89,7 @@ public class MainActivity extends Activity {
             });
         } else root.setFitsSystemWindows(true);
         web = new WebView(this);
-        web.setBackgroundColor(Color.rgb(11,12,16));
+        web.setBackgroundColor(Color.rgb(8,8,8));
         root.addView(web, new FrameLayout.LayoutParams(-1,-1));
         WebSettings settings = web.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -163,7 +163,7 @@ public class MainActivity extends Activity {
                     && !name.matches("(?i)host|connection|content-length|transfer-encoding|cookie|authorization")) headers.put(name,value);
         }
         DefaultHttpDataSource.Factory http = new DefaultHttpDataSource.Factory()
-                .setUserAgent("StreamGlass/0.4.0").setConnectTimeoutMs(15000).setReadTimeoutMs(20000);
+                .setUserAgent("StreamGlass/0.5.0").setConnectTimeoutMs(15000).setReadTimeoutMs(20000);
         ResolvingDataSource.Factory scoped = new ResolvingDataSource.Factory(http, spec ->
                 mediaUri.getAuthority().equals(spec.uri.getAuthority()) ? spec.withAdditionalHeaders(headers) : spec);
         player = new ExoPlayer.Builder(this).setMediaSourceFactory(new DefaultMediaSourceFactory(new DefaultDataSource.Factory(this, scoped)))

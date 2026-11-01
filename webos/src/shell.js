@@ -93,6 +93,7 @@
     if(target){const box=target.getBoundingClientRect(),area=view.getBoundingClientRect();if(box.bottom>area.bottom-20)view.scrollTop+=box.bottom-area.bottom+20;else if(box.top<area.top+20)view.scrollTop+=box.top-area.top-20;}
   }
   function previewCard(node) {
+    if(host().mobile)return;
     clearTimeout(previewTimer);
     const sequence=++previewSequence,token=epoch;
     const meta=cards.get(node.dataset.card),slot=doc.getElementById('sg-hero-slot');
@@ -125,11 +126,13 @@
     clearInterval(heroTimer);heroTimer=null;clearTimeout(previewTimer);++previewSequence;
     view.innerHTML=html;view.scrollTop=0;doc.body.dataset.dxRoute=route;
     root.querySelectorAll('[data-nav]').forEach(node=>{const selected=node.dataset.nav===route;node.classList.toggle('selected',selected);if(selected)node.setAttribute('aria-current','page');else node.removeAttribute('aria-current');});
+    if(host().screenChanged)host().screenChanged(route);
   }
   function setAccount() {
     const node=doc.getElementById('sg-account');
     const user=profile.auth&&profile.auth.user;
     if (node) {node.textContent=user?'Account':'Sign in';node.title=user?'Stremio account':'Sign in to Stremio';}
+    if(host().accountChanged)host().accountChanged(!!user);
   }
   async function refreshProfile() { const state=await core.getState('ctx');profile=state.profile||{};setAccount();return profile; }
   async function fetchJSON(url, useCache=true, signal=null) {
@@ -183,6 +186,7 @@
     return '<section class="sg-row meta-row-container" data-row-key="'+e(Number.isInteger(index)?'catalog:'+index:title)+'"><div class="sg-row-heading"><h2>'+e(title)+'</h2><span class="sg-row-count" aria-live="off"></span>'+(Number.isInteger(index)?'<a class="sg-see-all" href="#/discover?catalog='+index+'">See All <span>›</span></a>':'')+'</div><div class="sg-cards meta-items-container">'+items.map(item=>card(item,options)).join('')+'</div></section>';
   }
   function hero(meta,index=0) {
+    if(host().renderHero)return host().renderHero(meta);
     const type=meta.type||'movie',id=meta.id||meta._id;
     const picture=safeURL(meta.background||meta.poster),logo=safeURL(meta.logo);
     const genres=(meta.genres||[]).slice(0,3).join(' · ');
@@ -213,7 +217,7 @@
           if(token!==epoch)return;
           const metas=(data.metas||[]).filter(item=>item&&item.id).map(item=>({...item,type:item.type||entry.catalog.type}));
           if(!metas.length){slots[index].remove();continue;}
-          slots[index].innerHTML=row((entry.catalog.name||entry.addon.manifest.name)+' · '+entry.catalog.type,metas.slice(0,24),catalogMemory.indexOf(entry),{wide:index===0});
+          slots[index].innerHTML=row((entry.catalog.name||entry.addon.manifest.name)+' · '+entry.catalog.type,metas.slice(0,24),catalogMemory.indexOf(entry),{wide:index===0&&!host().mobile});
           if(!heroChosen) {
             heroChosen=true;const chosen=metas.find(meta=>meta.background)||metas[0];doc.getElementById('sg-hero-slot').innerHTML=hero(chosen);
             resolveMeta(chosen.type,chosen.id,chosen).then(result=>{if(token===epoch&&!doc.getElementById('sg-hero-slot').contains(doc.activeElement)&&!doc.activeElement.closest('.sg-card')){doc.getElementById('sg-hero-slot').innerHTML=hero(result.meta);}}).catch(()=>{});
@@ -449,6 +453,7 @@
     currentDetail={...result,type,id,videoId:selectedVideo,streams:[],token,inLibrary};
     const backdrop=safeURL(meta.background||meta.poster),logo=safeURL(meta.logo);
     setScreen('<section class="sg-detail metadetails-container">'+(backdrop?'<div class="background-image-layer sg-detail-background"><img src="'+e(backdrop)+'" alt=""></div>':'')+'<div class="sg-detail-content"><a class="sg-back" href="'+e(detailOrigin)+'">‹ Back to browsing</a><div class="sg-detail-top"><div class="sg-detail-info"><span class="sg-eyebrow">'+e(type==='series'?'SERIES':'FILM')+'</span>'+(logo?'<img class="sg-detail-logo" src="'+e(logo)+'" alt="'+e(meta.name)+'">':'<h1>'+e(meta.name)+'</h1>')+'<div class="sg-detail-meta">'+(meta.imdbRating?'<b>IMDb '+e(meta.imdbRating)+'</b>':'')+'<span>'+e(meta.releaseInfo||'')+'</span><span>'+e(meta.runtime||'')+'</span></div><p class="sg-detail-description">'+e(meta.description||'No description provided by this addon.')+'</p><div class="sg-detail-genres">'+e((meta.genres||[]).join(' · '))+'</div><div class="sg-detail-actions"><button class="sg-button sg-primary" data-action="focus-streams">▶ Choose a stream</button><button id="sg-library-toggle" class="sg-button" data-action="library-toggle">'+(inLibrary?'✓ In Library':'+ Add to Library')+'</button></div>'+episodes(meta,selectedVideo)+'</div><aside class="sg-stream-panel" aria-label="Streams"><h2 id="sg-stream-heading">'+e(streamHeading(meta,selectedVideo))+'</h2><p class="sg-muted sg-stream-note">Pick your preferred quality to start watching.</p><div id="sg-streams">'+pendingText('Finding streams')+'</div></aside></div></div></section>','detail');
+    if(host().detailReady)host().detailReady({inLibrary,resumable:!!(resumable&&resumable.state&&resumable.state.timeOffset)});
     await streams(currentDetail,selectedVideo);
   }
   function streamHeading(meta,videoId) {const video=(meta.videos||[]).find(item=>item.id===videoId);return video&&video.season!=null?'S'+video.season+' E'+video.episode+' · Streams':'Available streams';}
@@ -617,8 +622,8 @@
     if(name==='catalog-more')return nextCatalogPage();
     if(name==='library-more'){await core.dispatch({action:'LibraryWithFilters',args:{action:'LoadNextPage'}},'library');return renderLibrary(await core.getState('library'));}
     if(name==='streams-retry'&&currentDetail)return streams(currentDetail,currentDetail.videoId);
-    if(name==='focus-streams'){const target=doc.querySelector('#sg-streams button');if(target){target.focus();target.scrollIntoView({block:'nearest'});}return;}
-    if(name==='library-toggle'&&currentDetail){const detail=currentDetail;await core.dispatch(ctxAction(detail.inLibrary?'RemoveFromLibrary':'AddToLibrary',detail.inLibrary?detail.id:detail.meta),'ctx');detail.inLibrary=!detail.inLibrary;node.textContent=detail.inLibrary?'✓ In Library':'+ Add to Library';notify(detail.inLibrary?'Added to your library.':'Removed from your library.');return;}
+    if(name==='focus-streams'){if(host().showStreams){host().showStreams();return;}const target=doc.querySelector('#sg-streams button');if(target){target.focus();target.scrollIntoView({block:'nearest'});}return;}
+    if(name==='library-toggle'&&currentDetail){const detail=currentDetail;node.disabled=true;try{await core.dispatch(ctxAction(detail.inLibrary?'RemoveFromLibrary':'AddToLibrary',detail.inLibrary?detail.id:detail.meta),'ctx');detail.inLibrary=!detail.inLibrary;node.textContent=detail.inLibrary?'✓ In Library':'+ Add to Library';if(host().libraryChanged)host().libraryChanged(detail.inLibrary);notify(detail.inLibrary?'Added to your library.':'Removed from your library.');}finally{node.disabled=false;}return;}
   }
   function back() {
     if(pendingPlayback){++epoch;location.hash='#/board';return true;}
@@ -632,12 +637,13 @@
     if(!core)throw new Error('Stremio core is not available.');
     root=doc.getElementById('app');if(!root){root=doc.createElement('div');root.id='app';doc.body.append(root);}
     root.innerHTML='<div class="main-nav-bars-container sg-app"><nav class="horizontal-nav-bar sg-nav"><a class="logo-container sg-brand" href="#/board" aria-label="StreamGlass Home"></a><div class="sg-nav-links">'+[['board','Home'],['picks','For you'],['discover','Discover'],['library','Library'],['addons','Addons'],['settings','Settings']].map(([route,label])=>'<a class="nav-tab-button" data-nav="'+route+'" href="#/'+route+'">'+label+'</a>').join('')+'</div><a class="sg-nav-search" href="#/search" aria-label="Search"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4.5 4.5"></path></svg></a><button id="sg-account" data-action="account" class="sg-account-button">Sign in</button></nav><main id="sg-view" tabindex="-1">'+pendingText('Starting StreamGlass TV')+'</main></div>';
+    if(host().mount)host().mount(root);
     view=doc.getElementById('sg-view');
     root.addEventListener('click',event=>{
       const link=event.target.closest('a[href]');
       if(link&&link.getAttribute('href').startsWith('#/detail/')&&parseHash(location.hash).route!=='detail')detailOrigin=searchSession?'#/search?search='+encodeURIComponent(searchSession.query):(location.hash||'#/board');
       const actionNode=event.target.closest('[data-action]');if(actionNode){event.preventDefault();Promise.resolve(action(actionNode.dataset.action,actionNode)).catch(()=>notify('The action could not complete. Please try again.'));return;}
-      const episode=event.target.closest('[data-video]');if(episode&&currentDetail){streams(currentDetail,episode.dataset.video).catch(()=>notify('Could not load streams.'));return;}
+      const episode=event.target.closest('[data-video]');if(episode&&currentDetail){streams(currentDetail,episode.dataset.video).catch(()=>notify('Could not load streams.'));if(host().showStreams)host().showStreams();return;}
       const stream=event.target.closest('[data-stream]');if(stream){play(Number(stream.dataset.stream));return;}
       const remove=event.target.closest('[data-remove-addon]');if(remove){const addon=installed()[Number(remove.dataset.removeAddon)];if(addon)core.dispatch(ctxAction('UninstallAddon',addon),'ctx').then(refreshProfile).then(addonPage).then(()=>notify('Addon removed.')).catch(()=>notify('Could not remove the addon.'));}
     });

@@ -1,7 +1,7 @@
 /* Copyright (C) 2026 StreamGlass contributors. GPL-3.0-or-later. */
 (function () {
   'use strict';
-  let active=null,sequence=0,modal=null;
+  let active=null,sequence=0;
   const events=[];
   function log(event,fields={}) {
     const record={event:/^[a-z0-9_.-]{1,64}$/i.test(event)?event:'event',at:new Date().toISOString()};
@@ -12,23 +12,15 @@
     if(!window.StreamGlassNative||typeof StreamGlassNative.postMessage!=='function')throw new Error('Native player is unavailable.');
     StreamGlassNative.postMessage(JSON.stringify({action,session:active&&active.session,payload}));
   }
-  function showMessage(title,message) {
-    if(modal)modal.close();
-    return new Promise(resolve=>{
-      const previous=document.activeElement,overlay=document.createElement('div');overlay.className='sg-mobile-modal';
-      overlay.innerHTML='<section role="dialog" aria-modal="true"><h2></h2><p></p><button class="sg-button">Close</button></section>';
-      overlay.querySelector('h2').textContent=title;overlay.querySelector('p').textContent=message;
-      const close=()=>{overlay.remove();modal=null;if(previous&&previous.isConnected)previous.focus({preventScroll:true});resolve();};
-      modal={close};overlay.querySelector('button').onclick=close;document.body.append(overlay);overlay.querySelector('button').focus();
-    });
-  }
-  window.StreamGlassDiagnostics={export:()=>JSON.stringify({platform:{app:'com.streamglass.mobile',version:'0.4.0'},events},null,2),log};
+  const showMessage=(title,message)=>StreamGlassMobile.showMessage(title,message);
+  window.StreamGlassDiagnostics={export:()=>JSON.stringify({platform:{app:'com.streamglass.mobile',version:'0.5.0'},events},null,2),log};
   window.StreamGlassHost={
-    play(payload){active={...payload,session:++sequence};try{post('play',payload);}catch(error){active=null;throw error;}},
+    ...StreamGlassMobile,
+    play(payload){active={...payload,session:++sequence};try{post('play',payload);StreamGlassMobile.dismiss();}catch(error){active=null;throw error;}},
     closePlayer(){if(active)post('close');},activePlayback:()=>active,
     updateSubtitles(subtitles){if(active)post('subtitles',subtitles);},
     showMessage,log,
-    showSettings:()=>showMessage('StreamGlass 0.4.0','Android phone and tablet test build. Playback pauses when the app goes into the background.')
+    showSettings:()=>showMessage('StreamGlass 0.5.0','Made for your next great watch. Your library, addons and progress sync with Stremio. Playback pauses when you leave the app.')
   };
   window.StreamGlassAndroid={
     receive(event){
@@ -37,7 +29,7 @@
       if(event.action==='progress')StreamGlassShell.onProgress(time,duration,!!event.paused);
       else if(event.action==='closed'){active=null;StreamGlassShell.onClose({timeMs:time,durationMs:duration,ended:!!event.ended});}
     },
-    back(){if(modal){modal.close();return true;}return !!(window.StreamGlassShell&&StreamGlassShell.back());}
+    back(){if(StreamGlassMobile.dismiss())return true;return !!(window.StreamGlassShell&&StreamGlassShell.back());}
   };
   window.addEventListener('error',()=>log('uncaught_error'));
   window.addEventListener('unhandledrejection',()=>log('unhandled_rejection'));
