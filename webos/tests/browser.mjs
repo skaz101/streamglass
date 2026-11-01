@@ -248,7 +248,7 @@ try {
   await page.locator('.sg-filter.selected[href="#/board?type=series"]').waitFor();
   await page.locator('.sg-card[data-card^="series:"]').first().waitFor();
   assert.equal(await page.locator('[data-row-key="Continue Watching"]').count(),0,'No empty Continue Watching heading in a different type filter');
-  await page.locator('[data-nav="library"]').click();await page.locator('.sg-card').first().waitFor();
+  await page.locator('[data-nav="library"]').click();await page.locator('#sg-library-grid .sg-card').first().waitFor();
   await page.screenshot({path:path.join(shots,'library.png')});
   // Recommendations use the real core library/progress created by playback above.
   genrelessCatalog=true;
@@ -263,7 +263,8 @@ try {
   await page.screenshot({path:path.join(shots,'recommendations.png')});
   const cachedMetadataRequests=metadataRequests;
   await page.locator('.sg-picks-filters a').filter({hasText:'Series'}).click();
-  await page.locator('.sg-recommendation').first().waitFor();
+  await page.locator('.sg-picks-filters .selected[href="#/picks?type=series"]').waitFor();
+  await page.locator('#sg-picks-results[aria-busy="false"] .sg-recommendation').first().waitFor();
   assert.equal(await page.locator('.sg-recommendation').count(),9);
   assert.ok(await page.locator('.sg-recommendation').evaluateAll(nodes=>nodes.every(node=>node.dataset.card.startsWith('series:'))));
   assert.equal(metadataRequests,cachedMetadataRequests,'Type changes reuse the bounded in-memory recommendation snapshot');
