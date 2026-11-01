@@ -1,0 +1,12 @@
+{
+  "name": "time-core",
+  "version": "0.1.2",
+  "sha256": "ef927ca75afb808a4d64dd374f00a2adf8d0fcff8e7b184af886c3c87ec4a3f3",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/time-rs/time",
+  "notices": [
+    "LICENSE-Apache",
+    "LICENSE-MIT"
+  ]
+}

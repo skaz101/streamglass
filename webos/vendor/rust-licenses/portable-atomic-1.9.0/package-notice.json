@@ -1,0 +1,12 @@
+{
+  "name": "portable-atomic",
+  "version": "1.9.0",
+  "sha256": "cc9c68a3f6da06753e9335d63e27f6b9754dd1920d941135b7ea8224f141adb2",
+  "license": "Apache-2.0 OR MIT",
+  "license_file": null,
+  "repository": "https://github.com/taiki-e/portable-atomic",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

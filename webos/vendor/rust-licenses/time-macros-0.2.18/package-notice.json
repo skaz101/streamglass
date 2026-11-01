@@ -1,0 +1,12 @@
+{
+  "name": "time-macros",
+  "version": "0.2.18",
+  "sha256": "3f252a68540fde3a3877aeea552b832b40ab9a69e318efd078774a01ddee1ccf",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/time-rs/time",
+  "notices": [
+    "LICENSE-Apache",
+    "LICENSE-MIT"
+  ]
+}

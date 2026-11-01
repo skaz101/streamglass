@@ -1,0 +1,15 @@
+{
+  "name": "through",
+  "version": "2.3.8",
+  "license": "MIT",
+  "author": "Dominic Tarr <dominic.tarr@gmail.com> (dominictarr.com)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dominictarr/through.git"
+  },
+  "homepage": "https://github.com/dominictarr/through",
+  "notices": [
+    "LICENSE.APACHE2",
+    "LICENSE.MIT"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "flat-cache",
+  "version": "3.2.0",
+  "license": "MIT",
+  "author": {
+    "name": "Jared Wray",
+    "url": "https://jaredwray.com"
+  },
+  "repository": "jaredwray/flat-cache",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

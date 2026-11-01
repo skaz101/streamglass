@@ -1,0 +1,15 @@
+{
+  "name": "globals",
+  "version": "13.24.0",
+  "license": "MIT",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "https://sindresorhus.com"
+  },
+  "repository": "sindresorhus/globals",
+  "homepage": null,
+  "notices": [
+    "license"
+  ]
+}

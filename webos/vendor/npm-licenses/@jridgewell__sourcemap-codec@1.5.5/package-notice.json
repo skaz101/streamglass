@@ -1,0 +1,15 @@
+{
+  "name": "@jridgewell/sourcemap-codec",
+  "version": "1.5.5",
+  "license": "MIT",
+  "author": "Justin Ridgewell <justin@ridgewell.name>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jridgewell/sourcemaps.git",
+    "directory": "packages/sourcemap-codec"
+  },
+  "homepage": "https://github.com/jridgewell/sourcemaps/tree/main/packages/sourcemap-codec",
+  "notices": [
+    "LICENSE"
+  ]
+}

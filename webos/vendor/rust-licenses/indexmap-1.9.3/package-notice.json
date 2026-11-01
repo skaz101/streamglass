@@ -1,0 +1,12 @@
+{
+  "name": "indexmap",
+  "version": "1.9.3",
+  "sha256": "bd070e393353796e801d209ad339e89596eb4c8d430d18ede6a1cced8fafbd99",
+  "license": "Apache-2.0 OR MIT",
+  "license_file": null,
+  "repository": "https://github.com/bluss/indexmap",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

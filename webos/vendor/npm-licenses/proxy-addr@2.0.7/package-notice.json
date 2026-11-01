@@ -1,0 +1,11 @@
+{
+  "name": "proxy-addr",
+  "version": "2.0.7",
+  "license": "MIT",
+  "author": "Douglas Christopher Wilson <doug@somethingdoug.com>",
+  "repository": "jshttp/proxy-addr",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

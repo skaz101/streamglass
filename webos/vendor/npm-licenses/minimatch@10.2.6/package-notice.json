@@ -1,0 +1,14 @@
+{
+  "name": "minimatch",
+  "version": "10.2.6",
+  "license": "BlueOak-1.0.0",
+  "author": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me)",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:isaacs/minimatch"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE.md"
+  ]
+}

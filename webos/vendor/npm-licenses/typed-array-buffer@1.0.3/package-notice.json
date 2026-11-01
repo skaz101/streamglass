@@ -1,0 +1,14 @@
+{
+  "name": "typed-array-buffer",
+  "version": "1.0.3",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inspect-js/typed-array-buffer.git"
+  },
+  "homepage": "https://github.com/inspect-js/typed-array-buffer#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

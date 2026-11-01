@@ -1,0 +1,12 @@
+{
+  "name": "yansi",
+  "version": "1.0.1",
+  "sha256": "cfe53a6657fd280eaa890a3bc59152892ffa3e30101319d168b781ed6529b049",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/SergioBenitez/yansi",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

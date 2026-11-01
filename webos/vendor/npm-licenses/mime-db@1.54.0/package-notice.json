@@ -1,0 +1,11 @@
+{
+  "name": "mime-db",
+  "version": "1.54.0",
+  "license": "MIT",
+  "author": null,
+  "repository": "jshttp/mime-db",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

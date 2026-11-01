@@ -1,0 +1,14 @@
+{
+  "name": "path-parse",
+  "version": "1.0.7",
+  "license": "MIT",
+  "author": "Javier Blanco <http://jbgutierrez.info>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jbgutierrez/path-parse.git"
+  },
+  "homepage": "https://github.com/jbgutierrez/path-parse#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

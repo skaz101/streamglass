@@ -1,0 +1,11 @@
+{
+  "name": "depd",
+  "version": "2.0.0",
+  "license": "MIT",
+  "author": "Douglas Christopher Wilson <doug@somethingdoug.com>",
+  "repository": "dougwilson/nodejs-depd",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

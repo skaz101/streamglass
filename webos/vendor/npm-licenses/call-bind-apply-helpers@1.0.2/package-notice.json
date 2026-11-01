@@ -1,0 +1,14 @@
+{
+  "name": "call-bind-apply-helpers",
+  "version": "1.0.2",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ljharb/call-bind-apply-helpers.git"
+  },
+  "homepage": "https://github.com/ljharb/call-bind-apply-helpers#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "is-map",
+  "version": "2.0.3",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inspect-js/is-map.git"
+  },
+  "homepage": "https://github.com/inspect-js/is-map#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

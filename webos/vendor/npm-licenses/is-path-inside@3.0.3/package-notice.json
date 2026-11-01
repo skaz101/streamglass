@@ -1,0 +1,15 @@
+{
+  "name": "is-path-inside",
+  "version": "3.0.3",
+  "license": "MIT",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com"
+  },
+  "repository": "sindresorhus/is-path-inside",
+  "homepage": null,
+  "notices": [
+    "license"
+  ]
+}

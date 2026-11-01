@@ -1,0 +1,12 @@
+{
+  "name": "toml_datetime",
+  "version": "0.6.8",
+  "sha256": "0dd7358ecb8fc2f8d014bf86f6f638ce72ba252a2c3a2572f2a795f1d23efb41",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/toml-rs/toml",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

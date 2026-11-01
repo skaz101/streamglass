@@ -1,0 +1,12 @@
+{
+  "name": "web-sys",
+  "version": "0.3.55",
+  "sha256": "38eb105f1c59d9eaa6b5cdc92b859d85b926e82cb2e0945cd0c9259faa6fe9fb",
+  "license": "MIT/Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/rustwasm/wasm-bindgen/tree/master/crates/web-sys",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

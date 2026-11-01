@@ -1,0 +1,12 @@
+{
+  "name": "elfy",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": "Fedor Indutny <fedor@indutny.com>",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:indutny/elfy"
+  },
+  "homepage": null,
+  "notices": []
+}

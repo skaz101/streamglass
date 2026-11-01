@@ -1,0 +1,11 @@
+{
+  "name": "word-wrap",
+  "version": "1.2.5",
+  "license": "MIT",
+  "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
+  "repository": "jonschlinkert/word-wrap",
+  "homepage": "https://github.com/jonschlinkert/word-wrap",
+  "notices": [
+    "LICENSE"
+  ]
+}

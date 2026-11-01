@@ -1,0 +1,14 @@
+{
+  "name": "eslint-plugin-import",
+  "version": "2.32.0",
+  "license": "MIT",
+  "author": "Ben Mosher <me@benmosher.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/import-js/eslint-plugin-import"
+  },
+  "homepage": "https://github.com/import-js/eslint-plugin-import",
+  "notices": [
+    "LICENSE"
+  ]
+}

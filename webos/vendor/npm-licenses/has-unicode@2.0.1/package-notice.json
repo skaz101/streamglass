@@ -1,0 +1,14 @@
+{
+  "name": "has-unicode",
+  "version": "2.0.1",
+  "license": "ISC",
+  "author": "Rebecca Turner <me@re-becca.org>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iarna/has-unicode"
+  },
+  "homepage": "https://github.com/iarna/has-unicode",
+  "notices": [
+    "LICENSE"
+  ]
+}

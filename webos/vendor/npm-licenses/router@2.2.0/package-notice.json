@@ -1,0 +1,11 @@
+{
+  "name": "router",
+  "version": "2.2.0",
+  "license": "MIT",
+  "author": "Douglas Christopher Wilson <doug@somethingdoug.com>",
+  "repository": "pillarjs/router",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

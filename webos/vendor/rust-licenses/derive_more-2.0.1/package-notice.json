@@ -1,0 +1,11 @@
+{
+  "name": "derive_more",
+  "version": "2.0.1",
+  "sha256": "093242cf7570c207c83073cf82f79706fe7b8317e98620a47d5be7c3d8497678",
+  "license": "MIT",
+  "license_file": null,
+  "repository": "https://github.com/JelteF/derive_more",
+  "notices": [
+    "LICENSE"
+  ]
+}

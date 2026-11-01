@@ -1,0 +1,11 @@
+{
+  "name": "serde_bencode",
+  "version": "0.2.4",
+  "sha256": "a70dfc7b7438b99896e7f8992363ab8e2c4ba26aa5ec675d32d1c3c2c33d413e",
+  "license": "MIT",
+  "license_file": null,
+  "repository": "https://github.com/toby/serde-bencode",
+  "notices": [
+    "LICENSE.md"
+  ]
+}

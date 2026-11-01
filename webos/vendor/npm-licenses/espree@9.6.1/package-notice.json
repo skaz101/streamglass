@@ -1,0 +1,11 @@
+{
+  "name": "espree",
+  "version": "9.6.1",
+  "license": "BSD-2-Clause",
+  "author": "Nicholas C. Zakas <nicholas+npm@nczconsulting.com>",
+  "repository": "eslint/espree",
+  "homepage": "https://github.com/eslint/espree",
+  "notices": [
+    "LICENSE"
+  ]
+}

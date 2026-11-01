@@ -1,0 +1,15 @@
+{
+  "name": "is-stream",
+  "version": "2.0.1",
+  "license": "MIT",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "https://sindresorhus.com"
+  },
+  "repository": "sindresorhus/is-stream",
+  "homepage": null,
+  "notices": [
+    "license"
+  ]
+}

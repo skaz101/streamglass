@@ -1,0 +1,12 @@
+{
+  "name": "proc_macro_roids",
+  "version": "0.8.0",
+  "sha256": "d0c2a098cd8aaa29f66da27a684ad19f4b7bc886f576abf12f7df4a7391071c7",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/azriel91/proc_macro_roids",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "on-finished",
+  "version": "2.4.1",
+  "license": "MIT",
+  "author": null,
+  "repository": "jshttp/on-finished",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

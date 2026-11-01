@@ -1,0 +1,11 @@
+{
+  "name": "tracing-subscriber",
+  "version": "0.3.18",
+  "sha256": "ad0f048c97dbd9faa9b7df56362b8ebcaa52adb06b498c050d2f4e32f90a7a8b",
+  "license": "MIT",
+  "license_file": null,
+  "repository": "https://github.com/tokio-rs/tracing",
+  "notices": [
+    "LICENSE"
+  ]
+}

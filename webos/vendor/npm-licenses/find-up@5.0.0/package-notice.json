@@ -1,0 +1,15 @@
+{
+  "name": "find-up",
+  "version": "5.0.0",
+  "license": "MIT",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "https://sindresorhus.com"
+  },
+  "repository": "sindresorhus/find-up",
+  "homepage": null,
+  "notices": [
+    "license"
+  ]
+}

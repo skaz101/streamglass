@@ -1,0 +1,15 @@
+{
+  "name": "wrap-ansi",
+  "version": "6.2.0",
+  "license": "MIT",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com"
+  },
+  "repository": "chalk/wrap-ansi",
+  "homepage": null,
+  "notices": [
+    "license"
+  ]
+}

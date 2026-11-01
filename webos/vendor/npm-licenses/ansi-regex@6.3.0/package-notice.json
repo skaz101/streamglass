@@ -1,0 +1,15 @@
+{
+  "name": "ansi-regex",
+  "version": "6.3.0",
+  "license": "MIT",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "https://sindresorhus.com"
+  },
+  "repository": "chalk/ansi-regex",
+  "homepage": null,
+  "notices": [
+    "license"
+  ]
+}

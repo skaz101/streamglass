@@ -1,0 +1,14 @@
+{
+  "name": "qs",
+  "version": "6.15.3",
+  "license": "BSD-3-Clause",
+  "author": null,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ljharb/qs.git"
+  },
+  "homepage": "https://github.com/ljharb/qs",
+  "notices": [
+    "LICENSE.md"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "reusify",
+  "version": "1.1.0",
+  "license": "MIT",
+  "author": "Matteo Collina <hello@matteocollina.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mcollina/reusify.git"
+  },
+  "homepage": "https://github.com/mcollina/reusify#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

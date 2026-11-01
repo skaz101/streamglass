@@ -1,0 +1,12 @@
+{
+  "name": "powerfmt",
+  "version": "0.2.0",
+  "sha256": "439ee305def115ba05938db6eb1644ff94165c5ab5e9420d1c1bcedbba909391",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/jhpratt/powerfmt",
+  "notices": [
+    "LICENSE-Apache",
+    "LICENSE-MIT"
+  ]
+}

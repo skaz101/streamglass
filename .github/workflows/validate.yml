@@ -1,0 +1,83 @@
+name: Validate StreamGlass
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  webos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: webos/package-lock.json
+      - run: npm ci
+        working-directory: webos
+      - run: npm test
+        working-directory: webos
+      - run: python3 webos/tests/source_archive_test.py
+      - run: npm run build:core && npm run build && npm run package
+        working-directory: webos
+      - run: npx playwright install --with-deps chromium
+        working-directory: webos
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Browser integration
+        working-directory: webos
+        run: |
+          node tests/core-browser.mjs
+          node tests/player-browser.cjs
+          node tests/review-host-browser.cjs
+          node tests/motion-browser.cjs
+          npm run test:browser
+          node ../android/scripts/sync-assets.mjs
+          node ../android/tests/mobile-browser.mjs
+      - run: python3 webos/scripts/source-archive.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: webos-and-source
+          path: webos/dist/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-results
+          path: |
+            webos/test-results/
+            android/test-results/
+          if-no-files-found: ignore
+
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: webos/package-lock.json
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - run: npm ci
+        working-directory: webos
+      - run: ./gradlew --no-daemon assembleDebug testDebugUnitTest lintDebug
+        working-directory: android
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-validation-reports
+          path: android/app/build/reports/
+          if-no-files-found: ignore
+      # CI's ephemeral debug key cannot update the original preview APK.
+      # Deliberately do not offer that differently signed APK as an app update.

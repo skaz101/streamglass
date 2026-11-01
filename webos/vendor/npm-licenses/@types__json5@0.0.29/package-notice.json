@@ -1,0 +1,12 @@
+{
+  "name": "@types/json5",
+  "version": "0.0.29",
+  "license": "MIT",
+  "author": "Jason Swearingen <https://jasonswearingen.github.io>",
+  "repository": {
+    "type": "git",
+    "url": "https://www.github.com/DefinitelyTyped/DefinitelyTyped.git"
+  },
+  "homepage": null,
+  "notices": []
+}

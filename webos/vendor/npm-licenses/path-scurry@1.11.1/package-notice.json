@@ -1,0 +1,14 @@
+{
+  "name": "path-scurry",
+  "version": "1.11.1",
+  "license": "BlueOak-1.0.0",
+  "author": "Isaac Z. Schlueter <i@izs.me> (https://blog.izs.me)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/isaacs/path-scurry"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE.md"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "sharded-slab",
+  "version": "0.1.7",
+  "sha256": "f40ca3c46823713e0d4209592e8d6e826aa57e928f09752619fc696c499637f6",
+  "license": "MIT",
+  "license_file": null,
+  "repository": "https://github.com/hawkw/sharded-slab",
+  "notices": [
+    "LICENSE"
+  ]
+}

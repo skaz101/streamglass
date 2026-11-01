@@ -1,0 +1,12 @@
+{
+  "name": "serde_with_macros",
+  "version": "3.9.0",
+  "sha256": "a8fee4991ef4f274617a51ad4af30519438dacb2f56ac773b08a1922ff743350",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/jonasbb/serde_with/",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

@@ -1,0 +1,11 @@
+/* StreamGlass webOS platform UI. GPL-3.0-or-later. */
+.sg-host-modal { position:fixed; inset:0; z-index:2147483647; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,.8); font:24px Inter,Arial,sans-serif; color:#fff; }
+.sg-host-modal section { background:#181818; border:1px solid #454545; border-radius:16px; padding:42px; width:min(1000px,85vw); max-height:85vh; overflow:auto; }
+.sg-host-modal h2 { font-size:36px; margin:0 0 22px; }
+.sg-host-modal p { line-height:1.45; white-space:pre-line; color:#ddd; }
+.sg-host-modal button { font:inherit; background:#e50914; color:white; border:0; border-radius:6px; padding:12px 30px; cursor:pointer; }
+.sg-host-modal button:focus { outline:4px solid white; outline-offset:5px; }
+.sg-host-options { display:flex; flex-direction:column; gap:12px; margin-bottom:28px; }
+.sg-host-options button { background:#303030; text-align:left; }
+/* The dialog focus uses a filled rounded control, without the old outer box. */
+.sg-host-modal button:focus { outline:none !important; background:#fff; color:#111; box-shadow:0 0 0 3px #f24457; }

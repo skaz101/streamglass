@@ -1,0 +1,11 @@
+{
+  "name": "serve-static",
+  "version": "2.2.1",
+  "license": "MIT",
+  "author": "Douglas Christopher Wilson <doug@somethingdoug.com>",
+  "repository": "expressjs/serve-static",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "ms",
+  "version": "2.1.3",
+  "license": "MIT",
+  "author": null,
+  "repository": "vercel/ms",
+  "homepage": null,
+  "notices": [
+    "license.md"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "bcrypt-pbkdf",
+  "version": "1.0.2",
+  "license": "BSD-3-Clause",
+  "author": null,
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/joyent/node-bcrypt-pbkdf.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

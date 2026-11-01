@@ -1,0 +1,18 @@
+{
+  "name": "has-tostringtag",
+  "version": "1.0.2",
+  "license": "MIT",
+  "author": {
+    "name": "Jordan Harband",
+    "email": "ljharb@gmail.com",
+    "url": "http://ljharb.codes"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inspect-js/has-tostringtag.git"
+  },
+  "homepage": "https://github.com/inspect-js/has-tostringtag#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

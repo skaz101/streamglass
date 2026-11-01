@@ -1,0 +1,14 @@
+{
+  "name": "is-core-module",
+  "version": "2.16.2",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inspect-js/is-core-module.git"
+  },
+  "homepage": "https://github.com/inspect-js/is-core-module",
+  "notices": [
+    "LICENSE"
+  ]
+}

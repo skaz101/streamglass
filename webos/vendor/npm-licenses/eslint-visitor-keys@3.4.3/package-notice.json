@@ -1,0 +1,11 @@
+{
+  "name": "eslint-visitor-keys",
+  "version": "3.4.3",
+  "license": "Apache-2.0",
+  "author": "Toru Nagashima (https://github.com/mysticatea)",
+  "repository": "eslint/eslint-visitor-keys",
+  "homepage": "https://github.com/eslint/eslint-visitor-keys#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "typed-array-byte-offset",
+  "version": "1.0.4",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inspect-js/typed-array-byte-offset.git"
+  },
+  "homepage": "https://github.com/inspect-js/typed-array-byte-offset#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

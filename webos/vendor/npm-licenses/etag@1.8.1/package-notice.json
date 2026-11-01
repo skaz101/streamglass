@@ -1,0 +1,11 @@
+{
+  "name": "etag",
+  "version": "1.8.1",
+  "license": "MIT",
+  "author": null,
+  "repository": "jshttp/etag",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

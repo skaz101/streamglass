@@ -1,0 +1,14 @@
+{
+  "name": "is-data-view",
+  "version": "1.0.2",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inspect-js/is-data-view.git"
+  },
+  "homepage": "https://github.com/inspect-js/is-data-view#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

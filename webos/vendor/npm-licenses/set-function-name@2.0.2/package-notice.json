@@ -1,0 +1,14 @@
+{
+  "name": "set-function-name",
+  "version": "2.0.2",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ljharb/set-function-name.git"
+  },
+  "homepage": "https://github.com/ljharb/set-function-name#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

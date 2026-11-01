@@ -1,0 +1,14 @@
+{
+  "name": "es-abstract-get",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ljharb/es-abstract-get.git"
+  },
+  "homepage": "https://github.com/ljharb/es-abstract-get#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

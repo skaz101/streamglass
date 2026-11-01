@@ -1,0 +1,12 @@
+{
+  "name": "android-tzdata",
+  "version": "0.1.1",
+  "sha256": "e999941b234f3131b00bc13c22d06e8c5ff726d1b6318ac7eb276997bbb4fef0",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/RumovZ/android-tzdata",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

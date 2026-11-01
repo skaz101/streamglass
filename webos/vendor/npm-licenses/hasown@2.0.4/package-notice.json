@@ -1,0 +1,14 @@
+{
+  "name": "hasown",
+  "version": "2.0.4",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inspect-js/hasOwn.git"
+  },
+  "homepage": "https://github.com/inspect-js/hasOwn#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

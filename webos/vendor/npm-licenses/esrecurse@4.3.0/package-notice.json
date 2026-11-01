@@ -1,0 +1,12 @@
+{
+  "name": "esrecurse",
+  "version": "4.3.0",
+  "license": "BSD-2-Clause",
+  "author": null,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/estools/esrecurse.git"
+  },
+  "homepage": "https://github.com/estools/esrecurse",
+  "notices": []
+}

@@ -1,0 +1,14 @@
+{
+  "name": "typed-array-length",
+  "version": "1.0.8",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inspect-js/typed-array-length.git"
+  },
+  "homepage": "https://github.com/inspect-js/typed-array-length#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "acorn",
+  "version": "8.18.0",
+  "license": "MIT",
+  "author": null,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/acornjs/acorn.git"
+  },
+  "homepage": "https://github.com/acornjs/acorn",
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,7 @@
+Unmodified upstream source snapshot (except this provenance file).
+Repository: https://github.com/Stremio/stremio-core
+Commit: 3417c2e7ed45cdbfd86b3226f69814c2dc4947ad
+npm package: @stremio/stremio-core-web@0.66.0
+License: MIT (LICENSE.md)
+Source fetched 2026-10-30 for the StreamGlass TV port.
+The corresponding published WASM was used; Rust was not rebuilt locally.

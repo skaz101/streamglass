@@ -1,0 +1,14 @@
+{
+  "name": "abbrev",
+  "version": "3.0.1",
+  "license": "ISC",
+  "author": "GitHub Inc.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/npm/abbrev-js.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

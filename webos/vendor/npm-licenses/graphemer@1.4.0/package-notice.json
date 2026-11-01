@@ -1,0 +1,14 @@
+{
+  "name": "graphemer",
+  "version": "1.4.0",
+  "license": "MIT",
+  "author": "Matt Davies <matt@filament.so> (https://github.com/mattpauldavies)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/flmnt/graphemer.git"
+  },
+  "homepage": "https://github.com/flmnt/graphemer",
+  "notices": [
+    "LICENSE"
+  ]
+}

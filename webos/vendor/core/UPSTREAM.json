@@ -1,0 +1,17 @@
+{
+  "package": "@stremio/stremio-core-web",
+  "version": "0.66.0",
+  "license": "MIT",
+  "repository": "https://github.com/Stremio/stremio-core",
+  "gitHead": "3417c2e7ed45cdbfd86b3226f69814c2dc4947ad",
+  "files": {
+    "LICENSE.md": "22584fcd1da294428887b53b9fe0d9a75a03e42f83254b22dfe8c8df2317d622",
+    "README.md": "03289004a78e881a82ec42bafdf98f104b62522466243cfec35c5f4ead9c7b36",
+    "bridge.js": "51c490dcde610baad20f6bf0c2cfc87e6b886830c2c6f80080ce4a7a796199d1",
+    "package.json": "61c4cdfb1ec94492685e9f99f5559df2a5c0728df2c8196fe93fb4ce6a7d0ffc",
+    "rust-toolchain.toml": "52130d2bc6dcb8e1c1f61a1d3ada5d821eb602841cf0a95cc9aacff5a3404af5",
+    "stremio_core_web.js": "991b180f09aadb8d055f95c0c22f25c50d0a81515590b4ec733998ee8d744741",
+    "stremio_core_web_bg.wasm": "45b6cbb3b25663891392e2f948b6a1a9502c327c44dc63ddece50e272203e1b1",
+    "worker.js": "455af735f709befb35ea2b66ae70059551413d39fab5154b8de94823c288ddcc"
+  }
+}

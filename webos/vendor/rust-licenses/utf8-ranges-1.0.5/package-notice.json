@@ -1,0 +1,12 @@
+{
+  "name": "utf8-ranges",
+  "version": "1.0.5",
+  "sha256": "7fcfc827f90e53a02eaef5e535ee14266c1d569214c6aa70133a624d8a3164ba",
+  "license": "Unlicense/MIT",
+  "license_file": null,
+  "repository": "https://github.com/BurntSushi/utf8-ranges",
+  "notices": [
+    "COPYING",
+    "LICENSE-MIT"
+  ]
+}

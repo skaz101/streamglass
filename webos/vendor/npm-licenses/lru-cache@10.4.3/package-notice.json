@@ -1,0 +1,14 @@
+{
+  "name": "lru-cache",
+  "version": "10.4.3",
+  "license": "ISC",
+  "author": "Isaac Z. Schlueter <i@izs.me>",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/isaacs/node-lru-cache.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

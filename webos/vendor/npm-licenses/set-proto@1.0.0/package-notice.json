@@ -1,0 +1,14 @@
+{
+  "name": "set-proto",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ljharb/set-proto.git"
+  },
+  "homepage": "https://github.com/ljharb/set-proto#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

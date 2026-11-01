@@ -1,0 +1,15 @@
+{
+  "name": "cli-spinners",
+  "version": "2.9.2",
+  "license": "MIT",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "https://sindresorhus.com"
+  },
+  "repository": "sindresorhus/cli-spinners",
+  "homepage": null,
+  "notices": [
+    "license"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "is-negative-zero",
+  "version": "2.0.3",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/inspect-js/is-negative-zero.git"
+  },
+  "homepage": "https://github.com/inspect-js/is-negative-zero",
+  "notices": [
+    "LICENSE"
+  ]
+}

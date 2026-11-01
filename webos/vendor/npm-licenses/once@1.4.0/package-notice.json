@@ -1,0 +1,14 @@
+{
+  "name": "once",
+  "version": "1.4.0",
+  "license": "ISC",
+  "author": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me/)",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/isaacs/once"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

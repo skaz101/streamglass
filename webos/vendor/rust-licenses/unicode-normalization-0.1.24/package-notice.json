@@ -1,0 +1,13 @@
+{
+  "name": "unicode-normalization",
+  "version": "0.1.24",
+  "sha256": "5033c97c4262335cded6d6fc3e5c18ab755e1a3dc96376350f3d8e9f009ad956",
+  "license": "MIT/Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/unicode-rs/unicode-normalization",
+  "notices": [
+    "COPYRIGHT",
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

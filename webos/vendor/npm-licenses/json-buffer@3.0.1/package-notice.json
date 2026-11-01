@@ -1,0 +1,14 @@
+{
+  "name": "json-buffer",
+  "version": "3.0.1",
+  "license": "MIT",
+  "author": "Dominic Tarr <dominic.tarr@gmail.com> (http://dominictarr.com)",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/dominictarr/json-buffer.git"
+  },
+  "homepage": "https://github.com/dominictarr/json-buffer",
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "windows-core",
+  "version": "0.52.0",
+  "sha256": "33ab640c8d7e35bf8ba19b884ba838ceb4fba93a4e8c65a9059d08afcfc683d9",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/microsoft/windows-rs",
+  "notices": [
+    "license-apache-2.0",
+    "license-mit"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "inherits",
+  "version": "2.0.4",
+  "license": "ISC",
+  "author": null,
+  "repository": "git://github.com/isaacs/inherits",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

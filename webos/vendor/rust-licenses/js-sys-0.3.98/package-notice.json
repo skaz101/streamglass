@@ -1,0 +1,12 @@
+{
+  "name": "js-sys",
+  "version": "0.3.98",
+  "sha256": "67df7112613f8bfd9150013a0314e196f4800d3201ae742489d999db2f979f08",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/js-sys",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

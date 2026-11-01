@@ -1,0 +1,14 @@
+{
+  "name": "async-function",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": "Jordan Harbamd <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ljharb/async-function.git"
+  },
+  "homepage": "https://github.com/ljharb/async-function#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

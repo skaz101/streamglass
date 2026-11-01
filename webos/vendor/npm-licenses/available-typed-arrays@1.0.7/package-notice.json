@@ -1,0 +1,14 @@
+{
+  "name": "available-typed-arrays",
+  "version": "1.0.7",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inspect-js/available-typed-arrays.git"
+  },
+  "homepage": "https://github.com/inspect-js/available-typed-arrays#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

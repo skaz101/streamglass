@@ -1,0 +1,13 @@
+{
+  "name": "unicode-ident",
+  "version": "1.0.13",
+  "sha256": "e91b56cd4cadaeb79bbf1a5645f6b4f8dc5bde8834ad5894a8db35fda9efa1fe",
+  "license": "(MIT OR Apache-2.0) AND Unicode-DFS-2016",
+  "license_file": null,
+  "repository": "https://github.com/dtolnay/unicode-ident",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT",
+    "LICENSE-UNICODE"
+  ]
+}

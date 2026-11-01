@@ -1,0 +1,14 @@
+{
+  "name": "dunder-proto",
+  "version": "1.0.1",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/es-shims/dunder-proto.git"
+  },
+  "homepage": "https://github.com/es-shims/dunder-proto#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

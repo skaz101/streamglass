@@ -1,0 +1,7 @@
+{
+  "package": "@babel/runtime",
+  "version": "7.24.1",
+  "url": "https://registry.npmjs.org/@babel/runtime/-/runtime-7.24.1.tgz",
+  "integrity": "sha512-+BIznRzyqBf+2wCTxcKE3wDjfGeCoVE61KSHGpkzqrLi8qxqFwBeUFyId2cxkTmm55fzDGnm0+yCxaxygrLUnQ==",
+  "sha256": "cd052d1bfc2cfd664dbfc4d240c3d90b1dbc9f1cd2a6487297367f6545218fa5"
+}

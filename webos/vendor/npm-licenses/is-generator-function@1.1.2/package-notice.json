@@ -1,0 +1,14 @@
+{
+  "name": "is-generator-function",
+  "version": "1.1.2",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/inspect-js/is-generator-function.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

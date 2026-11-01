@@ -1,0 +1,14 @@
+{
+  "name": "cross-spawn",
+  "version": "7.0.6",
+  "license": "MIT",
+  "author": "André Cruz <andre@moxy.studio>",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:moxystudio/node-cross-spawn.git"
+  },
+  "homepage": "https://github.com/moxystudio/node-cross-spawn",
+  "notices": [
+    "LICENSE"
+  ]
+}

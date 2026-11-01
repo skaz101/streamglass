@@ -1,0 +1,12 @@
+{
+  "name": "easy-table",
+  "version": "1.2.0",
+  "license": "MIT",
+  "author": "Eldar Gabdullin <eldargab@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eldargab/easy-table.git"
+  },
+  "homepage": null,
+  "notices": []
+}

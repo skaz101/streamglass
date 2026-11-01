@@ -1,0 +1,12 @@
+{
+  "name": "windows_i686_gnullvm",
+  "version": "0.52.6",
+  "sha256": "0eee52d38c090b3caa76c563b86c3a4bd71ef1a819287c19d586d7334ae8ed66",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/microsoft/windows-rs",
+  "notices": [
+    "license-apache-2.0",
+    "license-mit"
+  ]
+}

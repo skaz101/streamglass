@@ -1,0 +1,12 @@
+{
+  "name": "wasm-bindgen-futures",
+  "version": "0.4.71",
+  "sha256": "96492d0d3ffba25305a7dc88720d250b1401d7edca02cc3bcd50633b424673b8",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/futures",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

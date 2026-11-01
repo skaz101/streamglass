@@ -1,0 +1,11 @@
+{
+  "name": "cookie",
+  "version": "0.7.2",
+  "license": "MIT",
+  "author": "Roman Shtylman <shtylman@gmail.com>",
+  "repository": "jshttp/cookie",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

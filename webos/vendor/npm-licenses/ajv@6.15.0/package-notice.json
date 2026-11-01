@@ -1,0 +1,14 @@
+{
+  "name": "ajv",
+  "version": "6.15.0",
+  "license": "MIT",
+  "author": "Evgeny Poberezkin",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ajv-validator/ajv.git"
+  },
+  "homepage": "https://github.com/ajv-validator/ajv",
+  "notices": [
+    "LICENSE"
+  ]
+}

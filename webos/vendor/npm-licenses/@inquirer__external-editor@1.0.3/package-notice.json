@@ -1,0 +1,14 @@
+{
+  "name": "@inquirer/external-editor",
+  "version": "1.0.3",
+  "license": "MIT",
+  "author": "Simon Boudrias <admin@simonboudrias.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SBoudrias/Inquirer.js.git"
+  },
+  "homepage": "https://github.com/SBoudrias/Inquirer.js/blob/main/packages/external-editor/README.md",
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "csv-writer",
+  "version": "1.6.0",
+  "license": "MIT",
+  "author": "Ryuichi Inagaki",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ryu1kn/csv-writer.git"
+  },
+  "homepage": "https://github.com/ryu1kn/csv-writer#readme",
+  "notices": []
+}

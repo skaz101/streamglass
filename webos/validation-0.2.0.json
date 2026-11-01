@@ -1,0 +1,19 @@
+{
+  "passed": true,
+  "engine": "119.0.6045.0",
+  "protocol": "file:",
+  "mockedAccountAndAddons": true,
+  "localVideoPlayback": true,
+  "subtitleRendering": true,
+  "resume": true,
+  "libraryWrites": 12,
+  "addonWrites": 1,
+  "remoteNavigation": true,
+  "railBoundary": true,
+  "rowFocusMemory": true,
+  "backRestoresCardAndScroll": true,
+  "searchOriginRestored": true,
+  "homeTypeFilter": true,
+  "sensitiveDiagnosticsExcluded": true,
+  "runtimeErrors": []
+}

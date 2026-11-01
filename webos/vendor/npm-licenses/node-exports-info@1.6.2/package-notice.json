@@ -1,0 +1,14 @@
+{
+  "name": "node-exports-info",
+  "version": "1.6.2",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inspect-js/node-exports-info.git"
+  },
+  "homepage": "https://github.com/inspect-js/node-exports-info#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

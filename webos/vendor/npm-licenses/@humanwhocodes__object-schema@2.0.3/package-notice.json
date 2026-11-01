@@ -1,0 +1,14 @@
+{
+  "name": "@humanwhocodes/object-schema",
+  "version": "2.0.3",
+  "license": "BSD-3-Clause",
+  "author": "Nicholas C. Zakas",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/humanwhocodes/object-schema.git"
+  },
+  "homepage": "https://github.com/humanwhocodes/object-schema#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

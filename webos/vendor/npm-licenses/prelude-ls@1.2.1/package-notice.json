@@ -1,0 +1,14 @@
+{
+  "name": "prelude-ls",
+  "version": "1.2.1",
+  "license": "MIT",
+  "author": "George Zahariev <z@georgezahariev.com>",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/gkz/prelude-ls.git"
+  },
+  "homepage": "http://preludels.com",
+  "notices": [
+    "LICENSE"
+  ]
+}

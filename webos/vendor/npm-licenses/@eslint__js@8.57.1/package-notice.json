@@ -1,0 +1,15 @@
+{
+  "name": "@eslint/js",
+  "version": "8.57.1",
+  "license": "MIT",
+  "author": null,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eslint/eslint.git",
+    "directory": "packages/js"
+  },
+  "homepage": "https://eslint.org",
+  "notices": [
+    "LICENSE"
+  ]
+}

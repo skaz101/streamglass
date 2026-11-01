@@ -1,0 +1,18 @@
+{
+  "name": "queue-microtask",
+  "version": "1.2.3",
+  "license": "MIT",
+  "author": {
+    "name": "Feross Aboukhadijeh",
+    "email": "feross@feross.org",
+    "url": "https://feross.org"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/feross/queue-microtask.git"
+  },
+  "homepage": "https://github.com/feross/queue-microtask",
+  "notices": [
+    "LICENSE"
+  ]
+}

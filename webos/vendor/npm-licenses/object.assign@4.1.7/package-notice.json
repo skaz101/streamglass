@@ -1,0 +1,14 @@
+{
+  "name": "object.assign",
+  "version": "4.1.7",
+  "license": "MIT",
+  "author": "Jordan Harband",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/ljharb/object.assign.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

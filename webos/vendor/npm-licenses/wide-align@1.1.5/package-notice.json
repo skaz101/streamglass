@@ -1,0 +1,14 @@
+{
+  "name": "wide-align",
+  "version": "1.1.5",
+  "license": "ISC",
+  "author": "Rebecca Turner <me@re-becca.org> (http://re-becca.org/)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iarna/wide-align"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

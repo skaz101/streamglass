@@ -1,0 +1,11 @@
+{
+  "name": "content-disposition",
+  "version": "1.1.0",
+  "license": "MIT",
+  "author": "Douglas Christopher Wilson <doug@somethingdoug.com>",
+  "repository": "jshttp/content-disposition",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

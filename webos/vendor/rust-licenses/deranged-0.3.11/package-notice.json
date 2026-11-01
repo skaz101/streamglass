@@ -1,0 +1,12 @@
+{
+  "name": "deranged",
+  "version": "0.3.11",
+  "sha256": "b42b6fa04a440b495c8b04d0e71b707c585f83cb9cb28cf8cd0d976c315e31b4",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/jhpratt/deranged",
+  "notices": [
+    "LICENSE-Apache",
+    "LICENSE-MIT"
+  ]
+}

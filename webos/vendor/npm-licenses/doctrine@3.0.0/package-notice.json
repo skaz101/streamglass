@@ -1,0 +1,13 @@
+{
+  "name": "doctrine",
+  "version": "3.0.0",
+  "license": "Apache-2.0",
+  "author": null,
+  "repository": "eslint/doctrine",
+  "homepage": "https://github.com/eslint/doctrine",
+  "notices": [
+    "LICENSE",
+    "LICENSE.closure-compiler",
+    "LICENSE.esprima"
+  ]
+}

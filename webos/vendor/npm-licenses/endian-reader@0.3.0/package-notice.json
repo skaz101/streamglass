@@ -1,0 +1,12 @@
+{
+  "name": "endian-reader",
+  "version": "0.3.0",
+  "license": "MIT",
+  "author": "Fedor Indutny <fedor@indutny.com>",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:indutny/endian-reader"
+  },
+  "homepage": "https://github.com/indutny/endian-reader",
+  "notices": []
+}

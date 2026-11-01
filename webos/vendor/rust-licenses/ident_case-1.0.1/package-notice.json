@@ -1,0 +1,11 @@
+{
+  "name": "ident_case",
+  "version": "1.0.1",
+  "sha256": "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39",
+  "license": "MIT/Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/TedDriggs/ident_case",
+  "notices": [
+    "LICENSE"
+  ]
+}

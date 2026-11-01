@@ -1,0 +1,13 @@
+{
+  "name": "tinyvec_macros",
+  "version": "0.1.1",
+  "sha256": "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20",
+  "license": "MIT OR Apache-2.0 OR Zlib",
+  "license_file": null,
+  "repository": "https://github.com/Soveu/tinyvec_macros",
+  "notices": [
+    "LICENSE-APACHE.md",
+    "LICENSE-MIT.md",
+    "LICENSE-ZLIB.md"
+  ]
+}

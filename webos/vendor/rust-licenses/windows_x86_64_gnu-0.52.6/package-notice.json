@@ -1,0 +1,12 @@
+{
+  "name": "windows_x86_64_gnu",
+  "version": "0.52.6",
+  "sha256": "147a5c80aabfbf0c7d901cb5895d1de30ef2907eb21fbbab29ca94c5b08b1a78",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/microsoft/windows-rs",
+  "notices": [
+    "license-apache-2.0",
+    "license-mit"
+  ]
+}

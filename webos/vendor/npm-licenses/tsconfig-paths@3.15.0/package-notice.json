@@ -1,0 +1,11 @@
+{
+  "name": "tsconfig-paths",
+  "version": "3.15.0",
+  "license": "MIT",
+  "author": "Jonas Kello",
+  "repository": "https://github.com/dividab/tsconfig-paths",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "crc32fast",
+  "version": "1.4.2",
+  "sha256": "a97769d94ddab943e4510d138150169a2758b5ef3eb191a9ee688de3e23ef7b3",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/srijs/rust-crc32fast",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@humanwhocodes/config-array",
+  "version": "0.13.0",
+  "license": "Apache-2.0",
+  "author": "Nicholas C. Zakas",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/humanwhocodes/config-array.git"
+  },
+  "homepage": "https://github.com/humanwhocodes/config-array#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

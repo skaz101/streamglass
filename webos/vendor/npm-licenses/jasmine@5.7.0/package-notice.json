@@ -1,0 +1,14 @@
+{
+  "name": "jasmine",
+  "version": "5.7.0",
+  "license": "MIT",
+  "author": null,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jasmine/jasmine-npm"
+  },
+  "homepage": "http://jasmine.github.io/",
+  "notices": [
+    "LICENSE"
+  ]
+}

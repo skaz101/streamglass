@@ -1,0 +1,14 @@
+{
+  "name": "glob",
+  "version": "13.0.6",
+  "license": "BlueOak-1.0.0",
+  "author": "Isaac Z. Schlueter <i@izs.me> (https://blog.izs.me/)",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:isaacs/node-glob.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE.md"
+  ]
+}

@@ -1,0 +1,7 @@
+node_modules/
+build/
+dist/
+test-results/
+vendor/**/node_modules/
+vendor/**/build/
+vendor/**/.git/

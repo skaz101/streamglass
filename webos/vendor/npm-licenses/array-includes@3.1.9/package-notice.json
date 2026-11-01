@@ -1,0 +1,18 @@
+{
+  "name": "array-includes",
+  "version": "3.1.9",
+  "license": "MIT",
+  "author": {
+    "name": "Jordan Harband",
+    "email": "ljharb@gmail.com",
+    "url": "http://ljharb.codes"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/es-shims/array-includes.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "wasm-bindgen-shared",
+  "version": "0.2.121",
+  "sha256": "c4e0100b01e9f0d03189a92b96772a1fb998639d981193d7dbab487302513441",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/wasm-bindgen/wasm-bindgen/tree/master/crates/shared",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

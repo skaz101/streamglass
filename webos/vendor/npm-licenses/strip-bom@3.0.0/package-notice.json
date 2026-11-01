@@ -1,0 +1,15 @@
+{
+  "name": "strip-bom",
+  "version": "3.0.0",
+  "license": "MIT",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com"
+  },
+  "repository": "sindresorhus/strip-bom",
+  "homepage": null,
+  "notices": [
+    "license"
+  ]
+}

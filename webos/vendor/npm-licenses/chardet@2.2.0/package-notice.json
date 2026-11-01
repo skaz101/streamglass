@@ -1,0 +1,14 @@
+{
+  "name": "chardet",
+  "version": "2.2.0",
+  "license": "MIT",
+  "author": "Dmitry Shirokov <deadrunk@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/runk/node-chardet.git"
+  },
+  "homepage": "https://github.com/runk/node-chardet",
+  "notices": [
+    "LICENSE"
+  ]
+}

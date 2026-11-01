@@ -1,0 +1,14 @@
+{
+  "name": "jasmine-core",
+  "version": "5.7.1",
+  "license": "MIT",
+  "author": null,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jasmine/jasmine.git"
+  },
+  "homepage": "https://jasmine.github.io",
+  "notices": [
+    "LICENSE"
+  ]
+}

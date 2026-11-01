@@ -1,0 +1,11 @@
+{
+  "name": "body-parser",
+  "version": "2.3.0",
+  "license": "MIT",
+  "author": null,
+  "repository": "expressjs/body-parser",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

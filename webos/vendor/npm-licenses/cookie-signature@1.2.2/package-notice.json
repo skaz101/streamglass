@@ -1,0 +1,14 @@
+{
+  "name": "cookie-signature",
+  "version": "1.2.2",
+  "license": "MIT",
+  "author": "TJ Holowaychuk <tj@learnboost.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/visionmedia/node-cookie-signature.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

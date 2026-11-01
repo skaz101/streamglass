@@ -1,0 +1,12 @@
+{
+  "name": "iana-time-zone-haiku",
+  "version": "0.1.2",
+  "sha256": "f31827a206f56af32e590ba56d5d2d085f558508192593743f16b2306495269f",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/strawlab/iana-time-zone",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

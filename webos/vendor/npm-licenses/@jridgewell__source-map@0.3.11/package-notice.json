@@ -1,0 +1,15 @@
+{
+  "name": "@jridgewell/source-map",
+  "version": "0.3.11",
+  "license": "MIT",
+  "author": "Justin Ridgewell <justin@ridgewell.name>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jridgewell/sourcemaps.git",
+    "directory": "packages/source-map"
+  },
+  "homepage": "https://github.com/jridgewell/sourcemaps/tree/main/packages/source-map",
+  "notices": [
+    "LICENSE"
+  ]
+}

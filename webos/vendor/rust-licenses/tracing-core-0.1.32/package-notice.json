@@ -1,0 +1,12 @@
+{
+  "name": "tracing-core",
+  "version": "0.1.32",
+  "sha256": "c06d3da6113f116aaee68e4d601191614c9053067f9ab7f6edbcb161237daa54",
+  "license": "MIT",
+  "license_file": null,
+  "repository": "https://github.com/tokio-rs/tracing",
+  "notices": [
+    "LICENSE",
+    "src_spin_LICENSE"
+  ]
+}

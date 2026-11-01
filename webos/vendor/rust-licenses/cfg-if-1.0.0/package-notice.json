@@ -1,0 +1,12 @@
+{
+  "name": "cfg-if",
+  "version": "1.0.0",
+  "sha256": "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd",
+  "license": "MIT/Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/alexcrichton/cfg-if",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

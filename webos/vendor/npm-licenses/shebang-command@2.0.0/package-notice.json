@@ -1,0 +1,15 @@
+{
+  "name": "shebang-command",
+  "version": "2.0.0",
+  "license": "MIT",
+  "author": {
+    "name": "Kevin Mårtensson",
+    "email": "kevinmartensson@gmail.com",
+    "url": "github.com/kevva"
+  },
+  "repository": "kevva/shebang-command",
+  "homepage": null,
+  "notices": [
+    "license"
+  ]
+}

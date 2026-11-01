@@ -1,0 +1,11 @@
+{
+  "name": "content-type",
+  "version": "1.0.5",
+  "license": "MIT",
+  "author": "Douglas Christopher Wilson <doug@somethingdoug.com>",
+  "repository": "jshttp/content-type",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

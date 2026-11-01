@@ -1,0 +1,12 @@
+{
+  "name": "android_system_properties",
+  "version": "0.1.5",
+  "sha256": "819e7219dbd41043ac279b19830f2efc897156490d7fd6ea916720117ee66311",
+  "license": "MIT/Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/nical/android_system_properties",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

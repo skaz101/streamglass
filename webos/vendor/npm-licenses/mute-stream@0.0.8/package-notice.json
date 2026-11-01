@@ -1,0 +1,14 @@
+{
+  "name": "mute-stream",
+  "version": "0.0.8",
+  "license": "ISC",
+  "author": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me/)",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/isaacs/mute-stream"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

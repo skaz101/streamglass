@@ -1,0 +1,14 @@
+{
+  "name": "@eslint-community/eslint-utils",
+  "version": "4.10.1",
+  "license": "MIT",
+  "author": "Toru Nagashima",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eslint-community/eslint-utils"
+  },
+  "homepage": "https://github.com/eslint-community/eslint-utils#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "supports-color",
+  "version": "7.2.0",
+  "license": "MIT",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com"
+  },
+  "repository": "chalk/supports-color",
+  "homepage": null,
+  "notices": [
+    "license"
+  ]
+}

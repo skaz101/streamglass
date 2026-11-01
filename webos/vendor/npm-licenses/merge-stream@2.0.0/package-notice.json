@@ -1,0 +1,11 @@
+{
+  "name": "merge-stream",
+  "version": "2.0.0",
+  "license": "MIT",
+  "author": "Stephen Sugden <me@stephensugden.com>",
+  "repository": "grncdr/merge-stream",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "@nodelib/fs.walk",
+  "version": "1.2.8",
+  "license": "MIT",
+  "author": null,
+  "repository": "https://github.com/nodelib/nodelib/tree/master/packages/fs/fs.walk",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

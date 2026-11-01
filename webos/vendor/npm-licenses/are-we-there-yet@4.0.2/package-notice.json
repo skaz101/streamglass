@@ -1,0 +1,14 @@
+{
+  "name": "are-we-there-yet",
+  "version": "4.0.2",
+  "license": "ISC",
+  "author": "GitHub Inc.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/npm/are-we-there-yet.git"
+  },
+  "homepage": "https://github.com/npm/are-we-there-yet",
+  "notices": [
+    "LICENSE.md"
+  ]
+}

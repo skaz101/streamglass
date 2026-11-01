@@ -1,0 +1,11 @@
+{
+  "name": "darling",
+  "version": "0.20.10",
+  "sha256": "6f63b86c8a8826a49b8c21f08a2d07338eec8d900540f8630dc76284be802989",
+  "license": "MIT",
+  "license_file": null,
+  "repository": "https://github.com/TedDriggs/darling",
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "iconv-lite",
+  "version": "0.7.3",
+  "license": "MIT",
+  "author": "Alexander Shtuchkin <ashtuchkin@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pillarjs/iconv-lite.git"
+  },
+  "homepage": "https://github.com/pillarjs/iconv-lite",
+  "notices": [
+    "LICENSE"
+  ]
+}

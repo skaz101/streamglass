@@ -1,0 +1,11 @@
+{
+  "name": "chalk",
+  "version": "4.1.2",
+  "license": "MIT",
+  "author": null,
+  "repository": "chalk/chalk",
+  "homepage": null,
+  "notices": [
+    "license"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "ansi-escapes",
+  "version": "4.3.2",
+  "license": "MIT",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "https://sindresorhus.com"
+  },
+  "repository": "sindresorhus/ansi-escapes",
+  "homepage": null,
+  "notices": [
+    "license"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "regex-automata",
+  "version": "0.4.8",
+  "sha256": "368758f23274712b504848e9d5a6f010445cc8b87a7cdb4d7cbee666c1288da3",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/rust-lang/regex/tree/master/regex-automata",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

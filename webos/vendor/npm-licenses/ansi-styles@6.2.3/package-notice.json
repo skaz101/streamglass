@@ -1,0 +1,15 @@
+{
+  "name": "ansi-styles",
+  "version": "6.2.3",
+  "license": "MIT",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "https://sindresorhus.com"
+  },
+  "repository": "chalk/ansi-styles",
+  "homepage": null,
+  "notices": [
+    "license"
+  ]
+}

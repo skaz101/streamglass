@@ -1,0 +1,14 @@
+{
+  "name": "is-date-object",
+  "version": "1.1.0",
+  "license": "MIT",
+  "author": "Jordan Harband",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/inspect-js/is-date-object.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

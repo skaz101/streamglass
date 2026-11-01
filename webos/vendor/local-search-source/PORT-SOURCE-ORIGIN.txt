@@ -1,0 +1,6 @@
+Unmodified upstream source snapshot (except this provenance file).
+Repository: https://github.com/Stremio/local-search
+Commit: 74fefe1da2fa17d2b4ef7e3e629da00f3946ee72
+Cargo.lock package: localsearch@0.1.0
+License: MIT (LICENSE)
+Source fetched 2026-10-30 for the StreamGlass TV port.

@@ -1,0 +1,14 @@
+{
+  "name": "which",
+  "version": "2.0.2",
+  "license": "ISC",
+  "author": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me)",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/isaacs/node-which.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

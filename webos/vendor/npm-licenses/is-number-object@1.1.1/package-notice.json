@@ -1,0 +1,14 @@
+{
+  "name": "is-number-object",
+  "version": "1.1.1",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/inspect-js/is-number-object.git"
+  },
+  "homepage": "https://github.com/inspect-js/is-number-object#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

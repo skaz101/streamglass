@@ -1,0 +1,9 @@
+{
+  "name": "stremio-official-addons",
+  "version": "2.1.2",
+  "sha256": "f3aea8b91737b34bf40f8d1ac3d977d98d38b5121415d5dfdf297da48d66401b",
+  "license": "MIT",
+  "license_file": null,
+  "repository": "https://github.com/Stremio/stremio-official-addons",
+  "notices": []
+}

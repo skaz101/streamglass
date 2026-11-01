@@ -1,0 +1,21 @@
+{
+  "passed": true,
+  "engine": "119.0.6045.0",
+  "nativePlayerMocked": true,
+  "actualAndroidDevice": false,
+  "realCore": true,
+  "login": true,
+  "touchSearch": true,
+  "responsiveWidths": [
+    320,
+    390,
+    800
+  ],
+  "nativePayload": true,
+  "progress": true,
+  "resume": true,
+  "staleNativeEvents": true,
+  "recommendations": true,
+  "back": true,
+  "runtimeErrors": []
+}

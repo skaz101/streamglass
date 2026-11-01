@@ -1,0 +1,45 @@
+/* StreamGlass webOS player. GPL-3.0-or-later. */
+.webos-player {position:fixed;inset:0;z-index:2147483630;background:#000;color:#fff;font:500 18px Inter,Arial,sans-serif;--webos-subtitle-size:3.2vh;--webos-subtitle-color:#fff;--webos-subtitle-bg:rgba(0,0,0,.55);--webos-subtitle-weight:400}
+.webos-player video {position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+.webos-player video::cue {font-size:var(--webos-subtitle-size);color:var(--webos-subtitle-color);background-color:var(--webos-subtitle-bg);font-weight:var(--webos-subtitle-weight);text-shadow:0 2px 3px #000}
+.webos-player-top {position:absolute;top:0;left:0;right:0;padding:3.5vh 4vw 7vh;background:linear-gradient(#000d,transparent);pointer-events:none}
+.webos-player-top h1 {max-width:85%;font-size:2.5vw;margin:0 0 .7vh;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.webos-player-top p {margin:0;color:#ccc;font-size:1.4vw}
+.webos-player-message {position:absolute;left:20%;right:20%;top:40%;padding:2vh 2vw;background:#151515ee;border:1px solid #ffffff30;border-radius:12px;text-align:center;line-height:1.5;font-size:1.5vw;pointer-events:none}
+.webos-player-message[hidden] {display:none}
+.webos-player-controls {position:absolute;bottom:0;left:0;right:0;padding:8vh 4vw 4vh;background:linear-gradient(transparent,#000e 55%);transition:opacity .15s}
+.webos-player-seek-row {display:flex;align-items:center;gap:2vw;margin-bottom:2.5vh}
+.webos-player-seek {flex:1;height:1vh;accent-color:#e50914;cursor:pointer}
+.webos-player-time {min-width:10vw;font-size:1.25vw;font-variant-numeric:tabular-nums;text-align:right}
+.webos-player-buttons {display:flex;gap:1vw;align-items:center}
+.webos-player button {border:2px solid transparent;border-radius:8px;background:#252525e8;color:#fff;font:600 1.25vw Inter,Arial,sans-serif;padding:1.5vh 1.3vw;cursor:pointer}
+.webos-player button:focus {outline:3px solid #fff;outline-offset:3px;background:#fff;color:#111}
+.webos-player input:focus {outline:3px solid #fff;outline-offset:7px}
+.webos-player button[hidden] {display:none}
+.webos-player button[data-action=skip] {margin-left:auto;background:#fff;color:#111}
+.webos-controls-hidden .webos-player-controls,.webos-controls-hidden .webos-player-top {opacity:0;pointer-events:none}
+.webos-player-menu {position:absolute;inset:0;background:#000a;display:flex;align-items:center;justify-content:center}
+.webos-player-menu>div {width:44vw;max-height:80vh;overflow:auto;padding:2.5vw;border-radius:14px;background:#191919;box-shadow:0 12px 60px #000}
+.webos-player-menu h2 {margin:0 0 1.4vh;font-size:2vw}
+.webos-player-menu p {color:#bbb;line-height:1.5;font-size:1.2vw;margin:0 0 2vh}
+.webos-player-menu button {display:block;text-align:left;width:100%;margin:0 0 1.2vh}
+.webos-player-menu button[aria-pressed=true] {background:#4b1115}
+.webos-player-menu button[aria-pressed=true]:focus {background:#fff}
+@media (prefers-reduced-motion:reduce) {.webos-player-controls{transition:none}}
+/* 0.2.0 TV controls: generous targets and less chrome over the picture. */
+.webos-player-top { padding:4vh 4.5vw 10vh; background:linear-gradient(#000e,transparent); }
+.webos-player-top h1 { font-size:2.7vw; letter-spacing:-.04em; }
+.webos-player-top p { font-size:1.15vw; color:#c0c5d0; }
+.webos-player-controls { padding:12vh 4.5vw 4.5vh; background:linear-gradient(transparent,#080a0ee8 55%); transition:opacity .2s; }
+.webos-player button { background:#252a35d9; border-radius:9px; font-size:1.15vw; padding:1.6vh 1.6vw; transition:background .12s; }
+.webos-player button[data-action=play] { min-width:7vw; background:#fff; color:#101218; font-weight:800; }
+.webos-player button:focus { background:#fff; color:#111; outline-offset:5px; }
+.webos-player-seek { height:1.2vh; accent-color:#f52b40; }
+.webos-player-time { font-size:1.1vw; color:#e1e5ed; }
+.webos-player-menu { background:#000b; justify-content:flex-end; }
+.webos-player-menu>div { width:36vw; max-height:84vh; margin-right:4vw; background:#191d26; border:1px solid #ffffff24; border-radius:14px; padding:2.2vw; }
+.webos-player-menu h2 { font-size:1.9vw; letter-spacing:-.03em; }
+.webos-player-menu button[aria-pressed=true] { border-color:#f52b40; background:#32212c; }
+.webos-player-message { border-color:#ffffff24; background:#191d26ed; }
+@media (prefers-reduced-motion:reduce) {.webos-player *{transition:none !important}}
+.webos-player button:focus { outline:none !important; background:#fff; color:#111; box-shadow:0 0 0 3px #f24457; }

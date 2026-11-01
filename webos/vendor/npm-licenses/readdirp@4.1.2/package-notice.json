@@ -1,0 +1,14 @@
+{
+  "name": "readdirp",
+  "version": "4.1.2",
+  "license": "MIT",
+  "author": "Thorsten Lorenz <thlorenz@gmx.de> (thlorenz.com)",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/paulmillr/readdirp.git"
+  },
+  "homepage": "https://github.com/paulmillr/readdirp",
+  "notices": [
+    "LICENSE"
+  ]
+}

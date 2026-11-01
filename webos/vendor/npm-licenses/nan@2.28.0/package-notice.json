@@ -1,0 +1,14 @@
+{
+  "name": "nan",
+  "version": "2.28.0",
+  "license": "MIT",
+  "author": null,
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/nodejs/nan.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE.md"
+  ]
+}

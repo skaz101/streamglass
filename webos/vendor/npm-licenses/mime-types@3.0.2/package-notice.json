@@ -1,0 +1,11 @@
+{
+  "name": "mime-types",
+  "version": "3.0.2",
+  "license": "MIT",
+  "author": null,
+  "repository": "jshttp/mime-types",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

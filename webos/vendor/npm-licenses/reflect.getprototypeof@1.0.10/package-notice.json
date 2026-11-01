@@ -1,0 +1,14 @@
+{
+  "name": "reflect.getprototypeof",
+  "version": "1.0.10",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/es-shims/Reflect.getPrototypeOf.git"
+  },
+  "homepage": "https://github.com/es-shims/Reflect.getPrototypeOf",
+  "notices": [
+    "LICENSE"
+  ]
+}

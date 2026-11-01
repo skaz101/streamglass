@@ -1,0 +1,14 @@
+{
+  "name": "minimatch",
+  "version": "9.0.9",
+  "license": "ISC",
+  "author": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me)",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/isaacs/minimatch.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

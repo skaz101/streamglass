@@ -1,0 +1,12 @@
+{
+  "name": "iana-time-zone",
+  "version": "0.1.60",
+  "sha256": "e7ffbb5a1b541ea2561f8c41c087286cc091e21e556a4f09a8f6cbf17b69b141",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/strawlab/iana-time-zone",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "minizlib",
+  "version": "3.1.0",
+  "license": "MIT",
+  "author": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me/)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/isaacs/minizlib.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "ssh2",
+  "version": "1.17.0",
+  "license": [
+    {
+      "type": "MIT",
+      "url": "http://github.com/mscdex/ssh2/raw/master/LICENSE"
+    }
+  ],
+  "author": "Brian White <mscdex@mscdex.net>",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/mscdex/ssh2.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

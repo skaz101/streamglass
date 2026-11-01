@@ -1,0 +1,14 @@
+{
+  "name": "tweetnacl",
+  "version": "0.14.5",
+  "license": "Unlicense",
+  "author": "TweetNaCl-js contributors",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dchest/tweetnacl-js.git"
+  },
+  "homepage": "https://tweetnacl.js.org",
+  "notices": [
+    "LICENSE"
+  ]
+}

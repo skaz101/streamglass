@@ -1,0 +1,14 @@
+{
+  "name": "miniz_oxide",
+  "version": "0.8.0",
+  "sha256": "e2d80299ef12ff69b16a84bb182e3b9df68b5a91574d3d4fa6e41b65deec4df1",
+  "license": "MIT OR Zlib OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/Frommi/miniz_oxide/tree/master/miniz_oxide",
+  "notices": [
+    "LICENSE",
+    "LICENSE-APACHE.md",
+    "LICENSE-MIT.md",
+    "LICENSE-ZLIB.md"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "balanced-match",
+  "version": "4.0.4",
+  "license": "MIT",
+  "author": null,
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/juliangruber/balanced-match.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE.md"
+  ]
+}

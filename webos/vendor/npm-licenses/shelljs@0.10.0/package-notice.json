@@ -1,0 +1,14 @@
+{
+  "name": "shelljs",
+  "version": "0.10.0",
+  "license": "BSD-3-Clause",
+  "author": null,
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/shelljs/shelljs.git"
+  },
+  "homepage": "http://github.com/shelljs/shelljs",
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "@isaacs/cliui",
+  "version": "8.0.2",
+  "license": "ISC",
+  "author": "Ben Coe <ben@npmjs.com>",
+  "repository": "yargs/cliui",
+  "homepage": null,
+  "notices": [
+    "LICENSE.txt"
+  ]
+}

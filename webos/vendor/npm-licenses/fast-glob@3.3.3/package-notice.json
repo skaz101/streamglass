@@ -1,0 +1,14 @@
+{
+  "name": "fast-glob",
+  "version": "3.3.3",
+  "license": "MIT",
+  "author": {
+    "name": "Denis Malinochkin",
+    "url": "https://mrmlnc.com"
+  },
+  "repository": "mrmlnc/fast-glob",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

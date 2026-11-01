@@ -1,0 +1,12 @@
+{
+  "name": "derivative",
+  "version": "2.2.0",
+  "sha256": "fcc3dd5e9e9c0b295d6e1e4d811fb6f157d5ffd784b8d202fc62eac8035a770b",
+  "license": "MIT/Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/mcarton/rust-derivative",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

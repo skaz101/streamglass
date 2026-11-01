@@ -1,0 +1,14 @@
+{
+  "name": "fastq",
+  "version": "1.20.1",
+  "license": "ISC",
+  "author": "Matteo Collina <hello@matteocollina.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mcollina/fastq.git"
+  },
+  "homepage": "https://github.com/mcollina/fastq#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "optionator",
+  "version": "0.9.4",
+  "license": "MIT",
+  "author": "George Zahariev <z@georgezahariev.com>",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/gkz/optionator.git"
+  },
+  "homepage": "https://github.com/gkz/optionator",
+  "notices": [
+    "LICENSE"
+  ]
+}

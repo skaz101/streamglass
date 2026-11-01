@@ -1,0 +1,20 @@
+{
+  "name": "streamglass-webos",
+  "version": "0.4.0",
+  "private": true,
+  "description": "Unofficial webOS 25 port of the DX.BI TV experience",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "package": "node scripts/package.mjs",
+    "test": "node --test tests/*.test.cjs",
+    "test:browser": "node tests/browser.mjs",
+    "build:core": "node scripts/build-core.mjs"
+  },
+  "devDependencies": {
+    "@babel/runtime": "7.24.1",
+    "@webos-tools/cli": "3.2.6",
+    "esbuild": "0.25.12",
+    "playwright": "1.61.1"
+  }
+}

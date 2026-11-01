@@ -1,0 +1,14 @@
+{
+  "name": "is-async-function",
+  "version": "2.1.1",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/inspect-js/is-async-function.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

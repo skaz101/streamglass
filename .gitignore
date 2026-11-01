@@ -1,0 +1,37 @@
+*.plugin.json
+.DS_Store
+Thumbs.db
+tools/fonts/
+tools/frames/
+tools/prev/
+*.webm
+*.wav
+
+# Cloudflare Worker local secrets
+.dev.vars
+.wrangler/
+
+# Local dependencies, output and credentials
+node_modules/
+build/
+dist/
+.gradle/
+.idea/
+__pycache__/
+test-results/
+verification/
+local.properties
+key.properties
+runtime-inventory.json
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.apk
+*.ipk
+*.aab
+chat.txt

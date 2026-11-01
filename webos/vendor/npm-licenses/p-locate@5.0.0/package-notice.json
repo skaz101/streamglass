@@ -1,0 +1,15 @@
+{
+  "name": "p-locate",
+  "version": "5.0.0",
+  "license": "MIT",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "https://sindresorhus.com"
+  },
+  "repository": "sindresorhus/p-locate",
+  "homepage": null,
+  "notices": [
+    "license"
+  ]
+}

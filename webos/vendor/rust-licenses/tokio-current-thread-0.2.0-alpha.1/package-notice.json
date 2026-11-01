@@ -1,0 +1,11 @@
+{
+  "name": "tokio-current-thread",
+  "version": "0.2.0-alpha.1",
+  "sha256": "4ed30983efe64aa01758777622d70f45054802d959f02b7895b7245883699487",
+  "license": "MIT",
+  "license_file": null,
+  "repository": "https://github.com/tokio-rs/tokio",
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "fstream",
+  "version": "1.0.12",
+  "license": "ISC",
+  "author": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me/)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/npm/fstream.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

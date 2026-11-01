@@ -1,0 +1,11 @@
+{
+  "name": "braces",
+  "version": "3.0.3",
+  "license": "MIT",
+  "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
+  "repository": "micromatch/braces",
+  "homepage": "https://github.com/micromatch/braces",
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "object.fromentries",
+  "version": "2.0.8",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/es-shims/Object.fromEntries.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

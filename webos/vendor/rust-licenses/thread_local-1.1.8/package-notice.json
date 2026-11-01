@@ -1,0 +1,12 @@
+{
+  "name": "thread_local",
+  "version": "1.1.8",
+  "sha256": "8b9ef9bad013ada3808854ceac7b46812a6465ba368859a37e2100283d2d719c",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/Amanieu/thread_local-rs",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "supports-preserve-symlinks-flag",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inspect-js/node-supports-preserve-symlinks-flag.git"
+  },
+  "homepage": "https://github.com/inspect-js/node-supports-preserve-symlinks-flag#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

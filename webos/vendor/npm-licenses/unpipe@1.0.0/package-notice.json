@@ -1,0 +1,11 @@
+{
+  "name": "unpipe",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": "Douglas Christopher Wilson <doug@somethingdoug.com>",
+  "repository": "stream-utils/unpipe",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

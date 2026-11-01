@@ -1,0 +1,9 @@
+{
+  "name": "gloo-utils",
+  "version": "0.3.0",
+  "sha256": "4202275d95a142fa209a1e35e91c250a710c5600731372cd3464a39ed01573d6",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/rustwasm/gloo/tree/master/crates/utils",
+  "notices": []
+}

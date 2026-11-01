@@ -1,0 +1,11 @@
+{
+  "name": "js-yaml",
+  "version": "4.3.1",
+  "license": "MIT",
+  "author": "Vladimir Zapparov <dervus.grim@gmail.com>",
+  "repository": "nodeca/js-yaml",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

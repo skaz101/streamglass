@@ -1,0 +1,11 @@
+{
+  "name": "boolinator",
+  "version": "2.4.0",
+  "sha256": "cfa8873f51c92e232f9bac4065cddef41b714152812bfc5f7672ba16d6ef8cd9",
+  "license": "MIT/Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/DanielKeep/rust-boolinator",
+  "notices": [
+    "LICENSE"
+  ]
+}

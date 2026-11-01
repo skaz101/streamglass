@@ -1,0 +1,14 @@
+{
+  "name": "jasmine-spec-reporter",
+  "version": "7.0.0",
+  "license": "Apache-2.0",
+  "author": "Bastien Caudan",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bcaudan/jasmine-spec-reporter"
+  },
+  "homepage": "https://github.com/bcaudan/jasmine-spec-reporter",
+  "notices": [
+    "LICENSE"
+  ]
+}

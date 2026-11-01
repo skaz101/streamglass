@@ -1,0 +1,11 @@
+{
+  "name": "micromatch",
+  "version": "4.0.8",
+  "license": "MIT",
+  "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
+  "repository": "micromatch/micromatch",
+  "homepage": "https://github.com/micromatch/micromatch",
+  "notices": [
+    "LICENSE"
+  ]
+}

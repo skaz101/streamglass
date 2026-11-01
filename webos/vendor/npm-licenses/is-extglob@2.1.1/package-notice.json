@@ -1,0 +1,11 @@
+{
+  "name": "is-extglob",
+  "version": "2.1.1",
+  "license": "MIT",
+  "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
+  "repository": "jonschlinkert/is-extglob",
+  "homepage": "https://github.com/jonschlinkert/is-extglob",
+  "notices": [
+    "LICENSE"
+  ]
+}

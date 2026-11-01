@@ -1,0 +1,11 @@
+{
+  "name": "darling_macro",
+  "version": "0.20.10",
+  "sha256": "d336a2a514f6ccccaa3e09b02d41d35330c07ddf03a62165fcec10bb561c7806",
+  "license": "MIT",
+  "license_file": null,
+  "repository": "https://github.com/TedDriggs/darling",
+  "notices": [
+    "LICENSE"
+  ]
+}

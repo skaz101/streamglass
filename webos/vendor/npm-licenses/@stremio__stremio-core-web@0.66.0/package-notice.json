@@ -1,0 +1,15 @@
+{
+  "name": "@stremio/stremio-core-web",
+  "version": "0.66.0",
+  "license": "MIT",
+  "author": "Smart Code OOD",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Stremio/stremio-core.git",
+    "directory": "stremio-core-web"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE.md"
+  ]
+}

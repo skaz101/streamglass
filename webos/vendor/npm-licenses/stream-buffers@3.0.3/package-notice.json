@@ -1,0 +1,12 @@
+{
+  "name": "stream-buffers",
+  "version": "3.0.3",
+  "license": "Unlicense",
+  "author": "Sam Day <me@samcday.com.au>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/samcday/node-stream-buffer.git"
+  },
+  "homepage": null,
+  "notices": []
+}

@@ -1,0 +1,11 @@
+{
+  "name": "encoding",
+  "version": "0.1.13",
+  "license": "MIT",
+  "author": "Andris Reinman",
+  "repository": "https://github.com/andris9/encoding.git",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

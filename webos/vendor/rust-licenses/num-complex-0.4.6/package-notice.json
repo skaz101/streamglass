@@ -1,0 +1,12 @@
+{
+  "name": "num-complex",
+  "version": "0.4.6",
+  "sha256": "73f88a1307638156682bada9d7604135552957b7818057dcef22705b4d509495",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/rust-num/num-complex",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

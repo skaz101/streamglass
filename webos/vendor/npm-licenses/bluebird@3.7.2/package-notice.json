@@ -1,0 +1,18 @@
+{
+  "name": "bluebird",
+  "version": "3.7.2",
+  "license": "MIT",
+  "author": {
+    "name": "Petka Antonov",
+    "email": "petka_antonov@hotmail.com",
+    "url": "http://github.com/petkaantonov/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/petkaantonov/bluebird.git"
+  },
+  "homepage": "https://github.com/petkaantonov/bluebird",
+  "notices": [
+    "LICENSE"
+  ]
+}

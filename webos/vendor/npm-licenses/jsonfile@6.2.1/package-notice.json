@@ -1,0 +1,14 @@
+{
+  "name": "jsonfile",
+  "version": "6.2.1",
+  "license": "MIT",
+  "author": "JP Richardson <jprichardson@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:jprichardson/node-jsonfile.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

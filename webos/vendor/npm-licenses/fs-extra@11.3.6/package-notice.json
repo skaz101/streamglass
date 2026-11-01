@@ -1,0 +1,14 @@
+{
+  "name": "fs-extra",
+  "version": "11.3.6",
+  "license": "MIT",
+  "author": "JP Richardson <jprichardson@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jprichardson/node-fs-extra.git"
+  },
+  "homepage": "https://github.com/jprichardson/node-fs-extra",
+  "notices": [
+    "LICENSE"
+  ]
+}

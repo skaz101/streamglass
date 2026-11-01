@@ -1,0 +1,14 @@
+{
+  "name": "is-weakset",
+  "version": "2.0.4",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inspect-js/is-weakset.git"
+  },
+  "homepage": "https://github.com/inspect-js/is-weakset#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "name": "has-symbols",
+  "version": "1.1.0",
+  "license": "MIT",
+  "author": {
+    "name": "Jordan Harband",
+    "email": "ljharb@gmail.com",
+    "url": "http://ljharb.codes"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/inspect-js/has-symbols.git"
+  },
+  "homepage": "https://github.com/ljharb/has-symbols#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

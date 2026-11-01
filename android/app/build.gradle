@@ -1,0 +1,50 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'com.streamglass.mobile'
+    compileSdk 35
+    buildToolsVersion '35.0.0'
+    defaultConfig {
+        applicationId 'com.streamglass.mobile'
+        minSdk 26
+        targetSdk 35
+        versionCode 400
+        versionName '0.4.0'
+    }
+    // The original preview key stays local. Other builders get Android's own
+    // per-user debug key; it cannot update an APK signed with the original key.
+    def previewKey = rootProject.file('signing/streamglass-development.jks')
+    if (previewKey.exists()) {
+        signingConfigs { debug {
+            storeFile previewKey
+            storePassword 'android'; keyAlias 'androiddebugkey'; keyPassword 'android'
+        } }
+    }
+    buildFeatures { buildConfig true }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    sourceSets.main.assets.srcDir layout.buildDirectory.dir('generated/assets')
+    lint { abortOnError true }
+}
+tasks.register('syncStreamGlass', Exec) {
+    workingDir rootProject.projectDir
+    commandLine 'node', 'scripts/sync-assets.mjs'
+}
+tasks.named('preBuild').configure { dependsOn 'syncStreamGlass' }
+tasks.register('runtimeInventory') {
+    doLast {
+        def entries=configurations.debugRuntimeClasspath.resolvedConfiguration.resolvedArtifacts.collect {
+            [group:it.moduleVersion.id.group,name:it.moduleVersion.id.name,version:it.moduleVersion.id.version,file:it.file.absolutePath]
+        }
+        rootProject.file('runtime-inventory.json').text=groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(entries))
+    }
+}
+dependencies {
+    implementation 'androidx.webkit:webkit:1.12.1'
+    implementation 'androidx.media3:media3-exoplayer:1.5.1'
+    implementation 'androidx.media3:media3-exoplayer-hls:1.5.1'
+    implementation 'androidx.media3:media3-exoplayer-dash:1.5.1'
+    implementation 'androidx.media3:media3-ui:1.5.1'
+    testImplementation 'junit:junit:4.13.2'
+}

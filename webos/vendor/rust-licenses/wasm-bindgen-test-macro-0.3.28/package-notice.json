@@ -1,0 +1,12 @@
+{
+  "name": "wasm-bindgen-test-macro",
+  "version": "0.3.28",
+  "sha256": "6006f79628dfeb96a86d4db51fbf1344cd7fd8408f06fc9aa3c84913a4789688",
+  "license": "MIT/Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/rustwasm/wasm-bindgen",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

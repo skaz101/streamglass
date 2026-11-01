@@ -1,0 +1,14 @@
+{
+  "name": "cli-width",
+  "version": "3.0.0",
+  "license": "ISC",
+  "author": "Ilya Radchenko <knownasilya@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:knownasilya/cli-width.git"
+  },
+  "homepage": "https://github.com/knownasilya/cli-width",
+  "notices": [
+    "LICENSE"
+  ]
+}

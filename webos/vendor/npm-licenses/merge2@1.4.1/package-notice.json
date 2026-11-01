@@ -1,0 +1,14 @@
+{
+  "name": "merge2",
+  "version": "1.4.1",
+  "license": "MIT",
+  "author": null,
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:teambition/merge2.git"
+  },
+  "homepage": "https://github.com/teambition/merge2",
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "slab",
+  "version": "0.4.9",
+  "sha256": "8f92a496fb766b417c996b9c5e57daf2f7ad3b0bebe1ccfca4856390e3d3bb67",
+  "license": "MIT",
+  "license_file": null,
+  "repository": "https://github.com/tokio-rs/slab",
+  "notices": [
+    "LICENSE"
+  ]
+}

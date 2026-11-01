@@ -1,0 +1,12 @@
+{
+  "name": "wasm-bindgen",
+  "version": "0.2.121",
+  "sha256": "49ace1d07c165b0864824eee619580c4689389afa9dc9ed3a4c75040d82e6790",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/wasm-bindgen/wasm-bindgen",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

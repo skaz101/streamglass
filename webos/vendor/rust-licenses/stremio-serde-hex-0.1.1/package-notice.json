@@ -1,0 +1,12 @@
+{
+  "name": "stremio-serde-hex",
+  "version": "0.1.1",
+  "sha256": "51cd84ea7e099ea99f749dfb4b189bd415f01d7ac372a2f6a5e1972c369aa35d",
+  "license": "MIT/Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/Stremio/serde-hex",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

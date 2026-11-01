@@ -1,0 +1,14 @@
+{
+  "name": "isexe",
+  "version": "2.0.0",
+  "license": "ISC",
+  "author": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me/)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/isaacs/isexe.git"
+  },
+  "homepage": "https://github.com/isaacs/isexe#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "gauge",
+  "version": "5.0.2",
+  "license": "ISC",
+  "author": "GitHub Inc.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/npm/gauge.git"
+  },
+  "homepage": "https://github.com/npm/gauge",
+  "notices": [
+    "LICENSE.md"
+  ]
+}

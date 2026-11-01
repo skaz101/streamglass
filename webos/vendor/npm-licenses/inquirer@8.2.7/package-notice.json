@@ -1,0 +1,11 @@
+{
+  "name": "inquirer",
+  "version": "8.2.7",
+  "license": "MIT",
+  "author": "Simon Boudrias <admin@simonboudrias.com>",
+  "repository": "SBoudrias/Inquirer.js",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

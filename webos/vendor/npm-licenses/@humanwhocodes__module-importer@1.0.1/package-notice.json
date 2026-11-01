@@ -1,0 +1,14 @@
+{
+  "name": "@humanwhocodes/module-importer",
+  "version": "1.0.1",
+  "license": "Apache-2.0",
+  "author": "Nicholas C. Zaks",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/humanwhocodes/module-importer.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "foreground-child",
+  "version": "3.3.1",
+  "license": "ISC",
+  "author": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me/)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tapjs/foreground-child.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "aho-corasick",
+  "version": "1.1.3",
+  "sha256": "8e60d3430d3a69478ad0993f19238d2df97c507009a52b3c10addcd7f6bcb916",
+  "license": "Unlicense OR MIT",
+  "license_file": null,
+  "repository": "https://github.com/BurntSushi/aho-corasick",
+  "notices": [
+    "COPYING",
+    "LICENSE-MIT"
+  ]
+}

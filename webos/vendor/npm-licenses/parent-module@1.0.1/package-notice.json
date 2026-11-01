@@ -1,0 +1,15 @@
+{
+  "name": "parent-module",
+  "version": "1.0.1",
+  "license": "MIT",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com"
+  },
+  "repository": "sindresorhus/parent-module",
+  "homepage": null,
+  "notices": [
+    "license"
+  ]
+}

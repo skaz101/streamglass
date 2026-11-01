@@ -1,0 +1,15 @@
+{
+  "name": "type-fest",
+  "version": "0.21.3",
+  "license": "(MIT OR CC0-1.0)",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "https://sindresorhus.com"
+  },
+  "repository": "sindresorhus/type-fest",
+  "homepage": null,
+  "notices": [
+    "license"
+  ]
+}

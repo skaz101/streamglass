@@ -1,0 +1,14 @@
+{
+  "name": "path-to-regexp",
+  "version": "8.4.2",
+  "license": "MIT",
+  "author": null,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pillarjs/path-to-regexp.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "combined-stream",
+  "version": "1.0.8",
+  "license": "MIT",
+  "author": "Felix Geisendörfer <felix@debuggable.com> (http://debuggable.com/)",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/felixge/node-combined-stream.git"
+  },
+  "homepage": "https://github.com/felixge/node-combined-stream",
+  "notices": [
+    "License"
+  ]
+}

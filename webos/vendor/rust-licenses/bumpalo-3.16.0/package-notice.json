@@ -1,0 +1,12 @@
+{
+  "name": "bumpalo",
+  "version": "3.16.0",
+  "sha256": "79296716171880943b8470b5f8d03aa55eb2e645a4874bdbb28adb49162e012c",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/fitzgen/bumpalo",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

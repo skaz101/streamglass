@@ -1,0 +1,14 @@
+{
+  "name": "chokidar",
+  "version": "4.0.3",
+  "license": "MIT",
+  "author": "Paul Miller (https://paulmillr.com)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paulmillr/chokidar.git"
+  },
+  "homepage": "https://github.com/paulmillr/chokidar",
+  "notices": [
+    "LICENSE"
+  ]
+}

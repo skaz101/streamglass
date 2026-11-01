@@ -1,0 +1,14 @@
+{
+  "name": "is-regex",
+  "version": "1.2.1",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/inspect-js/is-regex.git"
+  },
+  "homepage": "https://github.com/inspect-js/is-regex",
+  "notices": [
+    "LICENSE"
+  ]
+}

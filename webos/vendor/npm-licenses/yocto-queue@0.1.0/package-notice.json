@@ -1,0 +1,15 @@
+{
+  "name": "yocto-queue",
+  "version": "0.1.0",
+  "license": "MIT",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "https://sindresorhus.com"
+  },
+  "repository": "sindresorhus/yocto-queue",
+  "homepage": null,
+  "notices": [
+    "license"
+  ]
+}

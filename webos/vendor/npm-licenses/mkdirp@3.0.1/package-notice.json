@@ -1,0 +1,14 @@
+{
+  "name": "mkdirp",
+  "version": "3.0.1",
+  "license": "MIT",
+  "author": null,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/isaacs/node-mkdirp.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "lazysort",
+  "version": "0.2.1",
+  "sha256": "d0e22ff43b231e0e2f87d74984e53ebc73b90ae13397e041214fb07efc64168f",
+  "license": "MIT/Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/benashford/rust-lazysort",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

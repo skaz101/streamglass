@@ -1,0 +1,14 @@
+{
+  "name": "ignore",
+  "version": "5.3.2",
+  "license": "MIT",
+  "author": "kael",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:kaelzhang/node-ignore.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE-MIT"
+  ]
+}

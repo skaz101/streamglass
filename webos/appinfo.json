@@ -1,0 +1,14 @@
+{
+  "id": "com.streamglass.tv",
+  "version": "0.4.0",
+  "vendor": "StreamGlass contributors (unofficial fork)",
+  "type": "web",
+  "main": "index.html",
+  "title": "StreamGlass TV",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "resolution": "1920x1080",
+  "disableBackHistoryAPI": true,
+  "uiRevision": 2,
+  "requiredACG": []
+}

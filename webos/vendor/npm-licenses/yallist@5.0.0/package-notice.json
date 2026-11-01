@@ -1,0 +1,14 @@
+{
+  "name": "yallist",
+  "version": "5.0.0",
+  "license": "BlueOak-1.0.0",
+  "author": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me/)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/isaacs/yallist.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE.md"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "is-interactive",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com"
+  },
+  "repository": "sindresorhus/is-interactive",
+  "homepage": null,
+  "notices": [
+    "license"
+  ]
+}

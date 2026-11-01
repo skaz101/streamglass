@@ -1,0 +1,11 @@
+{
+  "name": "statuses",
+  "version": "2.0.2",
+  "license": "MIT",
+  "author": null,
+  "repository": "jshttp/statuses",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

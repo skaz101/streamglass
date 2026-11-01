@@ -1,0 +1,12 @@
+{
+  "name": "autocfg",
+  "version": "1.4.0",
+  "sha256": "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26",
+  "license": "Apache-2.0 OR MIT",
+  "license_file": null,
+  "repository": "https://github.com/cuviper/autocfg",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

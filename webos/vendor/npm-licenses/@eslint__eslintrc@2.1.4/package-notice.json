@@ -1,0 +1,11 @@
+{
+  "name": "@eslint/eslintrc",
+  "version": "2.1.4",
+  "license": "MIT",
+  "author": "Nicholas C. Zakas",
+  "repository": "eslint/eslintrc",
+  "homepage": "https://github.com/eslint/eslintrc#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

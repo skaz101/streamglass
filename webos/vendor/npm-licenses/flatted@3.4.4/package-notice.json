@@ -1,0 +1,14 @@
+{
+  "name": "flatted",
+  "version": "3.4.4",
+  "license": "ISC",
+  "author": "Andrea Giammarchi",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WebReflection/flatted.git"
+  },
+  "homepage": "https://github.com/WebReflection/flatted#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "pretty_assertions",
+  "version": "1.4.1",
+  "sha256": "3ae130e2f271fbc2ac3a40fb1d07180839cdbbe443c7a27e1e3c13c5cac0116d",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/rust-pretty-assertions/rust-pretty-assertions",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

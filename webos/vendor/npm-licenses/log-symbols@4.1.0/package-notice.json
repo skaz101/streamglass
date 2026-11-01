@@ -1,0 +1,15 @@
+{
+  "name": "log-symbols",
+  "version": "4.1.0",
+  "license": "MIT",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "https://sindresorhus.com"
+  },
+  "repository": "sindresorhus/log-symbols",
+  "homepage": null,
+  "notices": [
+    "license"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "magnet-url",
+  "version": "3.0.0",
+  "sha256": "b2ab81d03e8f70deb7e21ac2f47f6cc9fe9a20a4fe06acc20cb90e8d346537ae",
+  "license": "MIT",
+  "license_file": null,
+  "repository": "https://github.com/billyb2/magnet-url-rs",
+  "notices": [
+    "LICENSE.md"
+  ]
+}

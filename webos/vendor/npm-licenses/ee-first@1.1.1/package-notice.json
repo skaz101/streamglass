@@ -1,0 +1,16 @@
+{
+  "name": "ee-first",
+  "version": "1.1.1",
+  "license": "MIT",
+  "author": {
+    "name": "Jonathan Ong",
+    "email": "me@jongleberry.com",
+    "url": "http://jongleberry.com",
+    "twitter": "https://twitter.com/jongleberry"
+  },
+  "repository": "jonathanong/ee-first",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

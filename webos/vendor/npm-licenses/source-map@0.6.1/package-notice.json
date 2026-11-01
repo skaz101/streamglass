@@ -1,0 +1,14 @@
+{
+  "name": "source-map",
+  "version": "0.6.1",
+  "license": "BSD-3-Clause",
+  "author": "Nick Fitzgerald <nfitzgerald@mozilla.com>",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/mozilla/source-map.git"
+  },
+  "homepage": "https://github.com/mozilla/source-map",
+  "notices": [
+    "LICENSE"
+  ]
+}

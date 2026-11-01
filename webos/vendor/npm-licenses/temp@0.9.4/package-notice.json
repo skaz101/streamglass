@@ -1,0 +1,14 @@
+{
+  "name": "temp",
+  "version": "0.9.4",
+  "license": "MIT",
+  "author": "Bruce Williams <brwcodes@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/bruce/node-temp.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

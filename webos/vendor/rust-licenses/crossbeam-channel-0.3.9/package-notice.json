@@ -1,0 +1,13 @@
+{
+  "name": "crossbeam-channel",
+  "version": "0.3.9",
+  "sha256": "c8ec7fcd21571dc78f96cc96243cab8d8f035247c3efd16c687be154c3fa9efa",
+  "license": "MIT/Apache-2.0 AND BSD-2-Clause",
+  "license_file": null,
+  "repository": "https://github.com/crossbeam-rs/crossbeam",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT",
+    "LICENSE-THIRD-PARTY"
+  ]
+}

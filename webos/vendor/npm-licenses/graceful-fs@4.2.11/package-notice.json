@@ -1,0 +1,14 @@
+{
+  "name": "graceful-fs",
+  "version": "4.2.11",
+  "license": "ISC",
+  "author": null,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/isaacs/node-graceful-fs"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

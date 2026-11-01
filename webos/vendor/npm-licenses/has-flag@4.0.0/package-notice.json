@@ -1,0 +1,15 @@
+{
+  "name": "has-flag",
+  "version": "4.0.0",
+  "license": "MIT",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com"
+  },
+  "repository": "sindresorhus/has-flag",
+  "homepage": null,
+  "notices": [
+    "license"
+  ]
+}

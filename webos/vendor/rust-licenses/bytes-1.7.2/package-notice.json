@@ -1,0 +1,11 @@
+{
+  "name": "bytes",
+  "version": "1.7.2",
+  "sha256": "428d9aa8fbc0670b7b8d6030a7fadd0f86151cae55e4dbbece15f3780a3dfaf3",
+  "license": "MIT",
+  "license_file": null,
+  "repository": "https://github.com/tokio-rs/bytes",
+  "notices": [
+    "LICENSE"
+  ]
+}

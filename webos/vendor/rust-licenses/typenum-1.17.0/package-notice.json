@@ -1,0 +1,13 @@
+{
+  "name": "typenum",
+  "version": "1.17.0",
+  "sha256": "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/paholg/typenum",
+  "notices": [
+    "LICENSE",
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

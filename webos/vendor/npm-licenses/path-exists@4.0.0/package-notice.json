@@ -1,0 +1,15 @@
+{
+  "name": "path-exists",
+  "version": "4.0.0",
+  "license": "MIT",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "sindresorhus.com"
+  },
+  "repository": "sindresorhus/path-exists",
+  "homepage": null,
+  "notices": [
+    "license"
+  ]
+}

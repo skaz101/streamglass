@@ -1,0 +1,12 @@
+{
+  "name": "indexmap",
+  "version": "2.5.0",
+  "sha256": "68b900aa2f7301e21c36462b170ee99994de34dff39a4a6a528e80e7376d07e5",
+  "license": "Apache-2.0 OR MIT",
+  "license_file": null,
+  "repository": "https://github.com/indexmap-rs/indexmap",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

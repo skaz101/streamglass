@@ -1,0 +1,14 @@
+{
+  "name": "aproba",
+  "version": "2.1.0",
+  "license": "ISC",
+  "author": "Rebecca Turner <me@re-becca.org>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iarna/aproba"
+  },
+  "homepage": "https://github.com/iarna/aproba",
+  "notices": [
+    "LICENSE"
+  ]
+}

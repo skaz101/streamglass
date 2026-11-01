@@ -1,0 +1,14 @@
+{
+  "name": "asn1",
+  "version": "0.2.6",
+  "license": "MIT",
+  "author": "Joyent (joyent.com)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/joyent/node-asn1.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

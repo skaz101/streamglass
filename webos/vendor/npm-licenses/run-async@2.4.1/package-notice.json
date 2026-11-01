@@ -1,0 +1,11 @@
+{
+  "name": "run-async",
+  "version": "2.4.1",
+  "license": "MIT",
+  "author": "Simon Boudrias <admin@simonboudrias.com>",
+  "repository": "SBoudrias/run-async",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

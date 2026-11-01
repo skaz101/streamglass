@@ -1,0 +1,11 @@
+{
+  "name": "case",
+  "version": "1.0.0",
+  "sha256": "fd6c0e7b807d60291f42f33f58480c0bfafe28ed08286446f45e463728cf9c1c",
+  "license": "MIT",
+  "license_file": null,
+  "repository": "https://github.com/SkylerLipthay/case",
+  "notices": [
+    "LICENSE"
+  ]
+}

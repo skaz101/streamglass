@@ -1,0 +1,14 @@
+{
+  "name": "levn",
+  "version": "0.4.1",
+  "license": "MIT",
+  "author": "George Zahariev <z@georgezahariev.com>",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/gkz/levn.git"
+  },
+  "homepage": "https://github.com/gkz/levn",
+  "notices": [
+    "LICENSE"
+  ]
+}

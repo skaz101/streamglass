@@ -1,0 +1,15 @@
+{
+  "name": "strip-ansi",
+  "version": "7.2.0",
+  "license": "MIT",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "https://sindresorhus.com"
+  },
+  "repository": "chalk/strip-ansi",
+  "homepage": null,
+  "notices": [
+    "license"
+  ]
+}

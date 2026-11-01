@@ -1,0 +1,14 @@
+{
+  "name": "base64-js",
+  "version": "1.5.1",
+  "license": "MIT",
+  "author": "T. Jameson Little <t.jameson.little@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/beatgammit/base64-js.git"
+  },
+  "homepage": "https://github.com/beatgammit/base64-js",
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "package-json-from-dist",
+  "version": "1.0.1",
+  "license": "BlueOak-1.0.0",
+  "author": "Isaac Z. Schlueter <i@izs.me> (https://izs.me)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/isaacs/package-json-from-dist.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE.md"
+  ]
+}

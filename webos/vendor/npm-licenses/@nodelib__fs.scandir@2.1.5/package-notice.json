@@ -1,0 +1,11 @@
+{
+  "name": "@nodelib/fs.scandir",
+  "version": "2.1.5",
+  "license": "MIT",
+  "author": null,
+  "repository": "https://github.com/nodelib/nodelib/tree/master/packages/fs/fs.scandir",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

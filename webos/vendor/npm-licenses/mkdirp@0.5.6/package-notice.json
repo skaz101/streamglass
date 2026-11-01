@@ -1,0 +1,14 @@
+{
+  "name": "mkdirp",
+  "version": "0.5.6",
+  "license": "MIT",
+  "author": "James Halliday <mail@substack.net> (http://substack.net)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/substack/node-mkdirp.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "wcwidth",
+  "version": "1.0.1",
+  "license": "MIT",
+  "author": "Tim Oxley",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/timoxley/wcwidth.git"
+  },
+  "homepage": "https://github.com/timoxley/wcwidth#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

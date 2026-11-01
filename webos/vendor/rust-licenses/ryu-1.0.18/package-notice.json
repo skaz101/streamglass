@@ -1,0 +1,12 @@
+{
+  "name": "ryu",
+  "version": "1.0.18",
+  "sha256": "f3cb5ba0dc43242ce17de99c180e96db90b235b8a9fdc9543c96d2209116bd9f",
+  "license": "Apache-2.0 OR BSL-1.0",
+  "license_file": null,
+  "repository": "https://github.com/dtolnay/ryu",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-BOOST"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "uri-js",
+  "version": "4.4.1",
+  "license": "BSD-2-Clause",
+  "author": "Gary Court <gary.court@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/garycourt/uri-js"
+  },
+  "homepage": "https://github.com/garycourt/uri-js",
+  "notices": [
+    "LICENSE"
+  ]
+}

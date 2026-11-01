@@ -1,0 +1,18 @@
+{
+  "name": "fast-json-stable-stringify",
+  "version": "2.1.0",
+  "license": "MIT",
+  "author": {
+    "name": "James Halliday",
+    "email": "mail@substack.net",
+    "url": "http://substack.net"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/epoberezkin/fast-json-stable-stringify.git"
+  },
+  "homepage": "https://github.com/epoberezkin/fast-json-stable-stringify",
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "androidBuild": "passed",
+  "apkSignature": "verified APK Signature Scheme v2",
+  "javaUnitTests": 3,
+  "javaUnitFailures": 0,
+  "lintErrors": 0,
+  "lintWarnings": [
+    "UnusedAttribute",
+    "GradleDependency",
+    "DataExtractionRules",
+    "ObsoleteSdkInt",
+    "MonochromeLauncherIcon"
+  ],
+  "physicalAndroidTested": false,
+  "emulatorTested": false,
+  "physicalLGTested": false,
+  "sharedNodeTests": 40,
+  "tvBrowserIntegration": "passed",
+  "mobileBrowserIntegration": "passed; native bridge simulated",
+  "rowAnimation": {
+    "durationMs": 180,
+    "intermediateFrames": true,
+    "rapidReversal": true,
+    "routeCancellation": true,
+    "reducedMotion": true
+  },
+  "remoteSelectRegression": "passed",
+  "ipkManifestHashesVerified": true
+}

@@ -1,0 +1,14 @@
+{
+  "name": "iconv-lite",
+  "version": "0.6.3",
+  "license": "MIT",
+  "author": "Alexander Shtuchkin <ashtuchkin@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/ashtuchkin/iconv-lite.git"
+  },
+  "homepage": "https://github.com/ashtuchkin/iconv-lite",
+  "notices": [
+    "LICENSE"
+  ]
+}

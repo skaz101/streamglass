@@ -1,0 +1,11 @@
+{
+  "name": "human-signals",
+  "version": "2.1.0",
+  "license": "Apache-2.0",
+  "author": "ehmicky <ehmicky@gmail.com> (https://github.com/ehmicky)",
+  "repository": "ehmicky/human-signals",
+  "homepage": "https://git.io/JeluP",
+  "notices": [
+    "LICENSE"
+  ]
+}

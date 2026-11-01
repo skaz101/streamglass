@@ -1,0 +1,12 @@
+{
+  "name": "futures-macro",
+  "version": "0.3.32",
+  "sha256": "e835b70203e41293343137df5c0664546da5745f82ec9b84d40be8336958447b",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/rust-lang/futures-rs",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

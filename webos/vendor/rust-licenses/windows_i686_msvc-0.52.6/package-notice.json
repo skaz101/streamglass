@@ -1,0 +1,12 @@
+{
+  "name": "windows_i686_msvc",
+  "version": "0.52.6",
+  "sha256": "240948bc05c5e7c6dabba28bf89d89ffce3e303022809e73deaefe4f6ec56c66",
+  "license": "MIT OR Apache-2.0",
+  "license_file": null,
+  "repository": "https://github.com/microsoft/windows-rs",
+  "notices": [
+    "license-apache-2.0",
+    "license-mit"
+  ]
+}

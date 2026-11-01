@@ -1,0 +1,11 @@
+{
+  "name": "forwarded",
+  "version": "0.2.0",
+  "license": "MIT",
+  "author": null,
+  "repository": "jshttp/forwarded",
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "object",
+  "version": "0.36.4",
+  "sha256": "084f1a5821ac4c651660a94a7153d27ac9d8a53736203f58b31945ded098070a",
+  "license": "Apache-2.0 OR MIT",
+  "license_file": null,
+  "repository": "https://github.com/gimli-rs/object",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}

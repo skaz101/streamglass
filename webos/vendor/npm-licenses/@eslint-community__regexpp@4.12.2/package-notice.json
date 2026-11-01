@@ -1,0 +1,14 @@
+{
+  "name": "@eslint-community/regexpp",
+  "version": "4.12.2",
+  "license": "MIT",
+  "author": "Toru Nagashima",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eslint-community/regexpp"
+  },
+  "homepage": "https://github.com/eslint-community/regexpp#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "string.prototype.trimend",
+  "version": "1.0.10",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/es-shims/String.prototype.trimEnd.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

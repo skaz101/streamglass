@@ -1,0 +1,14 @@
+{
+  "name": "esutils",
+  "version": "2.0.3",
+  "license": "BSD-2-Clause",
+  "author": null,
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/estools/esutils.git"
+  },
+  "homepage": "https://github.com/estools/esutils",
+  "notices": [
+    "LICENSE.BSD"
+  ]
+}

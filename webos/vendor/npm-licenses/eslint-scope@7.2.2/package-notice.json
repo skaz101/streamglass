@@ -1,0 +1,11 @@
+{
+  "name": "eslint-scope",
+  "version": "7.2.2",
+  "license": "BSD-2-Clause",
+  "author": null,
+  "repository": "eslint/eslint-scope",
+  "homepage": "http://github.com/eslint/eslint-scope",
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "execa",
+  "version": "5.1.1",
+  "license": "MIT",
+  "author": {
+    "name": "Sindre Sorhus",
+    "email": "sindresorhus@gmail.com",
+    "url": "https://sindresorhus.com"
+  },
+  "repository": "sindresorhus/execa",
+  "homepage": null,
+  "notices": [
+    "license"
+  ]
+}

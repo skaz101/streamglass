@@ -1,0 +1,14 @@
+{
+  "name": "color-name",
+  "version": "1.1.4",
+  "license": "MIT",
+  "author": "DY <dfcreative@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:colorjs/color-name.git"
+  },
+  "homepage": "https://github.com/colorjs/color-name",
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "tokio-executor",
+  "version": "0.2.0-alpha.1",
+  "sha256": "1e0937fcedb52baa1424b7483977ec1e387a75413c12abc232c3c092ed35f68d",
+  "license": "MIT",
+  "license_file": null,
+  "repository": "https://github.com/tokio-rs/tokio",
+  "notices": [
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "fxhash",
+  "version": "0.2.1",
+  "sha256": "c31b6d751ae2c7f11320402d34e41349dd1016f8d5d45e48c4312bc8625af50c",
+  "license": "Apache-2.0/MIT",
+  "license_file": null,
+  "repository": "https://github.com/cbreeden/fxhash",
+  "notices": []
+}

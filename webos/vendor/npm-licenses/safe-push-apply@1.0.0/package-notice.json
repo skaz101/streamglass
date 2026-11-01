@@ -1,0 +1,14 @@
+{
+  "name": "safe-push-apply",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ljharb/safe-push-apply.git"
+  },
+  "homepage": "https://github.com/ljharb/safe-push-apply#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

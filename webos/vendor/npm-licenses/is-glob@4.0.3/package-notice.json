@@ -1,0 +1,11 @@
+{
+  "name": "is-glob",
+  "version": "4.0.3",
+  "license": "MIT",
+  "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
+  "repository": "micromatch/is-glob",
+  "homepage": "https://github.com/micromatch/is-glob",
+  "notices": [
+    "LICENSE"
+  ]
+}

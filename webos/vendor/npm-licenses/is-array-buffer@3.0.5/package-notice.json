@@ -1,0 +1,14 @@
+{
+  "name": "is-array-buffer",
+  "version": "3.0.5",
+  "license": "MIT",
+  "author": "Jordan Harband <ljharb@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inspect-js/is-array-buffer.git"
+  },
+  "homepage": "https://github.com/inspect-js/is-array-buffer#readme",
+  "notices": [
+    "LICENSE"
+  ]
+}

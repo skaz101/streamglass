@@ -1,0 +1,14 @@
+{
+  "name": "semver",
+  "version": "6.3.1",
+  "license": "ISC",
+  "author": "GitHub Inc.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/npm/node-semver.git"
+  },
+  "homepage": null,
+  "notices": [
+    "LICENSE"
+  ]
+}

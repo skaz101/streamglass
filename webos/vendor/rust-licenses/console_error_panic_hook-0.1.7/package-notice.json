@@ -1,0 +1,12 @@
+{
+  "name": "console_error_panic_hook",
+  "version": "0.1.7",
+  "sha256": "a06aeb73f470f66dcdbf7223caeebb85984942f22f1adb2a088cf9668146bbbc",
+  "license": "Apache-2.0/MIT",
+  "license_file": null,
+  "repository": "https://github.com/rustwasm/console_error_panic_hook",
+  "notices": [
+    "LICENSE-APACHE",
+    "LICENSE-MIT"
+  ]
+}
