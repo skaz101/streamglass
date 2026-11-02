@@ -192,14 +192,14 @@ public class MainActivity extends Activity {
             @Override public void lockOrientation(boolean locked){setRequestedOrientation(locked?ActivityInfo.SCREEN_ORIENTATION_LOCKED:playbackOrientation);}
         });
         root.addView(playerView,new FrameLayout.LayoutParams(-1,-1));
-        web.setVisibility(View.INVISIBLE);setRequestedOrientation(playbackOrientation);setImmersive(true);
+        web.setVisibility(View.INVISIBLE);setRequestedOrientation(playbackOrientation);setPlayerFullscreen(true);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         ending=false;
         player.addListener(new Player.Listener() {
-            @Override public void onIsPlayingChanged(boolean playing) { emit("progress",false); }
-            @Override public void onPlaybackStateChanged(int state) { if(state==Player.STATE_ENDED)closePlayer(true); }
+            @Override public void onIsPlayingChanged(boolean playing) { updateKeepScreenOn();emit("progress",false); }
+            @Override public void onPlaybackStateChanged(int state) { updateKeepScreenOn();if(state==Player.STATE_ENDED)closePlayer(true); }
             @Override public void onPlayerError(PlaybackException error) {
-                emit("progress",false); // Keep the title and position available for in-player retry.
+                updateKeepScreenOn();emit("progress",false); // Keep the title and position available for in-player retry.
             }
         });
         MediaItem item = new MediaItem.Builder().setUri(mediaUri).setSubtitleConfigurations(subtitles).build();
@@ -241,10 +241,14 @@ public class MainActivity extends Activity {
         handler.removeCallbacks(tick);emit("closed",ended);
         if(playerView!=null)playerView.dispose();player.release();player=null;
         if(playerView!=null)root.removeView(playerView);playerView=null;
-        setRequestedOrientation(previousOrientation);setImmersive(false);
+        setRequestedOrientation(previousOrientation);setPlayerFullscreen(false);
         web.setVisibility(View.VISIBLE);getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
-    private void setImmersive(boolean active){
+    private void updateKeepScreenOn(){
+        if(player!=null&&(player.isPlaying()||(player.getPlayWhenReady()&&player.getPlaybackState()==Player.STATE_BUFFERING)))getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+    private void setPlayerFullscreen(boolean active){
         if(Build.VERSION.SDK_INT>=28){WindowManager.LayoutParams params=getWindow().getAttributes();params.layoutInDisplayCutoutMode=active?WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES:WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT;getWindow().setAttributes(params);}
         if(Build.VERSION.SDK_INT>=30){
             WindowInsetsController controller=getWindow().getInsetsController();
@@ -255,7 +259,7 @@ public class MainActivity extends Activity {
         }
         if(active)root.setPadding(0,0,0,0);root.requestApplyInsets();
     }
-    @Override public void onWindowFocusChanged(boolean focused){super.onWindowFocusChanged(focused);if(focused&&player!=null)setImmersive(true);}
+    @Override public void onWindowFocusChanged(boolean focused){super.onWindowFocusChanged(focused);if(focused&&player!=null)setPlayerFullscreen(true);}
     private void showError(String message) { new AlertDialog.Builder(this).setTitle("Playback").setMessage(message).setPositiveButton("OK",null).show(); }
     @Override public void onBackPressed() {
         if(player!=null){if(playerView==null||!playerView.handleBack())closePlayer(false);return;}

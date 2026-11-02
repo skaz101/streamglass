@@ -197,11 +197,11 @@ public final class StreamPlayerView extends FrameLayout {
     }
     public void setControlsVisible(boolean show){
         if(disposed||locked)return;visible=show;chrome.setVisibility(show?VISIBLE:GONE);
-        SubtitleView subtitles=surface.getSubtitleView();if(subtitles!=null)subtitles.setBottomPaddingFraction(show?.22f:.08f);
+        SubtitleView subtitles=surface.getSubtitleView();if(subtitles!=null)subtitles.setBottomPaddingFraction(show?Math.min(.55f,dp(148)/(float)Math.max(1,getHeight())):.08f);
         if(show)scheduleHide();else handler.removeCallbacks(hide);
     }
     private void scheduleHide(){
-        handler.removeCallbacks(hide);AccessibilityManager accessibility=(AccessibilityManager)activity.getSystemService(Context.ACCESSIBILITY_SERVICE);
+        handler.removeCallbacks(hide);if(disposed)return;AccessibilityManager accessibility=(AccessibilityManager)activity.getSystemService(Context.ACCESSIBILITY_SERVICE);
         if(visible&&!locked&&!scrubbing&&dialog==null&&player.isPlaying()&&player.getPlayerError()==null&&(accessibility==null||!accessibility.isTouchExplorationEnabled()))handler.postDelayed(hide,4000);
     }
     private void setLocked(boolean value){
@@ -209,7 +209,15 @@ public final class StreamPlayerView extends FrameLayout {
         if(value){visible=false;chrome.setVisibility(GONE);showUnlock();SubtitleView subtitles=surface.getSubtitleView();if(subtitles!=null)subtitles.setBottomPaddingFraction(.08f);}
         else{handler.removeCallbacks(hideUnlock);unlock.setVisibility(GONE);setControlsVisible(true);}
     }
-    private void showUnlock(){unlock.setVisibility(VISIBLE);handler.removeCallbacks(hideUnlock);handler.postDelayed(hideUnlock,4000);}
+    private void showUnlock(){
+        unlock.setVisibility(VISIBLE);handler.removeCallbacks(hideUnlock);
+        AccessibilityManager accessibility=(AccessibilityManager)activity.getSystemService(Context.ACCESSIBILITY_SERVICE);
+        if(accessibility==null||!accessibility.isTouchExplorationEnabled())handler.postDelayed(hideUnlock,4000);
+    }
+    @Override protected void onSizeChanged(int w,int h,int oldw,int oldh){
+        super.onSizeChanged(w,h,oldw,oldh);if(surface!=null){SubtitleView subtitles=surface.getSubtitleView();if(subtitles!=null)subtitles.setBottomPaddingFraction(visible?Math.min(.55f,dp(148)/(float)Math.max(1,h)):.08f);}
+        if(dialog!=null&&dialog.getWindow()!=null)dialog.getWindow().setLayout(Math.min(w,dp(680)),Math.min(dp(430),Math.max(dp(220),h-dp(24))));
+    }
     public boolean handleBack(){if(dialog!=null){dialog.dismiss();return true;}if(locked){setLocked(false);return true;}return false;}
     public void setSafeInsets(int left,int top,int right,int bottomInset){chrome.setPadding(left,top,right,bottomInset);LayoutParams params=(LayoutParams)unlock.getLayoutParams();params.bottomMargin=dp(24)+bottomInset;unlock.setLayoutParams(params);}
     private LinearLayout sheet(String title){
@@ -243,9 +251,9 @@ public final class StreamPlayerView extends FrameLayout {
             for(Tracks.Group group:player.getCurrentTracks().getGroups()){
                 if(group.getType()!=type)continue;
                 for(int i=0;i<group.length;i++)if(group.isTrackSupported(i)){
-                    Format format=group.getTrackFormat(i);String language=format.language==null?"Unknown language":Locale.forLanguageTag(format.language).getDisplayLanguage();
-                    String label=format.label!=null&&!format.label.isEmpty()?format.label:language;
-                    if(type==C.TRACK_TYPE_AUDIO&&format.channelCount>0)label+=" · "+(format.channelCount==2?"Stereo":format.channelCount==6?"5.1":format.channelCount+" channels");
+                    Format format=group.getTrackFormat(i);String language=format.language==null||"und".equals(format.language)?"Unknown language":Locale.forLanguageTag(format.language.replace('_','-')).getDisplayName();
+                    String label=format.label!=null&&!format.label.isEmpty()&&!format.label.equals(format.language)?format.label:language;
+                    if(type==C.TRACK_TYPE_AUDIO&&format.channelCount>0)label+=" · "+(format.channelCount==1?"Mono":format.channelCount==2?"Stereo":format.channelCount==6?"5.1":format.channelCount==8?"7.1":format.channelCount+" channels");
                     TrackSelectionOverride override=new TrackSelectionOverride(group.getMediaTrackGroup(),i);
                     trackOption(choices,label,!disabled&&group.isTrackSelected(i)&&(type==C.TRACK_TYPE_TEXT||overridden),()->selectTrack(type,override));count++;
                 }

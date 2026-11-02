@@ -6,8 +6,6 @@ import android.graphics.Bitmap;
 import android.os.SystemClock;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
 import androidx.lifecycle.Lifecycle;
 import androidx.media3.common.C;
 import androidx.media3.common.MediaItem;
@@ -17,7 +15,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BooleanSupplier;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -34,11 +31,6 @@ public class NativePlayerTest {
     }
     private View tagged(String tag){return activity.controls.findViewWithTag(tag);}
     private void click(String tag){main(()->{View v=tagged(tag);assertNotNull(tag,v);assertTrue(tag,v.isShown());assertTrue(tag,v.performClick());});}
-    private View described(View root,String value){
-        if(root.getContentDescription()!=null&&root.getContentDescription().toString().startsWith(value))return root;
-        if(root instanceof ViewGroup)for(int i=0;i<((ViewGroup)root).getChildCount();i++){View result=described(((ViewGroup)root).getChildAt(i),value);if(result!=null)return result;}
-        return null;
-    }
     private void touch(float x,float y,int action,long down){
         MotionEvent event=MotionEvent.obtain(down,SystemClock.uptimeMillis(),action,x,y,0);
         InstrumentationRegistry.getInstrumentation().getUiAutomation().injectInputEvent(event,true);event.recycle();
@@ -68,15 +60,21 @@ public class NativePlayerTest {
             down=SystemClock.uptimeMillis();x=location[0]+size[0]*.5f;y=location[1]+size[1]*.5f;touch(x,y,MotionEvent.ACTION_DOWN,down);touch(x,y,MotionEvent.ACTION_UP,down);
             waitFor("Timeline scrubs and preserves paused state",()->activity.player.getCurrentPosition()>50000&&activity.player.getCurrentPosition()<70000&&!activity.player.getPlayWhenReady());
             click("player-speed");screenshot("native-speed");
-            main(()->{View root=activity.getWindow().getDecorView();assertNotNull(root);});
             // Dialog controls use real window roots, found through UI automation below.
             android.app.UiAutomation automation=InstrumentationRegistry.getInstrumentation().getUiAutomation();
             android.view.accessibility.AccessibilityNodeInfo node=findNode(automation.getRootInActiveWindow(),"1.5×");assertNotNull("Speed option",node);assertTrue(node.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK));
             waitFor("Speed applied",()->Math.abs(activity.player.getPlaybackParameters().speed-1.5f)<.001f);
             click("player-tracks");screenshot("native-tracks");
+            node=findNode(automation.getRootInActiveWindow(),"French · Stereo");assertNotNull("Second audio track offered",node);assertTrue(node.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK));
+            waitFor("Audio selection applied",()->activity.player.getTrackSelectionParameters().overrides.values().stream().anyMatch(o->o.getType()==C.TRACK_TYPE_AUDIO));
             node=findNode(automation.getRootInActiveWindow(),"English");assertNotNull("External English captions offered",node);assertTrue(node.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK));
             waitFor("Subtitles enabled",()->!activity.player.getTrackSelectionParameters().disabledTrackTypes.contains(C.TRACK_TYPE_TEXT));
+            waitFor("Caption cues render",()->!activity.player.getCurrentCues().cues.isEmpty());
+            node=findNode(automation.getRootInActiveWindow(),"Off");assertNotNull(node);assertTrue(node.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK));
+            waitFor("Subtitles can be turned off",()->activity.player.getTrackSelectionParameters().disabledTrackTypes.contains(C.TRACK_TYPE_TEXT));
+            node=findNode(automation.getRootInActiveWindow(),"English");assertNotNull(node);assertTrue(node.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK));
             main(()->assertTrue(activity.controls.handleBack()));
+            screenshot("native-captions");
             click("player-fit");main(()->assertEquals("Fit whole video",tagged("player-fit").getContentDescription()));click("player-fit");
             click("player-lock");main(()->assertEquals(View.GONE,tagged("player-controls").getVisibility()));screenshot("native-locked");main(()->assertTrue(activity.controls.handleBack()));main(()->assertEquals(View.VISIBLE,tagged("player-controls").getVisibility()));
             click("player-rotate");waitFor("Portrait rotation retains playback",()->activity.getResources().getConfiguration().orientation==Configuration.ORIENTATION_PORTRAIT&&activity.player.getCurrentPosition()>50000);screenshot("native-portrait");
@@ -91,7 +89,7 @@ public class NativePlayerTest {
         }
     }
     private android.view.accessibility.AccessibilityNodeInfo findNode(android.view.accessibility.AccessibilityNodeInfo root,String prefix){
-        if(root==null)return null;CharSequence label=root.getContentDescription();if(label!=null&&label.toString().startsWith(prefix))return root;
+        if(root==null)return null;CharSequence label=root.getContentDescription();if(label!=null&&(label.toString().equals(prefix)||label.toString().equals(prefix+", selected")))return root;
         for(int i=0;i<root.getChildCount();i++){android.view.accessibility.AccessibilityNodeInfo result=findNode(root.getChild(i),prefix);if(result!=null)return result;}return null;
     }
 }

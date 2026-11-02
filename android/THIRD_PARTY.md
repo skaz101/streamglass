@@ -21,8 +21,10 @@ Android-specific libraries:
 The exact resolved runtime inventory is in vendor/dependencies.json. Corresponding
 source JARs and POM/license metadata are in vendor/runtime-sources. Extracted
 license/notice files are in vendor/licenses and bundled in the APK. A dependency's
-own notices control if they differ from this summary. Build-time JUnit is test
-code and is not shipped inside the APK.
+own notices control if they differ from this summary. Build-time JUnit and AndroidX Test (runner 1.6.2, rules 1.6.1 and JUnit
+extension 1.2.1, Apache-2.0) are test tooling and are not shipped inside the
+release APK. Native-test media is generated original artwork and audio. The
+fixture host and media are confined to the debug source set.
 
 Gradle wrapper scripts/JAR retain the Gradle contributors' Apache-2.0 license.
 Android SDK and JDK are build tools and are not distributed in the source ZIP.
