@@ -57,6 +57,18 @@ jobs:
             android/test-results/
           if-no-files-found: ignore
 
+      - name: Appearance visual review
+        if: always()
+        run: |
+          for name in phone-theme-purple phone-search phone-profile; do
+            file="android/test-results/$name.png"
+            [ -f "$file" ] || continue
+            ffmpeg -v error -y -i "$file" -frames:v 1 -quality 78 /tmp/appearance.webp
+            printf 'APPEARANCE_PREVIEW:%s:' "$name"
+            base64 -w0 /tmp/appearance.webp
+            printf '\n'
+          done
+
   android:
     permissions:
       contents: write # Temporary build transfer for local signing.

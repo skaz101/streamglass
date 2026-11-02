@@ -203,7 +203,7 @@ try {
   assert.equal(await page.evaluate(()=>document.documentElement.dataset.theme),'purple');
   await screenshot('phone-theme-purple.png');
   await page.locator('[data-theme-choice="oled"]').tap();
-  assert.equal(await page.locator('.sg-app').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(0, 0, 0)');
+  await page.waitForFunction(()=>getComputedStyle(document.querySelector('.sg-app')).backgroundColor==='rgb(0, 0, 0)');
   await page.reload();await ready();await page.locator('#sg-prefs-form').waitFor();
   assert.equal(await page.evaluate(()=>document.documentElement.dataset.theme),'oled','Theme survives restart');
   await page.locator('[data-theme-choice="classic"]').tap();
