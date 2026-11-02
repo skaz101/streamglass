@@ -11,6 +11,6 @@ for line in (root/'native-log.txt').read_text().splitlines():
 for name,parts in chunks.items():
     assert set(parts)==set(range(len(parts))),name+' has missing chunks'
     data=base64.b64decode(''.join(parts[i] for i in range(len(parts))),validate=True)
-    assert data.startswith(b'\x89PNG\r\n\x1a\n'),name
-    (root/(name+'.png')).write_bytes(data)
+    assert data.startswith(b'RIFF') and data[8:12]==b'WEBP',name
+    (root/(name+'.webp')).write_bytes(data)
 print('Collected native previews: '+', '.join(sorted(chunks)))

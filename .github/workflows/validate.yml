@@ -119,10 +119,10 @@ jobs:
       - name: Native player visual review
         if: always()
         run: |
-          for file in android/test-results/native/*.png; do
+          for file in android/test-results/native/*.webp; do
             [ -f "$file" ] || continue
             ffmpeg -v error -y -i "$file" -vf 'scale=1280:1280:force_original_aspect_ratio=decrease' -frames:v 1 -quality 78 /tmp/native-preview.webp
-            printf 'NATIVE_PREVIEW:%s:' "$(basename "$file" .png)"
+            printf 'NATIVE_PREVIEW:%s:' "$(basename "$file" .webp)"
             base64 -w0 /tmp/native-preview.webp
             printf '\n'
           done

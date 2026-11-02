@@ -17,6 +17,8 @@ addon, library and watch-progress integration.
 - One Audio & Subtitles panel, with supported tracks, readable language labels,
   audio channel information and a subtitle Off option. Caption size follows
   your settings, and captions move above the controls while they are visible.
+- External subtitles can be enabled after seeking without losing the active cue.
+  The pinned Media3 runtime uses its compatible renderer-decoding path.
 - Screen lock prevents accidental taps and holds orientation. Tap the locked
   screen to reveal Unlock; Android Back unlocks before exiting.
 - Fit/fill toggle and brightness adjustment that affects only the player.

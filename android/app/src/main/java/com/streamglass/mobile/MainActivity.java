@@ -33,8 +33,6 @@ import androidx.media3.datasource.DefaultDataSource;
 import androidx.media3.datasource.DefaultHttpDataSource;
 import androidx.media3.datasource.ResolvingDataSource;
 import androidx.media3.exoplayer.ExoPlayer;
-import androidx.media3.exoplayer.DefaultRenderersFactory;
-import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
 import androidx.webkit.WebViewAssetLoader;
 import androidx.webkit.WebViewClientCompat;
 import androidx.webkit.WebViewCompat;
@@ -162,7 +160,7 @@ public class MainActivity extends Activity {
                 .setUserAgent("StreamGlass/0.6.0").setConnectTimeoutMs(15000).setReadTimeoutMs(20000);
         ResolvingDataSource.Factory scoped = new ResolvingDataSource.Factory(http, spec ->
                 mediaUri.getAuthority().equals(spec.uri.getAuthority()) ? spec.withAdditionalHeaders(headers) : spec);
-        player = new ExoPlayer.Builder(this,new DefaultRenderersFactory(this).setEnableDecoderFallback(true)).setMediaSourceFactory(new DefaultMediaSourceFactory(new DefaultDataSource.Factory(this, scoped)))
+        player = new ExoPlayer.Builder(this,PlayerFactories.renderers(this)).setMediaSourceFactory(PlayerFactories.sources(new DefaultDataSource.Factory(this, scoped)))
                 .setSeekBackIncrementMs(10000).setSeekForwardIncrementMs(10000).build();
         player.setAudioAttributes(new AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MOVIE).build(),true);
         player.setHandleAudioBecomingNoisy(true);

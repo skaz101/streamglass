@@ -42,11 +42,11 @@ public class NativePlayerTest {
     private void screenshot(String name) throws Exception {
         Thread.sleep(900);Bitmap bitmap=InstrumentationRegistry.getInstrumentation().getUiAutomation().takeScreenshot();assertNotNull(bitmap);
         File folder=new File(activity.getExternalFilesDir(null),"native-player-tests");assertTrue(folder.isDirectory()||folder.mkdirs());
-        try(FileOutputStream stream=new FileOutputStream(new File(folder,name+".png"))){assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG,100,stream));}
-        // Log chunks survive Gradle uninstalling the test app, unlike its external data.
-        ByteArrayOutputStream bytes=new ByteArrayOutputStream();assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG,100,bytes));bitmap.recycle();
+        ByteArrayOutputStream bytes=new ByteArrayOutputStream();assertTrue(bitmap.compress(Bitmap.CompressFormat.WEBP,90,bytes));bitmap.recycle();
+        try(FileOutputStream stream=new FileOutputStream(new File(folder,name+".webp"))){stream.write(bytes.toByteArray());}
+        // Small paced chunks survive Gradle uninstalling the test app and log rate limits.
         String encoded=Base64.encodeToString(bytes.toByteArray(),Base64.NO_WRAP);
-        for(int i=0;i<encoded.length();i+=3000)Log.i("StreamGlassPreview","NATIVE_IMAGE:"+name+":"+(i/3000)+":"+encoded.substring(i,Math.min(i+3000,encoded.length())));
+        for(int i=0;i<encoded.length();i+=3000){Log.i("StreamGlassPreview","NATIVE_IMAGE:"+name+":"+(i/3000)+":"+encoded.substring(i,Math.min(i+3000,encoded.length())));Thread.sleep(10);}
         dumpNode(InstrumentationRegistry.getInstrumentation().getUiAutomation().getRootInActiveWindow(),0);
     }
     private void dumpNode(android.view.accessibility.AccessibilityNodeInfo node,int depth){
@@ -89,8 +89,9 @@ public class NativePlayerTest {
             waitFor("Caption cues render during playback",()->activity.player.isPlaying()&&!activity.player.getCurrentCues().cues.isEmpty());
             main(()->activity.player.pause());
             node=findNode(automation.getRootInActiveWindow(),"Off");assertNotNull(node);assertTrue(node.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK));
-            waitFor("Subtitles can be turned off",()->activity.player.getTrackSelectionParameters().disabledTrackTypes.contains(C.TRACK_TYPE_TEXT));
+            waitFor("Subtitles can be turned off",()->activity.player.getTrackSelectionParameters().disabledTrackTypes.contains(C.TRACK_TYPE_TEXT)&&activity.player.getCurrentCues().cues.isEmpty());
             node=findNode(automation.getRootInActiveWindow(),"English");assertNotNull(node);assertTrue(node.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK));
+            main(()->activity.player.play());waitFor("Captions render again after re-enabling",()->!activity.player.getCurrentCues().cues.isEmpty());main(()->activity.player.pause());
             main(()->assertTrue(activity.controls.handleBack()));
             screenshot("native-captions");
             click("player-fit");main(()->assertEquals("Fit whole video",tagged("player-fit").getContentDescription()));click("player-fit");
