@@ -6,40 +6,35 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.view.Gravity;
 import android.view.View;
 import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.view.WindowManager;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
-import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import androidx.media3.common.AudioAttributes;
 import androidx.media3.common.C;
-import androidx.media3.common.Format;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
-import androidx.media3.common.TrackSelectionOverride;
-import androidx.media3.common.TrackSelectionParameters;
-import androidx.media3.common.Tracks;
 import androidx.media3.datasource.DefaultDataSource;
 import androidx.media3.datasource.DefaultHttpDataSource;
 import androidx.media3.datasource.ResolvingDataSource;
 import androidx.media3.exoplayer.ExoPlayer;
+import androidx.media3.exoplayer.DefaultRenderersFactory;
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
-import androidx.media3.ui.PlayerView;
 import androidx.webkit.WebViewAssetLoader;
 import androidx.webkit.WebViewClientCompat;
 import androidx.webkit.WebViewCompat;
@@ -52,7 +47,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 @androidx.annotation.OptIn(markerClass = androidx.media3.common.util.UnstableApi.class)
@@ -60,10 +54,12 @@ public class MainActivity extends Activity {
     private static final String ORIGIN = "https://appassets.androidplatform.net";
     private static final String START = ORIGIN + "/assets/app/index.html";
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private FrameLayout root, playerLayer;
+    private FrameLayout root;
     private WebView web;
     private ExoPlayer player;
-    private PlayerView playerView;
+    private StreamPlayerView playerView;
+    private int previousOrientation=ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
+    private int playbackOrientation=ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE;
     private int session;
     private boolean ending;
     private final Runnable tick = new Runnable() {
@@ -83,8 +79,14 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= 30) {
             getWindow().setDecorFitsSystemWindows(false);
             root.setOnApplyWindowInsetsListener((view, insets) -> {
-                android.graphics.Insets bars = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout() | WindowInsets.Type.ime());
-                view.setPadding(bars.left, bars.top, bars.right, bars.bottom);
+                if(playerView!=null){
+                    view.setPadding(0,0,0,0);
+                    android.graphics.Insets safe=insets.getInsets(WindowInsets.Type.displayCutout());
+                    playerView.setSafeInsets(safe.left,safe.top,safe.right,safe.bottom);
+                }else{
+                    android.graphics.Insets bars=insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout() | WindowInsets.Type.ime());
+                    view.setPadding(bars.left,bars.top,bars.right,bars.bottom);
+                }
                 return insets;
             });
         } else root.setFitsSystemWindows(true);
@@ -145,12 +147,6 @@ public class MainActivity extends Activity {
         web.loadUrl(START);
     }
 
-    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
-    private Button button(String label, Runnable action) {
-        Button button = new Button(this); button.setText(label); button.setTextColor(Color.WHITE);
-        button.setTextSize(12); button.setMinWidth(0); button.setMinimumWidth(0);
-        button.setOnClickListener(view -> action.run()); return button;
-    }
     private void openPlayer(JSONObject payload) throws Exception {
         String url = payload.getString("url");
         if (!StreamRules.direct(url)) throw new IllegalArgumentException("Direct stream required");
@@ -163,10 +159,10 @@ public class MainActivity extends Activity {
                     && !name.matches("(?i)host|connection|content-length|transfer-encoding|cookie|authorization")) headers.put(name,value);
         }
         DefaultHttpDataSource.Factory http = new DefaultHttpDataSource.Factory()
-                .setUserAgent("StreamGlass/0.5.0").setConnectTimeoutMs(15000).setReadTimeoutMs(20000);
+                .setUserAgent("StreamGlass/0.6.0").setConnectTimeoutMs(15000).setReadTimeoutMs(20000);
         ResolvingDataSource.Factory scoped = new ResolvingDataSource.Factory(http, spec ->
                 mediaUri.getAuthority().equals(spec.uri.getAuthority()) ? spec.withAdditionalHeaders(headers) : spec);
-        player = new ExoPlayer.Builder(this).setMediaSourceFactory(new DefaultMediaSourceFactory(new DefaultDataSource.Factory(this, scoped)))
+        player = new ExoPlayer.Builder(this,new DefaultRenderersFactory(this).setEnableDecoderFallback(true)).setMediaSourceFactory(new DefaultMediaSourceFactory(new DefaultDataSource.Factory(this, scoped)))
                 .setSeekBackIncrementMs(10000).setSeekForwardIncrementMs(10000).build();
         player.setAudioAttributes(new AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MOVIE).build(),true);
         player.setHandleAudioBecomingNoisy(true);
@@ -184,28 +180,26 @@ public class MainActivity extends Activity {
                     .setMimeType(StreamRules.subtitleMime(link)).setLanguage(choice.optString("lang"))
                     .setLabel(choice.optString("label",choice.optString("lang","Subtitle"))).setId("external-"+i).build());
         }
-        playerLayer = new FrameLayout(this); playerLayer.setBackgroundColor(Color.BLACK);
-        playerView = new PlayerView(this); playerView.setPlayer(player);
-        playerView.setShowSubtitleButton(true); playerView.setShowBuffering(PlayerView.SHOW_BUFFERING_WHEN_PLAYING);
-        playerLayer.addView(playerView, new FrameLayout.LayoutParams(-1,-1));
-        LinearLayout bar = new LinearLayout(this);bar.setGravity(Gravity.CENTER_VERTICAL);bar.setPadding(dp(4),0,dp(4),0);bar.setBackgroundColor(0x99000000);
-        bar.addView(button("Back",()->closePlayer(false)),new LinearLayout.LayoutParams(-2,dp(48)));
-        TextView title = new TextView(this);title.setText(payload.optString("title","StreamGlass"));title.setTextColor(Color.WHITE);title.setTextSize(14);title.setMaxLines(2);
-        bar.addView(title,new LinearLayout.LayoutParams(0,-2,1));
-        bar.addView(button("Audio",()->chooseTrack(C.TRACK_TYPE_AUDIO)),new LinearLayout.LayoutParams(-2,dp(48)));
-        bar.addView(button("Subs",()->chooseTrack(C.TRACK_TYPE_TEXT)),new LinearLayout.LayoutParams(-2,dp(48)));
-        playerLayer.addView(bar,new FrameLayout.LayoutParams(-1,dp(56),Gravity.TOP));
-        playerView.setControllerVisibilityListener((PlayerView.ControllerVisibilityListener)visibility -> bar.setVisibility(visibility));
-        root.addView(playerLayer,new FrameLayout.LayoutParams(-1,-1));
-        web.setVisibility(View.INVISIBLE);
+        previousOrientation=getRequestedOrientation();
+        playbackOrientation=ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE;
+        JSONObject subtitleStyle=payload.optJSONObject("subtitleStyle");
+        playerView=new StreamPlayerView(this,player,payload.optString("title","StreamGlass"),payload.optString("subtitle"),subtitleStyle==null?100:subtitleStyle.optInt("size",100),new StreamPlayerView.Callbacks(){
+            @Override public void close(){closePlayer(false);}
+            @Override public void rotate(){
+                playbackOrientation=getResources().getConfiguration().orientation==Configuration.ORIENTATION_LANDSCAPE?ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT:ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE;
+                setRequestedOrientation(playbackOrientation);
+            }
+            @Override public void lockOrientation(boolean locked){setRequestedOrientation(locked?ActivityInfo.SCREEN_ORIENTATION_LOCKED:playbackOrientation);}
+        });
+        root.addView(playerView,new FrameLayout.LayoutParams(-1,-1));
+        web.setVisibility(View.INVISIBLE);setRequestedOrientation(playbackOrientation);setImmersive(true);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         ending=false;
         player.addListener(new Player.Listener() {
             @Override public void onIsPlayingChanged(boolean playing) { emit("progress",false); }
             @Override public void onPlaybackStateChanged(int state) { if(state==Player.STATE_ENDED)closePlayer(true); }
             @Override public void onPlayerError(PlaybackException error) {
-                closePlayer(false);
-                showError("This stream could not play (code "+error.errorCode+"). Try another link or format.");
+                emit("progress",false); // Keep the title and position available for in-player retry.
             }
         });
         MediaItem item = new MediaItem.Builder().setUri(mediaUri).setSubtitleConfigurations(subtitles).build();
@@ -213,32 +207,6 @@ public class MainActivity extends Activity {
         player.prepare();player.play();handler.post(tick);
     }
 
-    private void chooseTrack(int type) {
-        if (player == null) return;
-        List<String> names = new ArrayList<>();List<TrackSelectionOverride> options = new ArrayList<>();
-        names.add(type==C.TRACK_TYPE_TEXT?"Off":"Automatic");options.add(null);
-        int checked=0;
-        for (Tracks.Group group : player.getCurrentTracks().getGroups()) {
-            if(group.getType()!=type)continue;
-            for(int i=0;i<group.length;i++)if(group.isTrackSupported(i)){
-                Format format=group.getTrackFormat(i);
-                String language=format.language==null?"Unknown language":Locale.forLanguageTag(format.language).getDisplayLanguage();
-                String label=format.label!=null?format.label:language;
-                if(type==C.TRACK_TYPE_AUDIO&&format.channelCount>0)label+=" · "+format.channelCount+" channels";
-                names.add(label);options.add(new TrackSelectionOverride(group.getMediaTrackGroup(),i));
-                if(group.isTrackSelected(i))checked=names.size()-1;
-            }
-        }
-        new AlertDialog.Builder(this).setTitle(type==C.TRACK_TYPE_TEXT?"Subtitles":"Audio")
-                .setSingleChoiceItems(names.toArray(new String[0]),checked,(dialog,which)->{
-                    if(player!=null){
-                        TrackSelectionParameters.Builder parameters=player.getTrackSelectionParameters().buildUpon().clearOverridesOfType(type)
-                                .setTrackTypeDisabled(type,type==C.TRACK_TYPE_TEXT&&which==0);
-                        if(options.get(which)!=null)parameters.addOverride(options.get(which));
-                        player.setTrackSelectionParameters(parameters.build());
-                    }dialog.dismiss();
-                }).setNegativeButton("Cancel",null).show();
-    }
     private void updateSubtitles(JSONArray choices) {
         if(player==null||choices==null)return;
         MediaItem current=player.getCurrentMediaItem();if(current==null||current.localConfiguration==null)return;
@@ -271,13 +239,26 @@ public class MainActivity extends Activity {
     private void closePlayer(boolean ended) {
         if(player==null||ending)return;ending=true;
         handler.removeCallbacks(tick);emit("closed",ended);
-        playerView.setPlayer(null);player.release();player=null;
-        root.removeView(playerLayer);playerLayer=null;playerView=null;
+        if(playerView!=null)playerView.dispose();player.release();player=null;
+        if(playerView!=null)root.removeView(playerView);playerView=null;
+        setRequestedOrientation(previousOrientation);setImmersive(false);
         web.setVisibility(View.VISIBLE);getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
+    private void setImmersive(boolean active){
+        if(Build.VERSION.SDK_INT>=28){WindowManager.LayoutParams params=getWindow().getAttributes();params.layoutInDisplayCutoutMode=active?WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES:WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_DEFAULT;getWindow().setAttributes(params);}
+        if(Build.VERSION.SDK_INT>=30){
+            WindowInsetsController controller=getWindow().getInsetsController();
+            if(controller!=null){controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);if(active)controller.hide(WindowInsets.Type.systemBars());else controller.show(WindowInsets.Type.systemBars());}
+        }else{
+            root.setFitsSystemWindows(!active);
+            getWindow().getDecorView().setSystemUiVisibility(active?View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY|View.SYSTEM_UI_FLAG_FULLSCREEN|View.SYSTEM_UI_FLAG_HIDE_NAVIGATION|View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN|View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION|View.SYSTEM_UI_FLAG_LAYOUT_STABLE:View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+        }
+        if(active)root.setPadding(0,0,0,0);root.requestApplyInsets();
+    }
+    @Override public void onWindowFocusChanged(boolean focused){super.onWindowFocusChanged(focused);if(focused&&player!=null)setImmersive(true);}
     private void showError(String message) { new AlertDialog.Builder(this).setTitle("Playback").setMessage(message).setPositiveButton("OK",null).show(); }
     @Override public void onBackPressed() {
-        if(player!=null){closePlayer(false);return;}
+        if(player!=null){if(playerView==null||!playerView.handleBack())closePlayer(false);return;}
         web.evaluateJavascript("window.StreamGlassAndroid?window.StreamGlassAndroid.back():false",value->{if(!"true".equals(value))finish();});
     }
     @Override protected void onStop() {
@@ -286,7 +267,7 @@ public class MainActivity extends Activity {
     }
     @Override protected void onDestroy() {
         handler.removeCallbacks(tick);
-        if(player!=null){playerView.setPlayer(null);player.release();player=null;}
+        if(player!=null){if(playerView!=null)playerView.dispose();player.release();player=null;}
         if(web!=null){root.removeView(web);web.destroy();web=null;}
         super.onDestroy();
     }

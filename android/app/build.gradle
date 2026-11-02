@@ -7,8 +7,9 @@ android {
         applicationId 'com.streamglass.mobile'
         minSdk 26
         targetSdk 35
-        versionCode 500
-        versionName '0.5.0'
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        versionCode 600
+        versionName '0.6.0'
     }
     // The original preview key stays local. Other builders get Android's own
     // per-user debug key; it cannot update an APK signed with the original key.
@@ -25,6 +26,7 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
     sourceSets.main.assets.srcDir layout.buildDirectory.dir('generated/assets')
+    sourceSets.debug.assets.srcDir layout.buildDirectory.dir('generated/player-test-assets')
     lint { abortOnError true }
 }
 tasks.register('syncStreamGlass', Exec) {
@@ -47,4 +49,7 @@ dependencies {
     implementation 'androidx.media3:media3-exoplayer-dash:1.5.1'
     implementation 'androidx.media3:media3-ui:1.5.1'
     testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test:rules:1.6.1'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
 }

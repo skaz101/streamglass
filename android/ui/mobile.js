@@ -74,7 +74,7 @@
     const signedIn=window.StreamGlassShell.state.signedIn;
     const overlay=doc.createElement('div');overlay.className='sg-mobile-overlay';
     const links=[['account',signedIn?'Your account':'Sign in to Stremio','user'],['discover','Browse all titles','grid'],['addons','Manage addons','addon'],['settings','App settings','settings']];
-    overlay.innerHTML='<section class="sg-mobile-sheet sg-menu-sheet" role="dialog" aria-modal="true" aria-labelledby="sg-menu-title" tabindex="-1">'+closeButton+'<div class="sg-menu-profile">'+icon('user')+'</div><h2 id="sg-menu-title">Your StreamGlass</h2><p>Your stories. Your way.</p><nav aria-label="Account and app">'+links.map(([route,label,glyph])=>'<a href="#/'+route+'">'+icon(glyph)+'<span>'+label+'</span><span aria-hidden="true">›</span></a>').join('')+'</nav><small>StreamGlass 0.5.0</small></section>';
+    overlay.innerHTML='<section class="sg-mobile-sheet sg-menu-sheet" role="dialog" aria-modal="true" aria-labelledby="sg-menu-title" tabindex="-1">'+closeButton+'<div class="sg-menu-profile">'+icon('user')+'</div><h2 id="sg-menu-title">Your StreamGlass</h2><p>Your stories. Your way.</p><nav aria-label="Account and app">'+links.map(([route,label,glyph])=>'<a href="#/'+route+'">'+icon(glyph)+'<span>'+label+'</span><span aria-hidden="true">›</span></a>').join('')+'</nav><small>StreamGlass 0.6.0</small></section>';
     doc.querySelector('.sg-app').append(overlay);open(overlay,{remove:true});
   }
   function mount(root) {
