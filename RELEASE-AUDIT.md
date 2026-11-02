@@ -1,5 +1,40 @@
 # StreamGlass release audit
 
+## Android 0.6.0 native player
+
+[Validation run 41393673766](https://github.com/skaz101/streamglass/actions/runs/41393673766)
+passed at `8d94fd5c560ec2eb7737ee6ca671e10c65933d7e`:
+
+- 40 shared Node tests, six Android JVM tests and the source-export regression.
+- Six browser suites: core, player, remote dialog, motion, TV and mobile.
+- Android debug/release compilation, both lint variants, and TV packaging.
+- Actual H.264/AAC/WebVTT playback on an Android 35 AOSP emulator: pause,
+  ten-second skips, double taps, timeline scrubbing, speed, audio/subtitle
+  selection, lock, rotation, auto-hide, background pause and error recovery.
+- Captions enabled after a seek render correctly. Geometry assertions and native
+  screenshots confirm captions stay clear of the timeline and Unlock button.
+- Native landscape, portrait, speed, tracks, captions, lock, brightness and
+  error screenshots reviewed. The artwork and local media are original fixtures.
+
+The validated unsigned release APK was signed locally with the original preview
+key. SDK apksigner verified v2/v3 signatures and the unchanged certificate.
+Every ZIP entry remained identical after signing. Release assets match source;
+fixture media and the debug-only player activity are absent from the release APK.
+
+APK SHA-256: `bee07fca560745fe7d348fd55e53bad65b312e696a79a56ec7f2962e82928baf`.
+Certificate SHA-256: `167c739ded0846e2e7e31884cef42ec58d1154e1145740c1a6ced15d4f9f3ead`.
+Package: `com.streamglass.mobile`; version: `0.6.0`; version code: `600`.
+
+The corresponding source's subsequent changes only record publication and remove
+temporary transfer tooling. Android and shared app sources are unchanged from
+the successful validation run. Routine CI has read-only repository permissions;
+the signing key remains local and is excluded from source archives.
+
+Physical phones, real addon/debrid media, audio focus and device-specific codecs
+still need testing. Native emulator tests isolate the player from the account
+and network; browser tests simulate the WebView/native bridge. This remains a
+preview, with WebView debugging disabled. LG remains on 0.4.0.
+
 ## Android 0.5.0
 
 [Validation run 41290194733](https://github.com/skaz101/streamglass/actions/runs/41290194733)
