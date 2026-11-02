@@ -10,4 +10,5 @@ collect() {
 trap collect EXIT
 adb logcat -G 16M
 adb logcat -c
+adb shell wm dismiss-keyguard
 ./gradlew --no-daemon connectedDebugAndroidTest

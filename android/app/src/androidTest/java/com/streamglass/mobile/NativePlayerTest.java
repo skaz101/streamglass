@@ -39,7 +39,7 @@ public class NativePlayerTest {
         InstrumentationRegistry.getInstrumentation().getUiAutomation().injectInputEvent(event,true);event.recycle();
     }
     private void screenshot(String name) throws Exception {
-        Thread.sleep(400);Bitmap bitmap=InstrumentationRegistry.getInstrumentation().getUiAutomation().takeScreenshot();assertNotNull(bitmap);
+        Thread.sleep(900);Bitmap bitmap=InstrumentationRegistry.getInstrumentation().getUiAutomation().takeScreenshot();assertNotNull(bitmap);
         File folder=new File(activity.getExternalFilesDir(null),"native-player-tests");assertTrue(folder.isDirectory()||folder.mkdirs());
         try(FileOutputStream stream=new FileOutputStream(new File(folder,name+".png"))){assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG,100,stream));}
         // Log chunks survive Gradle uninstalling the test app, unlike its external data.

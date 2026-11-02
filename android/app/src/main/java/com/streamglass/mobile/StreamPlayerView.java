@@ -73,7 +73,7 @@ public final class StreamPlayerView extends FrameLayout {
     private LinearLayout trackColumns;
     private boolean visible=true, locked, scrubbing, resumeAfterScrub, zoomed, disposed;
     private final Runnable hide=()->setControlsVisible(false);
-    private final Runnable hideUnlock=()->{ if(locked)unlock.setVisibility(GONE); };
+    private final Runnable hideUnlock=()->{ if(locked){unlock.setVisibility(GONE);updateSubtitlePadding();} };
     private final Runnable hideFeedback=()->feedback.setVisibility(GONE);
     private final Runnable update=new Runnable(){
         @Override public void run(){if(disposed)return;refresh();handler.postDelayed(this,visible?500:1000);}
@@ -198,7 +198,7 @@ public final class StreamPlayerView extends FrameLayout {
     }
     public void setControlsVisible(boolean show){
         if(disposed||locked)return;visible=show;chrome.setVisibility(show?VISIBLE:GONE);
-        SubtitleView subtitles=surface.getSubtitleView();if(subtitles!=null)subtitles.setBottomPaddingFraction(show?Math.min(.55f,dp(148)/(float)Math.max(1,getHeight())):.08f);
+        updateSubtitlePadding();
         if(show)scheduleHide();else handler.removeCallbacks(hide);
     }
     private void scheduleHide(){
@@ -207,16 +207,21 @@ public final class StreamPlayerView extends FrameLayout {
     }
     private void setLocked(boolean value){
         locked=value;callbacks.lockOrientation(value);handler.removeCallbacks(hide);
-        if(value){visible=false;chrome.setVisibility(GONE);showUnlock();SubtitleView subtitles=surface.getSubtitleView();if(subtitles!=null)subtitles.setBottomPaddingFraction(.08f);}
+        if(value){visible=false;chrome.setVisibility(GONE);showUnlock();}
         else{handler.removeCallbacks(hideUnlock);unlock.setVisibility(GONE);setControlsVisible(true);}
     }
     private void showUnlock(){
-        unlock.setVisibility(VISIBLE);handler.removeCallbacks(hideUnlock);
+        unlock.setVisibility(VISIBLE);updateSubtitlePadding();handler.removeCallbacks(hideUnlock);
         AccessibilityManager accessibility=(AccessibilityManager)activity.getSystemService(Context.ACCESSIBILITY_SERVICE);
         if(accessibility==null||!accessibility.isTouchExplorationEnabled())handler.postDelayed(hideUnlock,4000);
     }
+    private void updateSubtitlePadding(){
+        if(surface==null)return;SubtitleView subtitles=surface.getSubtitleView();if(subtitles==null)return;
+        int clearance=visible?148:locked&&unlock!=null&&unlock.getVisibility()==VISIBLE?100:0;
+        subtitles.setBottomPaddingFraction(clearance>0?Math.min(.55f,dp(clearance)/(float)Math.max(1,getHeight())):.08f);
+    }
     @Override protected void onSizeChanged(int w,int h,int oldw,int oldh){
-        super.onSizeChanged(w,h,oldw,oldh);if(surface!=null){SubtitleView subtitles=surface.getSubtitleView();if(subtitles!=null)subtitles.setBottomPaddingFraction(visible?Math.min(.55f,dp(148)/(float)Math.max(1,h)):.08f);}
+        super.onSizeChanged(w,h,oldw,oldh);updateSubtitlePadding();
         if(dialog!=null&&dialog.getWindow()!=null)dialog.getWindow().setLayout(Math.min(w,dp(680)),Math.min(dp(sheetHeight),Math.max(dp(220),h-dp(24))));
     }
     public boolean handleBack(){if(dialog!=null){dialog.dismiss();return true;}if(locked){setLocked(false);return true;}return false;}
