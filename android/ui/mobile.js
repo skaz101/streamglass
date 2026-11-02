@@ -22,7 +22,7 @@
   const mark='<svg class="sg-mobile-mark" viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M7 4h18v6H13v4h10v14H5v-6h12v-4H7Z"/></svg>';
   const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
   const ease='cubic-bezier(.2,0,0,1)';
-  let dialog=null,lastRoute=null;
+  let dialog=null,lastRoute=null,tabAnimation=null;
   function finishDismiss(state,restore) {
     if(dialog!==state)return;
     dialog=null;
@@ -54,6 +54,7 @@
     return true;
   }
   reducedMotion.addEventListener('change',()=>{
+    if(reducedMotion.matches&&tabAnimation){tabAnimation.cancel();tabAnimation=null;}
     if(!reducedMotion.matches||!dialog)return;
     if(dialog.closing)finishDismiss(dialog,true);
     else{dialog.animations.forEach(animation=>animation.cancel());dialog.animations=[];}
@@ -122,7 +123,7 @@
   function renderHero(meta) {
     const {escapeHTML:e,safeURL,detailHash}=StreamGlassShell.helpers;
     const href=detailHash(meta.type||'movie',meta.id||meta._id),poster=safeURL(meta.poster||meta.background),logo=safeURL(meta.logo);
-    return '<section class="sg-mobile-hero" aria-label="Featured title">'+(poster?'<img class="sg-mobile-hero-art" src="'+e(poster)+'" alt="" fetchpriority="high" referrerpolicy="no-referrer">':'')+'<div class="sg-mobile-hero-shade"></div><div class="sg-mobile-hero-content"><span class="sg-mobile-hero-kicker">'+mark+(meta.type==='series'?'SERIES':'FILM')+'</span>'+(logo?'<img class="dx-hero-logo sg-mobile-hero-logo" src="'+e(logo)+'" alt="'+e(meta.name)+'">':'<h1>'+e(meta.name)+'</h1>')+'<p>'+e((meta.genres||[]).slice(0,3).join(' · ')||'Your next great watch')+'</p><div class="sg-mobile-hero-actions"><a class="sg-button sg-primary" href="'+e(href)+'?play=1">'+icon('play')+'Play</a><a class="sg-button" href="'+e(href)+'">'+icon('info')+'More info</a></div></div></section>';
+    return '<section class="sg-mobile-hero" aria-label="Featured title">'+(poster?'<img class="sg-mobile-hero-art" src="'+e(poster)+'" alt="" fetchpriority="high" referrerpolicy="no-referrer">':'')+'<div class="sg-mobile-hero-shade"></div><div class="sg-mobile-hero-content"><span class="sg-mobile-hero-kicker">'+(meta.type==='series'?'SERIES':'MOVIE')+'</span>'+(logo?'<img class="dx-hero-logo sg-mobile-hero-logo" src="'+e(logo)+'" alt="'+e(meta.name)+'">':'<h1>'+e(meta.name)+'</h1>')+'<p>'+e((meta.genres||[]).slice(0,3).join(' · ')||'Your next great watch')+'</p><div class="sg-mobile-hero-actions"><a class="sg-button sg-primary" href="'+e(href)+'?play=1">'+icon('play')+'Play</a><a class="sg-button" href="'+e(href)+'">'+icon('info')+'More info</a></div></div></section>';
   }
   function libraryChanged(saved) {
     const button=doc.getElementById('sg-library-toggle');if(!button)return;
@@ -148,10 +149,29 @@
   function screenChanged(route) {
     dismiss(false);
     const view=doc.getElementById('sg-view');
-    view.dataset.motion=route==='detail'?'forward':lastRoute==='detail'?'back':'tab';lastRoute=route;
+    const tabs=['board','picks','search','library'],index=tabs.indexOf(route),previous=tabs.indexOf(lastRoute);
+    view.dataset.motion=route==='detail'?'forward':lastRoute==='detail'?'back':'tab';
+    if(tabAnimation){tabAnimation.cancel();tabAnimation=null;}
+    if(index>=0){
+      const nav=doc.querySelector('.sg-bottom-nav');nav.style.setProperty('--sg-tab',index);nav.dataset.active='true';
+      if(previous>=0&&route!==lastRoute&&!reducedMotion.matches){
+        tabAnimation=view.animate([{opacity:.12},{opacity:1}],{duration:320,easing:ease});
+      }
+    }else doc.querySelector('.sg-bottom-nav').dataset.active='false';
+    lastRoute=route;
     const heading=view.querySelector('.sg-page>h1');
     if(heading&&route==='library')heading.textContent='My List';
-    if(heading&&route==='search')heading.textContent='Search';
+    if(heading&&route==='search'){
+      heading.textContent='Find your next watch';
+      const form=view.querySelector('.sg-search-form'),input=form.querySelector('input'),submit=form.querySelector('button');
+      form.insertAdjacentHTML('afterbegin','<span class="sg-search-glyph">'+icon('search')+'</span>');
+      input.placeholder='Search movies, series and more';input.setAttribute('enterkeyhint','search');
+      submit.innerHTML=icon('search');submit.setAttribute('aria-label','Search');submit.title='Search';
+      const clear=doc.createElement('button');clear.type='button';clear.className='sg-search-clear';clear.setAttribute('aria-label','Clear search');clear.innerHTML=icon('close');
+      const update=()=>{clear.hidden=!input.value;};update();input.addEventListener('input',update);
+      clear.onclick=()=>{input.value='';input.dispatchEvent(new Event('input',{bubbles:true}));input.focus({preventScroll:true});};
+      form.insertBefore(clear,submit);
+    }
     if(route==='account'){
       const intro=view.querySelector('.sg-account-box>p');
       if(intro&&!StreamGlassShell.state.signedIn)intro.textContent='Bring your saved titles, addons and watch progress with you.';

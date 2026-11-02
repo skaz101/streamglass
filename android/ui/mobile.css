@@ -234,3 +234,24 @@ body[data-dx-route='detail'] #app #sg-view { top:0; }
 @keyframes sg-nav-in { from { transform:scale(.84); } to { transform:scale(1); } }
 @keyframes sg-loading { from { opacity:.5; } to { opacity:1; } }
 @keyframes sg-toast-in { from { opacity:0; transform:translate(-50%,8px); } to { opacity:1; transform:translate(-50%,0); } }
+
+/* A quiet search surface with results that fit the screen, rather than rails. */
+#app .search-content>h1 { font-size:26px; margin:4px 0 22px; }
+#app .search-content .sg-search-form { position:relative; display:flex; align-items:center; gap:0; padding:0 6px 0 14px; border:1px solid #ffffff18; border-radius:12px; background:#252525; }
+#app .sg-search-glyph { color:#999; display:flex; }
+#app .search-content .sg-search-form input { flex:1; min-width:0; min-height:56px; width:0; padding:14px 10px; background:transparent; border:0; font-size:14px; }
+#app .search-content .sg-search-form input::-webkit-search-cancel-button { display:none; }
+#app .search-content .sg-search-form button { flex:none; width:40px; min-height:44px; padding:10px; border:0; border-radius:8px; color:#eee; background:transparent; }
+#app .search-content .sg-search-form:focus-within { border-color:#aaa; }
+#app .search-content .sg-search-status { min-height:18px; margin:14px 0 20px; }
+#app .search-content .sg-cards { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px 9px; margin:0; padding:6px 0 16px; width:100%; overflow:visible; }
+#app .search-content .sg-cards>.sg-card.meta-item-container { width:100%; min-width:0; }
+#app .search-content .sg-empty { min-height:260px; text-align:center; }
+#app .search-content .sg-empty p { max-width:270px; }
+#app .sg-bottom-nav::before { content:''; position:absolute; top:0; left:8px; width:calc((100% - 16px)/4); height:2px; background:#ef233c; transform:translateX(calc(var(--sg-tab,0)*100%)); opacity:0; }
+#app .sg-bottom-nav[data-active='true']::before { opacity:1; }
+@media (prefers-reduced-motion:no-preference) { #app .sg-bottom-nav::before { transition:transform .32s cubic-bezier(.2,0,0,1),opacity .2s ease; } }
+@media (min-width:600px) {
+ #app .search-content .sg-cards { grid-template-columns:repeat(5,minmax(0,1fr)); }
+ #app .sg-bottom-nav::before { left:max(16px,calc((100% - 640px)/2)); width:calc(min(100% - 32px,640px)/4); }
+}

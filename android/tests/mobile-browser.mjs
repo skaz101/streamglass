@@ -112,6 +112,11 @@ try {
   assert.equal(await page.locator('#sg-search-input').evaluate(el=>el.readOnly),false);
   assert.equal(await page.locator('#sg-search-input').inputValue(),'phone');
   await screenshot('phone-search.png');
+  await page.locator('.sg-search-clear').tap();
+  assert.equal(await page.locator('#sg-search-input').inputValue(),'');
+  assert.equal(await page.locator('#sg-search-input').evaluate(el=>el===document.activeElement),true);
+  await page.locator('#sg-search-input').fill('phone');
+  await page.locator('#sg-search-results .sg-card').first().waitFor();
   await page.locator('.sg-card').first().tap();await page.locator('[data-action="focus-streams"]').waitFor();
   assert.equal(await page.locator('.sg-stream-sheet').isVisible(),false,'Streams stay out of the title page until Play');
   await page.locator('#sg-library-toggle').tap();
