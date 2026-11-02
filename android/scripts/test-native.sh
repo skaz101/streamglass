@@ -11,4 +11,8 @@ trap collect EXIT
 adb logcat -G 16M
 adb logcat -c
 adb shell wm dismiss-keyguard
+# This disposable AOSP emulator launches the fixture Activity directly. Its
+# Quickstep launcher ANRs during rotation; keep that unrelated dialog out of tests.
+adb shell am force-stop com.android.launcher3
+adb shell pm disable-user --user 0 com.android.launcher3
 ./gradlew --no-daemon connectedDebugAndroidTest
