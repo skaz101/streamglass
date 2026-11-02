@@ -1,5 +1,19 @@
 # StreamGlass release audit
 
+## Android 0.6.2 appearance and profile
+
+[Validation run 41402266011](https://github.com/skaz101/streamglass/actions/runs/41402266011) passed at `15d9321862bb2f428f662004c736039b80bd0aed`.
+
+Android debug/release builds, lint, JVM tests, shared tests, six browser suites and real native playback on Android 35 passed. Mobile coverage includes saved themes across reload, OLED black backgrounds, profile email, search clearing and existing navigation/playback behavior. Purple settings, search and profile screenshots were reviewed. Physical-phone testing remains pending.
+
+The unsigned APK was signed locally with the original preview certificate. SDK apksigner verified v2/v3 signatures. Package `com.streamglass.mobile`, version `0.6.2`, code `602`. All ZIP entries match the unsigned build; mobile assets match source, and debug fixture media/activity are excluded.
+
+APK SHA-256: `c3f595fcf291eea4eb249627b2fc3ab52988a343170f1040bc8d082f88524da7`.
+Certificate SHA-256: `167c739ded0846e2e7e31884cef42ec58d1154e1145740c1a6ced15d4f9f3ead`.
+
+The source commit only adds this audit and removes temporary transfer/review tooling; app sources match the validated commit. Routine CI retains read-only permissions and the signing key stays local.
+
+
 ## Android 0.6.1 motion and full-video dimming
 
 [Validation run 41399125611](https://github.com/skaz101/streamglass/actions/runs/41399125611)
