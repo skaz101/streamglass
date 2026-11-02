@@ -57,6 +57,18 @@ jobs:
             android/test-results/
           if-no-files-found: ignore
 
+      - name: Mobile polish visual review
+        if: always()
+        run: |
+          for name in phone-search phone-my-list phone-list-filters; do
+            file="android/test-results/$name.png"
+            [ -f "$file" ] || continue
+            ffmpeg -v error -y -i "$file" -frames:v 1 -quality 78 /tmp/mobile-polish.webp
+            printf 'POLISH_PREVIEW:%s:' "$name"
+            base64 -w0 /tmp/mobile-polish.webp
+            printf '\n'
+          done
+
   android:
     runs-on: ubuntu-latest
     timeout-minutes: 40

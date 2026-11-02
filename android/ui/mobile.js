@@ -43,7 +43,7 @@
   const mark='<svg class="sg-mobile-mark" viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M7 4h18v6H13v4h10v14H5v-6h12v-4H7Z"/></svg>';
   const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
   const ease='cubic-bezier(.22,1,.36,1)';
-  let dialog=null,lastRoute=null,tabAnimation=null,account=null,snapshot=null,snapshotAnimation=null;
+  let dialog=null,lastRoute=null,tabAnimation=null,account=null,snapshot=null,snapshotAnimation=null,lastHash=null,restoreScroll=null,scrollObserver=null,scrollTimer=null;
   function finishDismiss(state,restore) {
     if(dialog!==state)return;
     dialog=null;
@@ -187,6 +187,8 @@
   }
   function clearSnapshot(){if(snapshotAnimation)snapshotAnimation.cancel();snapshotAnimation=null;if(snapshot)snapshot.remove();snapshot=null;}
   function beforeScreenChanged(){
+    if(scrollObserver)scrollObserver.disconnect();clearTimeout(scrollTimer);scrollObserver=null;
+    const previousView=doc.getElementById('sg-view');restoreScroll=lastHash===location.hash?previousView?.scrollTop:null;
     clearSnapshot();dismiss(false);
     const view=doc.getElementById('sg-view');if(reducedMotion.matches||!view?.firstElementChild)return;
     const rect=view.getBoundingClientRect();snapshot=view.cloneNode(true);snapshot.removeAttribute('id');snapshot.querySelectorAll('[id]').forEach(node=>node.removeAttribute('id'));
@@ -232,7 +234,13 @@
     }else doc.querySelector('.sg-bottom-nav').dataset.active='false';
     if(!reducedMotion.matches&&lastRoute){tabAnimation=view.animate([{opacity:.45},{opacity:1}],{duration:420,easing:ease});}
     if(snapshot){const outgoing=snapshot;snapshotAnimation=snapshot.animate([{opacity:1},{opacity:0}],{duration:240,easing:ease});snapshotAnimation.finished.then(()=>{if(snapshot===outgoing)clearSnapshot();}).catch(()=>{});}
-    lastRoute=route;
+    lastRoute=route;lastHash=location.hash;
+    if(restoreScroll>0){
+      const position=restoreScroll;
+      const restore=()=>{view.scrollTop=position;if(view.scrollHeight-view.clientHeight>=position){if(scrollObserver)scrollObserver.disconnect();clearTimeout(scrollTimer);scrollObserver=null;}};
+      scrollObserver=new MutationObserver(restore);scrollObserver.observe(view,{childList:true,subtree:true});requestAnimationFrame(restore);
+      scrollTimer=setTimeout(()=>{if(scrollObserver)scrollObserver.disconnect();scrollObserver=null;},3000);
+    }
     if(route==='library')requestAnimationFrame(()=>{if(view.isConnected&&doc.body.dataset.dxRoute==='library')libraryFilters(view);});
     const heading=view.querySelector('.sg-page>h1');
     if(heading&&route==='library')heading.textContent='My List';

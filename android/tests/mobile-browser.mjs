@@ -70,6 +70,10 @@ try {
   await page.goto(pathToFileURL(path.join(root,'../android/app/build/generated/assets/app/index.html')).href);
   await ready();await page.locator('.sg-card').first().waitFor();
   await screenshot('home.png');
+  await page.evaluate(async()=>{document.getElementById('sg-view').scrollTop=100;await StreamGlassShell.render();});
+  await page.waitForFunction(()=>document.getElementById('sg-view').scrollTop===100);
+  await page.locator('.sg-route-snapshot').waitFor({state:'detached'});
+  await page.evaluate(()=>document.getElementById('sg-view').scrollTop=0);
   assert.ok(await page.evaluate(()=>document.getElementById('app').scrollWidth<=innerWidth),'No phone-wide horizontal overflow');
   await page.locator('.sg-nav-search').evaluate(el=>el.click());
   await page.waitForFunction(()=>document.querySelector('.search-content>h1')?.getAnimations().some(a=>a.playState==='running'));
