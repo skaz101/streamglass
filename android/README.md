@@ -1,4 +1,4 @@
-# StreamGlass for Android phones and tablets, 0.6.0
+# StreamGlass for Android phones and tablets, 0.6.1
 
 An installable Android preview with a dedicated mobile interface: artwork-led
 home, compact poster rows, Home / For You / Search / My List tabs, a profile
@@ -14,7 +14,7 @@ first hardware test device. This version is designed for touch, not Android TV.
 
 ## Install
 
-Download [streamglass-android-0.6.0.apk](https://github.com/skaz101/streamglass/releases/download/v0.6.0/streamglass-android-0.6.0.apk) on your phone and open it. Allow installation
+Download [streamglass-android-0.6.1.apk](https://github.com/skaz101/streamglass/releases/download/v0.6.1/streamglass-android-0.6.1.apk) on your phone and open it. Allow installation
 from that browser or file manager when Android asks. Open StreamGlass and sign
 in with the same Stremio account used on your TV. This is a separate installation;
 it does not replace Stremio or the LG app. Account library/addons/progress sync
@@ -23,14 +23,14 @@ through Stremio. Recommendations are computed separately on each device.
 Alternatively, with Android platform-tools and USB debugging authorized:
 
 ```sh
-adb install -r streamglass-android-0.6.0.apk
+adb install -r streamglass-android-0.6.1.apk
 adb shell am start -n com.streamglass.mobile/.MainActivity
 ```
 
 ## Signing and updates
 
-The 0.6.0 APK is built with the release configuration and signed locally with
-the original preview certificate, so it can update 0.4.0 or 0.5.0 without uninstalling.
+The 0.6.1 APK is built with the release configuration and signed locally with
+the original preview certificate, so it can update earlier previews, including 0.6.0 without uninstalling.
 The key remains private. This is still a preview signed with a development
 certificate, not a Play Store release. Release builds disable WebView debugging;
 local debug builds permit inspection through an authorized USB connection.
@@ -54,6 +54,13 @@ A production release needs a separate private release-signing configuration.
 - Lock prevents accidental input and holds orientation. Tap to reveal Unlock,
   or press Android Back once to unlock. Back closes settings before exiting.
 - On an error, retry the stream in place or return to choose another stream.
+
+## Motion
+
+Browsing pages, cards and artwork ease into view. Tabs, buttons and My List
+respond to touch; sheets slide and fade on both opening and closing. Player
+controls, lock and seek feedback fade smoothly. Android's Remove animations
+setting disables native motion, and the WebView follows reduced-motion preferences.
 
 ## Playback and limits
 
@@ -83,13 +90,15 @@ CI builds debug and release variants and runs Android lint and six JVM tests
 covering URL rules, subtitle formats, seek bounds, time labels and playback speeds. The mobile browser integration uses
 real Stremio core WASM with fake account/addon services and a simulated native
 player. It covers login, touch search, 320/390/800-pixel layouts, landscape,
-bottom navigation, My List, episodes, sheet dismissal and focus restoration,
+bottom navigation, My List, episodes, animated page/card entrances, sheet entry/exit,
+interrupted transitions, reduced motion, sheet dismissal and focus restoration,
 playback handoff, progress, resume, stale events, and recommendations.
-See [0.6.0 release notes](RELEASE-0.6.0.md) for the verified release checks.
+See [0.6.1 release notes](RELEASE-0.6.1.md) for the verified release checks.
 
 The Android 35 emulator suite runs the actual native player with isolated local
 H.264/AAC/WebVTT fixtures. It covers pause, skips, double taps, timeline scrubbing,
-speed, track selection, screen lock, rotation, auto-hide, background pause and
+speed, track selection, screen lock, rotation, full-video scrim bounds with cutout
+insets, reversible fades, system reduced motion, auto-hide, background pause and
 error recovery. Physical-device codecs, real TorBox links, vendor insets, audio
 focus and the full WebView-to-native path still require phone testing.
 

@@ -20,10 +20,14 @@
   };
   const icon=name=>'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">'+paths[name]+'</svg>';
   const mark='<svg class="sg-mobile-mark" viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M7 4h18v6H13v4h10v14H5v-6h12v-4H7Z"/></svg>';
-  let dialog=null;
-  function dismiss(restore=true) {
-    if(!dialog)return false;
-    const state=dialog;dialog=null;
+  const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
+  const ease='cubic-bezier(.2,0,0,1)';
+  let dialog=null,lastRoute=null;
+  function finishDismiss(state,restore) {
+    if(dialog!==state)return;
+    dialog=null;
+    state.animations.forEach(animation=>animation.cancel());
+    state.overlay.classList.remove('sg-sheet-closing');
     state.overlay.hidden=true;
     state.inert.forEach(([node,value])=>node.inert=value);
     doc.removeEventListener('keydown',state.keydown,true);
@@ -31,8 +35,29 @@
     doc.body.classList.remove('sg-dialog-open');
     if(restore){const target=state.previous?.isConnected?state.previous:doc.querySelector('[data-action="focus-streams"]');if(target)target.focus({preventScroll:true});}
     if(state.resolve)state.resolve();
+  }
+  function dismiss(restore=true) {
+    if(!dialog)return false;
+    const state=dialog;
+    // Navigation/native playback and reduced motion complete synchronously.
+    // Ordinary Back/Close keeps focus trapped until the exit has finished.
+    if(!restore||reducedMotion.matches){finishDismiss(state,restore);return true;}
+    if(state.closing)return true;
+    state.closing=true;state.overlay.classList.add('sg-sheet-closing');
+    const opacity=getComputedStyle(state.overlay).opacity,transform=getComputedStyle(state.panel).transform;
+    state.animations.forEach(animation=>animation.cancel());
+    state.animations=[
+      state.overlay.animate([{opacity},{opacity:0}],{duration:180,easing:ease,fill:'forwards'}),
+      state.panel.animate([{transform},{transform:'translateY(32px)'}],{duration:180,easing:ease,fill:'forwards'})
+    ];
+    Promise.all(state.animations.map(animation=>animation.finished)).then(()=>finishDismiss(state,true)).catch(()=>{});
     return true;
   }
+  reducedMotion.addEventListener('change',()=>{
+    if(!reducedMotion.matches||!dialog)return;
+    if(dialog.closing)finishDismiss(dialog,true);
+    else{dialog.animations.forEach(animation=>animation.cancel());dialog.animations=[];}
+  });
   function open(overlay,{remove=false,resolve}={}) {
     dismiss(false);
     const previous=doc.activeElement,inert=[];
@@ -53,9 +78,16 @@
         else if(!event.shiftKey&&(doc.activeElement===last||doc.activeElement===panel)){event.preventDefault();first.focus();}
       }
     };
-    dialog={overlay,previous,inert,keydown,remove,resolve};
+    dialog={overlay,panel,previous,inert,keydown,remove,resolve,animations:[],closing:false};
+    if(!reducedMotion.matches){
+      dialog.animations=[
+        overlay.animate([{opacity:0},{opacity:1}],{duration:260,easing:ease}),
+        panel.animate([{transform:'translateY(40px)'},{transform:'translateY(0)'}],{duration:300,easing:ease})
+      ];
+    }
     doc.addEventListener('keydown',keydown,true);doc.body.classList.add('sg-dialog-open');
     overlay.onclick=event=>{
+      if(dialog?.closing){event.preventDefault();event.stopPropagation();return;}
       if(event.target===overlay||event.target.closest('[data-mobile-close]'))dismiss();
       else if(event.target.closest('a[href]'))dismiss(false);
     };
@@ -74,13 +106,18 @@
     const signedIn=window.StreamGlassShell.state.signedIn;
     const overlay=doc.createElement('div');overlay.className='sg-mobile-overlay';
     const links=[['account',signedIn?'Your account':'Sign in to Stremio','user'],['discover','Browse all titles','grid'],['addons','Manage addons','addon'],['settings','App settings','settings']];
-    overlay.innerHTML='<section class="sg-mobile-sheet sg-menu-sheet" role="dialog" aria-modal="true" aria-labelledby="sg-menu-title" tabindex="-1">'+closeButton+'<div class="sg-menu-profile">'+icon('user')+'</div><h2 id="sg-menu-title">Your StreamGlass</h2><p>Your stories. Your way.</p><nav aria-label="Account and app">'+links.map(([route,label,glyph])=>'<a href="#/'+route+'">'+icon(glyph)+'<span>'+label+'</span><span aria-hidden="true">›</span></a>').join('')+'</nav><small>StreamGlass 0.6.0</small></section>';
+    overlay.innerHTML='<section class="sg-mobile-sheet sg-menu-sheet" role="dialog" aria-modal="true" aria-labelledby="sg-menu-title" tabindex="-1">'+closeButton+'<div class="sg-menu-profile">'+icon('user')+'</div><h2 id="sg-menu-title">Your StreamGlass</h2><p>Your stories. Your way.</p><nav aria-label="Account and app">'+links.map(([route,label,glyph])=>'<a href="#/'+route+'">'+icon(glyph)+'<span>'+label+'</span><span aria-hidden="true">›</span></a>').join('')+'</nav><small>StreamGlass 0.6.1</small></section>';
     doc.querySelector('.sg-app').append(overlay);open(overlay,{remove:true});
   }
   function mount(root) {
     root.querySelector('.sg-nav').outerHTML='<header class="sg-mobile-header"><a class="sg-mobile-brand" href="#/board" aria-label="StreamGlass Home">'+mark+'<span>STREAMGLASS</span></a><div class="sg-header-actions"><a class="sg-icon-button" href="#/discover" aria-label="Browse all titles">'+icon('grid')+'</a><button class="sg-icon-button sg-profile-button" id="sg-profile" aria-label="Open profile and settings">'+icon('user')+'</button></div></header>';
     root.querySelector('.sg-app').insertAdjacentHTML('beforeend','<nav class="sg-bottom-nav" aria-label="Main navigation">'+[['board','Home','home'],['picks','For You','spark'],['search','Search','search'],['library','My List','list']].map(([route,label,glyph])=>'<a data-nav="'+route+'" href="#/'+route+'"'+(route==='search'?' class="sg-nav-search"':'')+'>'+icon(glyph)+'<span>'+label+'</span></a>').join('')+'</nav>');
     doc.getElementById('sg-profile').onclick=menu;
+    // Animate artwork when it is decoded, including cached and async catalog
+    // images. No observer, scroll handler or retained animation per card.
+    root.addEventListener('load',event=>{
+      if(event.target.matches('.sg-poster img,.sg-mobile-hero-art,.sg-detail-background img,.sg-detail-logo'))event.target.classList.add('sg-art-ready');
+    },true);
   }
   function renderHero(meta) {
     const {escapeHTML:e,safeURL,detailHash}=StreamGlassShell.helpers;
@@ -89,9 +126,11 @@
   }
   function libraryChanged(saved) {
     const button=doc.getElementById('sg-library-toggle');if(!button)return;
+    const changed=button.hasAttribute('aria-pressed')&&button.getAttribute('aria-pressed')!==String(saved);
     button.innerHTML=icon(saved?'check':'plus')+'<span>My List</span>';
     button.setAttribute('aria-pressed',String(saved));
     button.setAttribute('aria-label',saved?'Remove from My List':'Add to My List');
+    if(changed&&!reducedMotion.matches)button.querySelector('svg').animate([{transform:'scale(.7)'},{transform:'scale(1.15)',offset:.65},{transform:'scale(1)'}],{duration:280,easing:ease});
   }
   function showStreams() {
     const overlay=doc.querySelector('.sg-stream-sheet');if(overlay)open(overlay);
@@ -109,6 +148,7 @@
   function screenChanged(route) {
     dismiss(false);
     const view=doc.getElementById('sg-view');
+    view.dataset.motion=route==='detail'?'forward':lastRoute==='detail'?'back':'tab';lastRoute=route;
     const heading=view.querySelector('.sg-page>h1');
     if(heading&&route==='library')heading.textContent='My List';
     if(heading&&route==='search')heading.textContent='Search';

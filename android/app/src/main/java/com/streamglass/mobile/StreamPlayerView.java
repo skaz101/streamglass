@@ -2,6 +2,7 @@
 package com.streamglass.mobile;
 
 import android.annotation.SuppressLint;
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
@@ -23,6 +24,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityManager;
+import android.view.animation.PathInterpolator;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -62,7 +64,7 @@ public final class StreamPlayerView extends FrameLayout {
     private final Handler handler=new Handler(Looper.getMainLooper());
     private final SharedPreferences preferences;
     private final PlayerView surface;
-    private final FrameLayout chrome;
+    private final FrameLayout overlay, chrome;
     private final LinearLayout center, bottom, loading, errorPanel;
     private ImageButton play, rewind, forward, fit;
     private final DefaultTimeBar timeBar;
@@ -75,8 +77,8 @@ public final class StreamPlayerView extends FrameLayout {
     private LinearLayout trackColumns;
     private boolean visible=true, locked, scrubbing, resumeAfterScrub, zoomed, disposed;
     private final Runnable hide=()->setControlsVisible(false);
-    private final Runnable hideUnlock=()->{ if(locked){unlock.setVisibility(GONE);updateSubtitlePadding();} };
-    private final Runnable hideFeedback=()->feedback.setVisibility(GONE);
+    private final Runnable hideUnlock=()->{if(locked)fade(unlock,false);};
+    private final Runnable hideFeedback=()->fade(feedback,false);
     private final Runnable update=new Runnable(){
         @Override public void run(){if(disposed)return;refresh();handler.postDelayed(this,visible?500:1000);}
     };
@@ -111,9 +113,17 @@ public final class StreamPlayerView extends FrameLayout {
         });
         gestures.setOnTouchListener((view,event)->detector.onTouchEvent(event));
         addView(gestures,new LayoutParams(-1,-1));
-        chrome=new FrameLayout(activity);chrome.setTag("player-controls");addView(chrome,new LayoutParams(-1,-1));
-        View shade=new View(activity);shade.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{0xd9000000,0x25000000,0x25000000,0xe6000000}));
-        chrome.addView(shade,new LayoutParams(-1,-1));
+        overlay=new FrameLayout(activity){
+            @Override public boolean onInterceptTouchEvent(MotionEvent event){return !visible||locked||super.onInterceptTouchEvent(event);}
+            @Override public boolean onTouchEvent(MotionEvent event){return !visible||locked||super.onTouchEvent(event);}
+        };
+        overlay.setTag("player-controls");addView(overlay,new LayoutParams(-1,-1));
+        // The video and scrim are edge to edge. Only interactive controls receive
+        // cutout insets; padding their parent would leave the movie edges undimmed.
+        View shade=new View(activity);shade.setTag("player-scrim");shade.setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);
+        shade.setBackground(new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,new int[]{0xd9000000,0x40000000,0x40000000,0xe6000000}));
+        overlay.addView(shade,new LayoutParams(-1,-1));
+        chrome=new FrameLayout(activity);chrome.setTag("player-safe-controls");overlay.addView(chrome,new LayoutParams(-1,-1));
         LinearLayout top=new LinearLayout(activity);top.setGravity(Gravity.CENTER_VERTICAL);top.setPadding(dp(8),dp(4),dp(8),dp(4));
         top.addView(icon(R.drawable.ic_player_back,"Back to title","player-back",callbacks::close),new LinearLayout.LayoutParams(dp(48),dp(48)));
         LinearLayout titles=column();titles.setPadding(dp(10),0,dp(6),0);
@@ -188,7 +198,7 @@ public final class StreamPlayerView extends FrameLayout {
     }
     private boolean canSeek(){return player.isCommandAvailable(Player.COMMAND_SEEK_IN_CURRENT_MEDIA_ITEM)&&player.isCurrentMediaItemSeekable()&&player.getDuration()>0;}
     private void seek(long delta){if(!canSeek())return;player.seekTo(PlayerUiMath.seekPosition(player.getCurrentPosition(),player.getDuration(),delta));announce(delta<0?"↶ 10 seconds":"10 seconds ↷");refresh();scheduleHide();}
-    private void announce(String message){feedback.setText(message);feedback.setVisibility(VISIBLE);handler.removeCallbacks(hideFeedback);handler.postDelayed(hideFeedback,800);announceForAccessibility(message);}
+    private void announce(String message){feedback.setText(message);fade(feedback,true);handler.removeCallbacks(hideFeedback);handler.postDelayed(hideFeedback,800);announceForAccessibility(message);}
     private void showTime(long position){elapsed.setText(PlayerUiMath.time(position));long duration=player.getDuration();remaining.setText(duration>0?"−"+PlayerUiMath.time(Math.max(0,duration-position)):player.isCurrentMediaItemLive()?"LIVE":"--:--");}
     private void refresh(){
         if(disposed)return;
@@ -202,9 +212,27 @@ public final class StreamPlayerView extends FrameLayout {
         String speed="Speed ("+PlayerUiMath.speedLabel(player.getPlaybackParameters().speed)+")";speedText.setText(speed);((View)speedText.getParent()).setContentDescription(speed);
     }
     public void setControlsVisible(boolean show){
-        if(disposed||locked)return;visible=show;chrome.setVisibility(show?VISIBLE:GONE);
+        if(disposed||locked)return;
+        if(visible!=show){visible=show;fade(overlay,show);}
         updateSubtitlePadding();
         if(show)scheduleHide();else handler.removeCallbacks(hide);
+    }
+    private void fade(View view,boolean show){
+        view.animate().withEndAction(null).cancel();
+        if(view!=feedback)view.setImportantForAccessibility(show?IMPORTANT_FOR_ACCESSIBILITY_AUTO:IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
+        if(!ValueAnimator.areAnimatorsEnabled()){
+            view.setAlpha(1f);view.setVisibility(show?VISIBLE:GONE);updateSubtitlePadding();return;
+        }
+        if(show){
+            if(view.getVisibility()!=VISIBLE){view.setAlpha(0f);view.setVisibility(VISIBLE);}
+            if(view.getAlpha()==1f)return;
+        }else if(view.getVisibility()!=VISIBLE)return;
+        view.animate().alpha(show?1f:0f).setDuration(show?240:180)
+            .setInterpolator(new PathInterpolator(.2f,0f,0f,1f)).withEndAction(()->{
+                if(!show)view.setVisibility(GONE);
+                view.setAlpha(1f);updateSubtitlePadding();
+            }).start();
+        updateSubtitlePadding();
     }
     private void scheduleHide(){
         handler.removeCallbacks(hide);if(disposed)return;AccessibilityManager accessibility=(AccessibilityManager)activity.getSystemService(Context.ACCESSIBILITY_SERVICE);
@@ -212,18 +240,18 @@ public final class StreamPlayerView extends FrameLayout {
     }
     private void setLocked(boolean value){
         locked=value;callbacks.lockOrientation(value);handler.removeCallbacks(hide);
-        if(value){visible=false;chrome.setVisibility(GONE);showUnlock();}
-        else{handler.removeCallbacks(hideUnlock);unlock.setVisibility(GONE);setControlsVisible(true);}
+        if(value){visible=false;fade(overlay,false);showUnlock();}
+        else{handler.removeCallbacks(hideUnlock);fade(unlock,false);setControlsVisible(true);}
     }
     private void showUnlock(){
-        unlock.setVisibility(VISIBLE);updateSubtitlePadding();handler.removeCallbacks(hideUnlock);
+        fade(unlock,true);updateSubtitlePadding();handler.removeCallbacks(hideUnlock);
         AccessibilityManager accessibility=(AccessibilityManager)activity.getSystemService(Context.ACCESSIBILITY_SERVICE);
         if(accessibility==null||!accessibility.isTouchExplorationEnabled())handler.postDelayed(hideUnlock,4000);
     }
     private void updateSubtitlePadding(){
         if(disposed||surface==null)return;SubtitleView subtitles=surface.getSubtitleView();if(subtitles==null||!(subtitles.getParent() instanceof View))return;
         View frame=(View)subtitles.getParent();if(frame.getHeight()==0)return;
-        View obstruction=visible&&bottom!=null&&bottom.isShown()?bottom:locked&&unlock!=null&&unlock.isShown()?unlock:null;
+        View obstruction=bottom!=null&&bottom.isShown()?bottom:unlock!=null&&unlock.isShown()?unlock:null;
         int margin=0;
         if(obstruction!=null){int[] videoOrigin=new int[2],controlOrigin=new int[2];frame.getLocationOnScreen(videoOrigin);obstruction.getLocationOnScreen(controlOrigin);margin=Math.max(0,videoOrigin[1]+frame.getHeight()-controlOrigin[1]+dp(12));}
         margin=Math.min(frame.getHeight()/2,margin);
@@ -246,7 +274,7 @@ public final class StreamPlayerView extends FrameLayout {
         dialog=new Dialog(activity);dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);LinearLayout content=column();content.setPadding(dp(22),dp(20),dp(22),dp(22));content.setBackground(round(0xff191919,18));
         LinearLayout heading=new LinearLayout(activity);heading.setGravity(Gravity.CENTER_VERTICAL);TextView text=text(title,22,Color.WHITE);text.setTypeface(null,Typeface.BOLD);heading.addView(text,new LinearLayout.LayoutParams(0,-2,1));heading.addView(icon(R.drawable.ic_player_close,"Close player settings","player-sheet-close",()->dialog.dismiss()),new LinearLayout.LayoutParams(dp(48),dp(48)));content.addView(heading);
         dialog.setContentView(content);dialog.setOnDismissListener(d->{dialog=null;trackColumns=null;scheduleHide();});
-        Window window=dialog.getWindow();if(window!=null){window.setBackgroundDrawableResource(android.R.color.transparent);window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);WindowManager.LayoutParams params=window.getAttributes();params.dimAmount=.65f;params.gravity=Gravity.BOTTOM;window.setAttributes(params);}
+        Window window=dialog.getWindow();if(window!=null){window.setBackgroundDrawableResource(android.R.color.transparent);window.setWindowAnimations(ValueAnimator.areAnimatorsEnabled()?R.style.PlayerSheetAnimation:0);window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);WindowManager.LayoutParams params=window.getAttributes();params.dimAmount=.65f;params.gravity=Gravity.BOTTOM;window.setAttributes(params);}
         dialog.show();if(window!=null)window.setLayout(Math.min(getWidth(),dp(680)),Math.min(dp(sheetHeight),Math.max(dp(220),getHeight()-dp(24))));
         return content;
     }
@@ -304,6 +332,7 @@ public final class StreamPlayerView extends FrameLayout {
     }
     public void dispose(){
         disposed=true;handler.removeCallbacksAndMessages(null);if(dialog!=null)dialog.dismiss();player.removeListener(listener);surface.setPlayer(null);
+        for(View view:new View[]{overlay,unlock,feedback})view.animate().withEndAction(null).cancel();
         WindowManager.LayoutParams params=activity.getWindow().getAttributes();params.screenBrightness=originalBrightness;activity.getWindow().setAttributes(params);
     }
 }

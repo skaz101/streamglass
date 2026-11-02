@@ -2,15 +2,15 @@
 
 An unofficial Stremio client for **LG webOS TVs and Android phones/tablets**, with a dedicated Android interface, a DX.BI-derived TV theme, live search, local recommendations, and watch-progress sync.
 
-Android **0.6.0** adds an immersive native player with large transport controls,
-double-tap seeking, speed, screen lock, and combined audio/subtitle settings.
-It retains the cinematic mobile browsing interface from 0.5.0. LG webOS remains on **0.4.0**. Both are previews; Android native
-playback still needs physical-device testing.
+Android **0.6.1** adds motion throughout browsing, title pages, navigation and
+sheets, plus smooth player controls and full-video dimming that covers cutout
+edges. Reduced-motion settings are respected. LG webOS remains on **0.4.0**.
+Both are previews; Android still needs physical-device testing.
 
 ## Downloads
 
-- [**Android 0.6.0 APK**](https://github.com/skaz101/streamglass/releases/download/v0.6.0/streamglass-android-0.6.0.apk) — updates the original preview installation.
-- [Android 0.6.0 release, source and checksums](https://github.com/skaz101/streamglass/releases/tag/v0.6.0)
+- [**Android 0.6.1 APK**](https://github.com/skaz101/streamglass/releases/download/v0.6.1/streamglass-android-0.6.1.apk) — updates the original preview installation.
+- [Android 0.6.1 release, source and checksums](https://github.com/skaz101/streamglass/releases/tag/v0.6.1)
 - [LG TV 0.4.0 installer (.ipk)](https://github.com/skaz101/streamglass/releases/download/v0.4.0/com.streamglass.tv_0.4.0_all.ipk)
 - [LG 0.4.0 release, source and checksums](https://github.com/skaz101/streamglass/releases/tag/v0.4.0)
 

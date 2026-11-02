@@ -1,6 +1,7 @@
 package com.streamglass.mobile;
 
 import android.content.Intent;
+import android.animation.ValueAnimator;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.os.SystemClock;
@@ -62,12 +63,28 @@ public class NativePlayerTest {
             waitFor("Real H.264/AAC fixture must decode",()->activity.player.getPlaybackState()==Player.STATE_READY&&activity.player.isPlaying()&&activity.player.getCurrentPosition()>500);
             waitFor("Player opens in landscape",()->activity.getResources().getConfiguration().orientation==Configuration.ORIENTATION_LANDSCAPE);
             click("player-play");waitFor("Pause",()->!activity.player.getPlayWhenReady());
+            main(()->{assertTrue("Native motion is enabled for this test",ValueAnimator.areAnimatorsEnabled());activity.controls.setSafeInsets(38,24,30,18);});
+            waitFor("Dimming covers the entire video with nonzero cutout insets",this::scrimCoversPlayer);
+            main(()->assertEquals(38,tagged("player-safe-controls").getPaddingLeft()));
+            boolean[] sawFade={false};
+            main(()->{
+                View controls=tagged("player-controls");
+                controls.getViewTreeObserver().addOnPreDrawListener(new android.view.ViewTreeObserver.OnPreDrawListener(){
+                    @Override public boolean onPreDraw(){
+                        if(controls.getAlpha()>0&&controls.getAlpha()<1){sawFade[0]=true;controls.getViewTreeObserver().removeOnPreDrawListener(this);activity.controls.setControlsVisible(true);}return true;
+                    }
+                });
+                activity.controls.setControlsVisible(false);
+            });
+            waitFor("Controls fade through intermediate opacity",()->sawFade[0]);
+            waitFor("Reversing a fade leaves controls fully visible",()->tagged("player-controls").isShown()&&tagged("player-controls").getAlpha()==1f);
+            main(()->activity.controls.requestApplyInsets());
             main(()->activity.player.seekTo(30000));waitFor("Initial seek",()->activity.player.getCurrentPosition()>=29900);
             click("player-forward");waitFor("10-second forward",()->activity.player.getCurrentPosition()>=39900);
             click("player-rewind");waitFor("10-second rewind",()->activity.player.getCurrentPosition()<31000);
             waitFor("Seek finishes while paused",()->activity.player.getPlaybackState()==Player.STATE_READY&&!activity.player.getPlayWhenReady());
             screenshot("native-landscape");
-            main(()->activity.controls.setControlsVisible(false));int[] location=new int[2];int[] size=new int[2];
+            main(()->activity.controls.setControlsVisible(false));waitFor("Controls finish fading out",()->tagged("player-controls").getVisibility()==View.GONE);int[] location=new int[2];int[] size=new int[2];
             main(()->{activity.controls.getLocationOnScreen(location);size[0]=activity.controls.getWidth();size[1]=activity.controls.getHeight();});
             float x=location[0]+size[0]*.8f,y=location[1]+size[1]*.5f;long down=SystemClock.uptimeMillis();touch(x,y,MotionEvent.ACTION_DOWN,down);touch(x,y,MotionEvent.ACTION_UP,down);Thread.sleep(90);down=SystemClock.uptimeMillis();touch(x,y,MotionEvent.ACTION_DOWN,down);touch(x,y,MotionEvent.ACTION_UP,down);
             waitFor("Double tap seeks ten seconds",()->activity.player.getCurrentPosition()>=39900);
@@ -95,9 +112,9 @@ public class NativePlayerTest {
             main(()->assertTrue(activity.controls.handleBack()));
             waitFor("Captions clear the timeline",()->above("player-subtitles","player-timeline"));
             screenshot("native-captions");
-            click("player-fit");main(()->assertEquals("Fit whole video",tagged("player-fit").getContentDescription()));click("player-fit");
-            click("player-lock");main(()->assertEquals(View.GONE,tagged("player-controls").getVisibility()));waitFor("Captions clear Unlock",()->above("player-subtitles","player-unlock"));screenshot("native-locked");main(()->assertTrue(activity.controls.handleBack()));main(()->assertEquals(View.VISIBLE,tagged("player-controls").getVisibility()));
-            click("player-rotate");waitFor("Portrait rotation retains playback",()->activity.getResources().getConfiguration().orientation==Configuration.ORIENTATION_PORTRAIT&&activity.player.getCurrentPosition()>50000);screenshot("native-portrait");
+            click("player-fit");main(()->assertEquals("Fit whole video",tagged("player-fit").getContentDescription()));waitFor("Scrim covers fill mode",this::scrimCoversPlayer);screenshot("native-fill");click("player-fit");
+            click("player-lock");waitFor("Lock fades controls away",()->tagged("player-controls").getVisibility()==View.GONE);waitFor("Captions clear Unlock",()->above("player-subtitles","player-unlock"));screenshot("native-locked");main(()->assertTrue(activity.controls.handleBack()));main(()->assertEquals(View.VISIBLE,tagged("player-controls").getVisibility()));
+            click("player-rotate");waitFor("Portrait rotation retains playback",()->activity.getResources().getConfiguration().orientation==Configuration.ORIENTATION_PORTRAIT&&activity.player.getCurrentPosition()>50000);waitFor("Scrim covers portrait",this::scrimCoversPlayer);screenshot("native-portrait");
             click("player-brightness");screenshot("native-brightness");main(()->assertTrue(activity.controls.handleBack()));
             click("player-play");waitFor("Resume",()->activity.player.isPlaying());Thread.sleep(4500);main(()->assertEquals("Controls auto-hide while playing",View.GONE,tagged("player-controls").getVisibility()));
             scenario.moveToState(Lifecycle.State.CREATED);scenario.moveToState(Lifecycle.State.RESUMED);waitFor("Backgrounding leaves playback paused",()->!activity.player.getPlayWhenReady());
@@ -106,7 +123,18 @@ public class NativePlayerTest {
             click("player-retry");waitFor("A failed retry preserves recovery controls",()->activity.player.getPlayerError()!=null&&tagged("player-error").isShown());
             main(()->{View retry=tagged("player-retry");activity.player.setMediaItem(PlayerPreviewActivity.fixture(),45000);retry.performClick();});waitFor("Recovery resumes a playable source",()->activity.player.getPlaybackState()==Player.STATE_READY&&activity.player.getCurrentPosition()>=45000);
             main(()->{assertFalse(activity.isFinishing());activity.player.pause();});
+            try {
+                shell("settings put global animator_duration_scale 0");waitFor("System reduced motion applied",()->!ValueAnimator.areAnimatorsEnabled());
+                main(()->{activity.controls.setControlsVisible(false);assertEquals(View.GONE,tagged("player-controls").getVisibility());activity.controls.setControlsVisible(true);assertEquals(1f,tagged("player-controls").getAlpha(),0f);assertTrue(tagged("player-controls").isShown());});
+            } finally {shell("settings put global animator_duration_scale 1");}
         }
+    }
+    private boolean scrimCoversPlayer(){
+        View scrim=tagged("player-scrim"),player=activity.controls;int[] a=new int[2],b=new int[2];scrim.getLocationOnScreen(a);player.getLocationOnScreen(b);
+        return !tagged("player-safe-controls").isLayoutRequested()&&a[0]==b[0]&&a[1]==b[1]&&scrim.getWidth()==player.getWidth()&&scrim.getHeight()==player.getHeight();
+    }
+    private void shell(String command) throws Exception {
+        try(android.os.ParcelFileDescriptor.AutoCloseInputStream stream=new android.os.ParcelFileDescriptor.AutoCloseInputStream(InstrumentationRegistry.getInstrumentation().getUiAutomation().executeShellCommand(command))){while(stream.read()!=-1){}}
     }
     private boolean above(String upperTag,String lowerTag){
         View upper=tagged(upperTag),lower=tagged(lowerTag);int[] a=new int[2],b=new int[2];upper.getLocationOnScreen(a);lower.getLocationOnScreen(b);return a[1]+upper.getHeight()<=b[1];

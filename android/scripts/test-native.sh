@@ -11,6 +11,9 @@ trap collect EXIT
 adb logcat -G 16M
 adb logcat -c
 adb shell wm dismiss-keyguard
+adb shell settings put global window_animation_scale 1
+adb shell settings put global transition_animation_scale 1
+adb shell settings put global animator_duration_scale 1
 # This disposable AOSP emulator launches the fixture Activity directly. Its
 # Quickstep launcher ANRs during rotation; keep that unrelated dialog out of tests.
 adb shell am force-stop com.android.launcher3

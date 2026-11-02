@@ -70,6 +70,35 @@ try {
   await ready();await page.locator('.sg-card').first().waitFor();
   await screenshot('home.png');
   assert.ok(await page.evaluate(()=>document.getElementById('app').scrollWidth<=innerWidth),'No phone-wide horizontal overflow');
+  await page.locator('.sg-nav-search').evaluate(el=>el.click());
+  await page.waitForFunction(()=>document.querySelector('.search-content>h1')?.getAnimations().some(a=>a.playState==='running'));
+  const entrance=await page.locator('.search-content>h1').evaluate(el=>{
+    const animation=el.getAnimations()[0];animation.pause();animation.currentTime=80;
+    const style=getComputedStyle(el),result={opacity:Number(style.opacity),transform:style.transform};animation.finish();return result;
+  });
+  assert.ok(entrance.opacity>0&&entrance.opacity<1&&entrance.transform!=='none','Page entrance visibly fades and moves');
+  await page.locator('[data-nav="board"]').evaluate(el=>el.click());
+  await page.waitForFunction(()=>document.querySelector('.sg-card')?.getAnimations().some(a=>a.playState==='running'));
+  const sheetMotion=await page.evaluate(()=>{
+    document.getElementById('sg-profile').click();
+    const overlay=document.querySelector('.sg-mobile-overlay'),panel=overlay.querySelector('[role="dialog"]');
+    [...overlay.getAnimations(),...panel.getAnimations()].forEach(a=>{a.pause();a.currentTime=80;});
+    const opening={opacity:Number(getComputedStyle(overlay).opacity),transform:getComputedStyle(panel).transform};
+    const hash=location.hash,first=StreamGlassAndroid.back(),second=StreamGlassAndroid.back();
+    return {opening,first,second,hashUnchanged:hash===location.hash,closing:overlay.classList.contains('sg-sheet-closing'),stillVisible:!overlay.hidden,animations:overlay.getAnimations().length};
+  });
+  assert.ok(sheetMotion.opening.opacity>0&&sheetMotion.opening.opacity<1&&sheetMotion.opening.transform!=='none','Sheet entry fades the backdrop and slides the panel');
+  assert.ok(sheetMotion.first&&sheetMotion.second&&sheetMotion.hashUnchanged&&sheetMotion.closing&&sheetMotion.stillVisible&&sheetMotion.animations,'Repeated Back during an exit cannot navigate behind the sheet');
+  await page.locator('.sg-menu-sheet').waitFor({state:'detached'});
+  assert.equal(await page.locator('#sg-profile').evaluate(el=>el===document.activeElement),true);
+  await page.evaluate(()=>{
+    document.getElementById('sg-profile').click();StreamGlassAndroid.back();
+    StreamGlassMobile.showMessage('Transition test','Replacement sheet');
+  });
+  await page.locator('.sg-message-sheet').waitFor();
+  assert.equal(await page.locator('.sg-mobile-overlay').count(),1,'Replacing a closing sheet cleans up its overlay');
+  await page.evaluate(()=>StreamGlassMobile.dismiss(false));
+  assert.equal(await page.locator('[inert]').count(),0,'Interrupted dismissal restores every background surface');
   acceptLogin=true;
   await page.locator('#sg-profile').tap();
   await page.locator('.sg-menu-sheet a[href="#/account"]').tap();
@@ -92,6 +121,7 @@ try {
   await screenshot('phone-streams.png');
   assert.equal(await page.locator('.sg-bottom-nav').evaluate(el=>el.inert),true,'Background navigation is inert while choosing a stream');
   await page.keyboard.press('Escape');
+  await page.locator('.sg-stream-sheet').waitFor({state:'hidden'});
   assert.equal(await page.locator('.sg-stream-sheet').isVisible(),false);
   assert.equal(await page.locator('[data-action="focus-streams"]').evaluate(el=>el===document.activeElement),true,'Sheet dismissal restores focus');
   await page.locator('[data-action="focus-streams"]').tap();
@@ -132,6 +162,7 @@ try {
   await page.locator('.sg-mobile-hero-actions .sg-primary').tap();
   await page.locator('.sg-stream-sheet:not([hidden])').waitFor();
   assert.equal(await page.evaluate(()=>StreamGlassAndroid.back()),true,'Android Back closes stream sheet first');
+  await page.locator('.sg-stream-sheet').waitFor({state:'hidden'});
   assert.ok((await page.evaluate(()=>location.hash)).startsWith('#/detail'));
   assert.equal(await page.locator('.sg-stream-sheet').isVisible(),false);
   await page.locator('[data-nav="library"]').tap();
@@ -147,6 +178,7 @@ try {
   await page.locator('.sg-stream-sheet:not([hidden])').waitFor();
   assert.ok((await page.locator('#sg-stream-heading').textContent()).includes('S2 E1'));
   await page.evaluate(()=>StreamGlassAndroid.back());
+  await page.locator('.sg-stream-sheet').waitFor({state:'hidden'});
   await screenshot('phone-episodes.png');
   await page.locator('[data-nav="board"]').tap();
   await page.locator('#sg-profile').tap();
@@ -167,11 +199,19 @@ try {
   assert.ok(heroPlay.y+heroPlay.height<=bottomBar.y,'Featured Play stays above bottom navigation in landscape');
   await page.locator('#sg-profile').tap();
   assert.equal(await page.locator('.sg-menu-sheet').evaluate(el=>getComputedStyle(el).animationName),'none','Reduced motion disables sheet animation');
+  assert.equal(await page.evaluate(()=>document.querySelector('.sg-mobile-overlay').getAnimations({subtree:true}).length),0,'Reduced motion also disables Web Animations');
   await page.evaluate(()=>StreamGlassAndroid.back());
+  assert.equal(await page.locator('.sg-menu-sheet').count(),0,'Reduced-motion dismissal is immediate');
+  assert.equal(await page.locator('.sg-card').first().evaluate(el=>el.getAnimations().length),0,'Reduced motion disables catalog movement');
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  await page.evaluate(()=>{document.getElementById('sg-profile').click();StreamGlassAndroid.back();});
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.locator('.sg-menu-sheet').waitFor({state:'detached'});
+  assert.equal(await page.locator('[inert]').count(),0,'Changing reduced motion during dismissal cannot leave the app inert');
   assert.deepEqual(errors,[],'No mobile JavaScript runtime errors');
   const exported=await page.evaluate(()=>StreamGlassDiagnostics.export());
   assert.ok(!exported.includes('private-stream-token')&&!exported.includes('secret-fixture-token'));
-  const summary={passed:true,engine:await browser.version(),nativePlayerMocked:true,actualAndroidDevice:false,realCore:true,login:true,touchSearch:true,responsiveWidths:[320,390,800],nativePayload:true,progress:true,resume:true,staleNativeEvents:true,recommendations:true,back:true,bottomNavigation:true,streamSheet:true,focusRestoration:true,myList:true,episodes:true,reducedMotion:true,landscape:true,runtimeErrors:errors};
+  const summary={passed:true,engine:await browser.version(),nativePlayerMocked:true,actualAndroidDevice:false,realCore:true,login:true,touchSearch:true,responsiveWidths:[320,390,800],nativePayload:true,progress:true,resume:true,staleNativeEvents:true,recommendations:true,back:true,bottomNavigation:true,streamSheet:true,focusRestoration:true,myList:true,episodes:true,reducedMotion:true,landscape:true,pageMotion:true,catalogMotion:true,sheetEntryAndExit:true,interruptedMotionCleanup:true,runtimeErrors:errors};
   await fs.writeFile(path.join(shots,'browser-results.json'),JSON.stringify(summary,null,2));console.log(JSON.stringify(summary,null,2));
 }finally{
   if(browser)await browser.close();
