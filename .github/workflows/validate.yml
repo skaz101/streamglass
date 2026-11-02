@@ -57,21 +57,7 @@ jobs:
             android/test-results/
           if-no-files-found: ignore
 
-      - name: Mobile visual review
-        if: always()
-        run: |
-          for name in home-390 phone-detail phone-streams phone-settings; do
-            file="android/test-results/$name.png"
-            [ -f "$file" ] || continue
-            ffmpeg -v error -y -i "$file" -vf 'scale=900:900:force_original_aspect_ratio=decrease' -frames:v 1 -quality 78 /tmp/mobile-preview.webp
-            printf 'MOBILE_PREVIEW:%s:' "$name"
-            base64 -w0 /tmp/mobile-preview.webp
-            printf '\n'
-          done
-
   android:
-    permissions:
-      contents: write # Temporary unsigned-build transfer; removed before release.
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -128,18 +114,3 @@ jobs:
             android/app/build/reports/androidTests/
             android/app/build/outputs/androidTest-results/
             android/test-results/native/
-      - name: Native visual review
-        if: always()
-        run: |
-          for file in android/test-results/native/*.webp; do
-            [ -f "$file" ] || continue
-            ffmpeg -v error -y -i "$file" -vf 'scale=1280:1280:force_original_aspect_ratio=decrease' -frames:v 1 -quality 78 /tmp/native-preview.webp
-            printf 'NATIVE_PREVIEW:%s:' "$(basename "$file" .webp)"
-            base64 -w0 /tmp/native-preview.webp
-            printf '\n'
-          done
-      - name: Stage validated unsigned build for local signing
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: python3 .github/scripts/stage-android-build.py

@@ -1,5 +1,42 @@
 # StreamGlass release audit
 
+## Android 0.6.1 motion and full-video dimming
+
+[Validation run 41399125611](https://github.com/skaz101/streamglass/actions/runs/41399125611)
+passed at `dbfef94838a1b67f1bc9e50a76394ec84d9b2605`:
+
+- Shared Node tests, six Android JVM tests and the source-export regression.
+- Six browser suites, Android debug/release compilation and lint, and TV packaging.
+- Mobile tests sampled intermediate page/sheet frames, catalog entrances, entry
+  and exit, repeated Back, interrupted dismissal, focus/inert cleanup and reduced
+  motion, alongside login, search, playback handoff, resume and responsive layouts.
+- Android 35 native tests ran with animations enabled: full-player scrim geometry
+  with nonzero safe insets, fit/fill and portrait/landscape, an observed intermediate
+  fade reversed before completion, and instant controls with system animations off.
+- Real H.264/AAC/WebVTT playback still passed seeking, speed, track selection,
+  captions, lock, rotation, auto-hide, lifecycle and recovery checks.
+- Native screenshots reviewed in landscape, fill, portrait, captions, settings,
+  lock and error states. The artwork and media are original test fixtures.
+
+The validated unsigned release APK was signed locally with the original preview
+key. SDK apksigner verified v2/v3 signatures and the unchanged certificate.
+All ZIP entries match the unsigned build. The packaged mobile assets match source;
+test media and the debug-only fixture Activity are excluded.
+
+APK SHA-256: `1c105016258f3674f7d630c03b9eb9d69dd875051cbb97081c9986f6cf7cba8e`.
+Certificate SHA-256: `167c739ded0846e2e7e31884cef42ec58d1154e1145740c1a6ced15d4f9f3ead`.
+Package: `com.streamglass.mobile`; version: `0.6.1`; version code: `601`.
+
+The subsequent source commit records this audit and removes temporary transfer
+tooling. Android and shared runtime/test sources are identical to the successful
+validation run. Routine CI has read-only permissions and the signing key stays
+local, outside source archives.
+
+Physical-device smoothness, vendor cutouts, real addon media and codecs still need
+phone testing. Native tests isolate the player; browser tests simulate its bridge.
+This remains a preview with release WebView debugging disabled. LG stays on 0.4.0.
+
+
 ## Android 0.6.0 native player
 
 [Validation run 41393673766](https://github.com/skaz101/streamglass/actions/runs/41393673766)
