@@ -93,9 +93,10 @@ public class NativePlayerTest {
             node=findNode(automation.getRootInActiveWindow(),"English");assertNotNull(node);assertTrue(node.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK));
             main(()->activity.player.play());waitFor("Captions render again after re-enabling",()->!activity.player.getCurrentCues().cues.isEmpty());main(()->activity.player.pause());
             main(()->assertTrue(activity.controls.handleBack()));
+            waitFor("Captions clear the timeline",()->above("player-subtitles","player-timeline"));
             screenshot("native-captions");
             click("player-fit");main(()->assertEquals("Fit whole video",tagged("player-fit").getContentDescription()));click("player-fit");
-            click("player-lock");main(()->assertEquals(View.GONE,tagged("player-controls").getVisibility()));screenshot("native-locked");main(()->assertTrue(activity.controls.handleBack()));main(()->assertEquals(View.VISIBLE,tagged("player-controls").getVisibility()));
+            click("player-lock");main(()->assertEquals(View.GONE,tagged("player-controls").getVisibility()));waitFor("Captions clear Unlock",()->above("player-subtitles","player-unlock"));screenshot("native-locked");main(()->assertTrue(activity.controls.handleBack()));main(()->assertEquals(View.VISIBLE,tagged("player-controls").getVisibility()));
             click("player-rotate");waitFor("Portrait rotation retains playback",()->activity.getResources().getConfiguration().orientation==Configuration.ORIENTATION_PORTRAIT&&activity.player.getCurrentPosition()>50000);screenshot("native-portrait");
             click("player-brightness");screenshot("native-brightness");main(()->assertTrue(activity.controls.handleBack()));
             click("player-play");waitFor("Resume",()->activity.player.isPlaying());Thread.sleep(4500);main(()->assertEquals("Controls auto-hide while playing",View.GONE,tagged("player-controls").getVisibility()));
@@ -106,6 +107,9 @@ public class NativePlayerTest {
             main(()->{View retry=tagged("player-retry");activity.player.setMediaItem(PlayerPreviewActivity.fixture(),45000);retry.performClick();});waitFor("Recovery resumes a playable source",()->activity.player.getPlaybackState()==Player.STATE_READY&&activity.player.getCurrentPosition()>=45000);
             main(()->{assertFalse(activity.isFinishing());activity.player.pause();});
         }
+    }
+    private boolean above(String upperTag,String lowerTag){
+        View upper=tagged(upperTag),lower=tagged(lowerTag);int[] a=new int[2],b=new int[2];upper.getLocationOnScreen(a);lower.getLocationOnScreen(b);return a[1]+upper.getHeight()<=b[1];
     }
     private android.view.accessibility.AccessibilityNodeInfo findNode(android.view.accessibility.AccessibilityNodeInfo root,String prefix){
         if(root==null)return null;CharSequence label=root.getContentDescription();if(label!=null&&(label.toString().equals(prefix)||label.toString().equals(prefix+", selected")))return root;

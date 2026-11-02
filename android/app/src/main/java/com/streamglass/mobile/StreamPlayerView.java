@@ -14,6 +14,7 @@ import android.graphics.drawable.RippleDrawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
+import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.MotionEvent;
@@ -68,6 +69,7 @@ public final class StreamPlayerView extends FrameLayout {
     private TextView elapsed, remaining, speedText, feedback, errorText;
     private Button unlock;
     private final float originalBrightness;
+    private final float captionScale;
     private Dialog dialog;
     private int sheetHeight=430;
     private LinearLayout trackColumns;
@@ -93,13 +95,14 @@ public final class StreamPlayerView extends FrameLayout {
         super(activity);this.activity=activity;this.player=player;this.callbacks=callbacks;
         preferences=activity.getSharedPreferences("streamglass-player",Context.MODE_PRIVATE);
         originalBrightness=activity.getWindow().getAttributes().screenBrightness;
+        captionScale=Math.max(75,Math.min(200,subtitleSize))/100f;
         setBackgroundColor(Color.BLACK);setTag("native-player");
         if(android.os.Build.VERSION.SDK_INT>=28)setOnApplyWindowInsetsListener((v,insets)->{android.view.DisplayCutout cutout=insets.getDisplayCutout();if(cutout!=null)setSafeInsets(cutout.getSafeInsetLeft(),cutout.getSafeInsetTop(),cutout.getSafeInsetRight(),cutout.getSafeInsetBottom());else setSafeInsets(0,0,0,0);return insets;});
         surface=new PlayerView(activity);surface.setUseController(false);surface.setPlayer(player);
         surface.setKeepContentOnPlayerReset(true);surface.setShowBuffering(PlayerView.SHOW_BUFFERING_NEVER);
         addView(surface,new LayoutParams(-1,-1));
         SubtitleView subtitles=surface.getSubtitleView();
-        if(subtitles!=null){subtitles.setUserDefaultStyle();subtitles.setFractionalTextSize(SubtitleView.DEFAULT_TEXT_SIZE_FRACTION*Math.max(75,Math.min(200,subtitleSize))/100f);}
+        if(subtitles!=null){subtitles.setTag("player-subtitles");subtitles.setUserDefaultStyle();((View)subtitles.getParent()).addOnLayoutChangeListener((v,l,t,r,b,ol,ot,or,ob)->post(this::updateSubtitlePadding));}
         View gestures=new View(activity);gestures.setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);
         GestureDetector detector=new GestureDetector(activity,new GestureDetector.SimpleOnGestureListener(){
             @Override public boolean onDown(MotionEvent event){return true;}
@@ -164,6 +167,8 @@ public final class StreamPlayerView extends FrameLayout {
         Button retry=plainButton("Try again",()->{player.prepare();player.play();refresh();});retry.setTag("player-retry");retry.setBackground(ripple(ACCENT,6));recovery.addView(retry,new LinearLayout.LayoutParams(0,dp(48),1));recovery.addView(space(10));
         Button other=plainButton("Choose another stream",callbacks::close);other.setTag("player-other-stream");recovery.addView(other,new LinearLayout.LayoutParams(0,dp(48),1));errorPanel.addView(recovery,new LinearLayout.LayoutParams(-1,-2));
         LayoutParams errorParams=new LayoutParams(-1,-2,Gravity.CENTER);errorParams.setMargins(dp(24),dp(60),dp(24),dp(24));addView(errorPanel,errorParams);errorPanel.setVisibility(GONE);
+        bottom.addOnLayoutChangeListener((v,l,t,r,b,ol,ot,or,ob)->post(this::updateSubtitlePadding));
+        unlock.addOnLayoutChangeListener((v,l,t,r,b,ol,ot,or,ob)->post(this::updateSubtitlePadding));
         player.addListener(listener);player.setPlaybackSpeed(PlayerUiMath.speed(preferences.getFloat("speed",1f)));handler.post(update);scheduleHide();
     }
     private int dp(int value){return Math.round(value*getResources().getDisplayMetrics().density);}
@@ -216,9 +221,18 @@ public final class StreamPlayerView extends FrameLayout {
         if(accessibility==null||!accessibility.isTouchExplorationEnabled())handler.postDelayed(hideUnlock,4000);
     }
     private void updateSubtitlePadding(){
-        if(surface==null)return;SubtitleView subtitles=surface.getSubtitleView();if(subtitles==null)return;
-        int clearance=visible?148:locked&&unlock!=null&&unlock.getVisibility()==VISIBLE?100:0;
-        subtitles.setBottomPaddingFraction(clearance>0?Math.min(.55f,dp(clearance)/(float)Math.max(1,getHeight())):.08f);
+        if(disposed||surface==null)return;SubtitleView subtitles=surface.getSubtitleView();if(subtitles==null||!(subtitles.getParent() instanceof View))return;
+        View frame=(View)subtitles.getParent();if(frame.getHeight()==0)return;
+        View obstruction=visible&&bottom!=null&&bottom.isShown()?bottom:locked&&unlock!=null&&unlock.isShown()?unlock:null;
+        int margin=0;
+        if(obstruction!=null){int[] videoOrigin=new int[2],controlOrigin=new int[2];frame.getLocationOnScreen(videoOrigin);obstruction.getLocationOnScreen(controlOrigin);margin=Math.max(0,videoOrigin[1]+frame.getHeight()-controlOrigin[1]+dp(12));}
+        margin=Math.min(frame.getHeight()/2,margin);
+        // WebVTT's explicit line placement ignores bottomPaddingFraction. Resize
+        // the caption viewport instead, preserving the font size and video bounds.
+        ViewGroup.MarginLayoutParams params=(ViewGroup.MarginLayoutParams)subtitles.getLayoutParams();
+        if(params.bottomMargin!=margin){params.bottomMargin=margin;subtitles.setLayoutParams(params);}
+        subtitles.setFixedTextSize(TypedValue.COMPLEX_UNIT_PX,frame.getHeight()*SubtitleView.DEFAULT_TEXT_SIZE_FRACTION*captionScale);
+        subtitles.setBottomPaddingFraction(.08f);
     }
     @Override protected void onSizeChanged(int w,int h,int oldw,int oldh){
         super.onSizeChanged(w,h,oldw,oldh);updateSubtitlePadding();
