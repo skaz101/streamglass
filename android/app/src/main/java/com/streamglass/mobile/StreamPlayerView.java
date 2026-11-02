@@ -69,6 +69,7 @@ public final class StreamPlayerView extends FrameLayout {
     private Button unlock;
     private final float originalBrightness;
     private Dialog dialog;
+    private int sheetHeight=430;
     private LinearLayout trackColumns;
     private boolean visible=true, locked, scrubbing, resumeAfterScrub, zoomed, disposed;
     private final Runnable hide=()->setControlsVisible(false);
@@ -216,28 +217,32 @@ public final class StreamPlayerView extends FrameLayout {
     }
     @Override protected void onSizeChanged(int w,int h,int oldw,int oldh){
         super.onSizeChanged(w,h,oldw,oldh);if(surface!=null){SubtitleView subtitles=surface.getSubtitleView();if(subtitles!=null)subtitles.setBottomPaddingFraction(visible?Math.min(.55f,dp(148)/(float)Math.max(1,h)):.08f);}
-        if(dialog!=null&&dialog.getWindow()!=null)dialog.getWindow().setLayout(Math.min(w,dp(680)),Math.min(dp(430),Math.max(dp(220),h-dp(24))));
+        if(dialog!=null&&dialog.getWindow()!=null)dialog.getWindow().setLayout(Math.min(w,dp(680)),Math.min(dp(sheetHeight),Math.max(dp(220),h-dp(24))));
     }
     public boolean handleBack(){if(dialog!=null){dialog.dismiss();return true;}if(locked){setLocked(false);return true;}return false;}
     public void setSafeInsets(int left,int top,int right,int bottomInset){chrome.setPadding(left,top,right,bottomInset);LayoutParams params=(LayoutParams)unlock.getLayoutParams();params.bottomMargin=dp(24)+bottomInset;unlock.setLayoutParams(params);}
-    private LinearLayout sheet(String title){
+    private LinearLayout sheet(String title,int preferredHeight){
+        sheetHeight=preferredHeight;
         if(dialog!=null)dialog.dismiss();handler.removeCallbacks(hide);
         dialog=new Dialog(activity);LinearLayout content=column();content.setPadding(dp(22),dp(20),dp(22),dp(22));content.setBackground(round(0xff191919,18));
         LinearLayout heading=new LinearLayout(activity);heading.setGravity(Gravity.CENTER_VERTICAL);TextView text=text(title,22,Color.WHITE);text.setTypeface(null,Typeface.BOLD);heading.addView(text,new LinearLayout.LayoutParams(0,-2,1));heading.addView(icon(R.drawable.ic_player_close,"Close player settings","player-sheet-close",()->dialog.dismiss()),new LinearLayout.LayoutParams(dp(48),dp(48)));content.addView(heading);
         dialog.setContentView(content);dialog.setOnDismissListener(d->{dialog=null;trackColumns=null;scheduleHide();});
         Window window=dialog.getWindow();if(window!=null){window.setBackgroundDrawableResource(android.R.color.transparent);window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);WindowManager.LayoutParams params=window.getAttributes();params.dimAmount=.65f;params.gravity=Gravity.BOTTOM;window.setAttributes(params);}
-        dialog.show();if(window!=null)window.setLayout(Math.min(getWidth(),dp(680)),Math.min(dp(430),Math.max(dp(220),getHeight()-dp(24))));
+        dialog.show();if(window!=null)window.setLayout(Math.min(getWidth(),dp(680)),Math.min(dp(sheetHeight),Math.max(dp(220),getHeight()-dp(24))));
         return content;
     }
     private void chooseSpeed(){
-        LinearLayout content=sheet("Playback speed");ScrollView scroll=new ScrollView(activity);LinearLayout choices=column();scroll.addView(choices);content.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
+        LinearLayout content=sheet("Playback speed",250);
+        LinearLayout choices=column();choices.setPadding(0,dp(12),0,0);content.addView(choices,new LinearLayout.LayoutParams(-1,-2));
+        LinearLayout row=null;int index=0;
         for(float value:new float[]{.5f,.75f,1f,1.25f,1.5f,2f}){
             Button option=plainButton(PlayerUiMath.speedLabel(value)+(value==1f?" · Normal":""),()->{player.setPlaybackSpeed(value);preferences.edit().putFloat("speed",value).apply();dialog.dismiss();refresh();});
-            option.setTag("player-speed-"+value);boolean selected=Math.abs(player.getPlaybackParameters().speed-value)<.001;option.setBackground(ripple(selected?0xff4a2028:Color.TRANSPARENT,6));option.setContentDescription(option.getText()+(selected?", selected":""));choices.addView(option,new LinearLayout.LayoutParams(-1,dp(48)));
+            option.setTag("player-speed-"+value);boolean selected=Math.abs(player.getPlaybackParameters().speed-value)<.001;option.setBackground(ripple(selected?0xff4a2028:Color.TRANSPARENT,6));option.setContentDescription(option.getText()+(selected?", selected":""));if(index%3==0){row=new LinearLayout(activity);LinearLayout.LayoutParams rowParams=new LinearLayout.LayoutParams(-1,dp(52));rowParams.bottomMargin=dp(8);choices.addView(row,rowParams);}
+            LinearLayout.LayoutParams cell=new LinearLayout.LayoutParams(0,-1,1);if(index%3!=0)cell.leftMargin=dp(8);row.addView(option,cell);index++;
         }
     }
     private void chooseTracks(){
-        LinearLayout content=sheet("Audio & Subtitles");trackColumns=new LinearLayout(activity);trackColumns.setPadding(0,dp(12),0,dp(12));content.addView(trackColumns,new LinearLayout.LayoutParams(-1,0,1));populateTracks();Button done=plainButton("Done",()->dialog.dismiss());content.addView(done,new LinearLayout.LayoutParams(-1,dp(48)));
+        LinearLayout content=sheet("Audio & Subtitles",430);trackColumns=new LinearLayout(activity);trackColumns.setPadding(0,dp(12),0,dp(12));content.addView(trackColumns,new LinearLayout.LayoutParams(-1,0,1));populateTracks();Button done=plainButton("Done",()->dialog.dismiss());content.addView(done,new LinearLayout.LayoutParams(-1,dp(48)));
     }
     private void populateTracks(){
         if(trackColumns==null)return;trackColumns.removeAllViews();
@@ -269,7 +274,7 @@ public final class StreamPlayerView extends FrameLayout {
         if(override!=null)parameters.addOverride(override);player.setTrackSelectionParameters(parameters.build());populateTracks();
     }
     private void chooseBrightness(){
-        LinearLayout content=sheet("Brightness");TextView note=text("Adjust brightness for this player only.",14,MUTED);note.setPadding(0,dp(12),0,dp(22));content.addView(note);
+        LinearLayout content=sheet("Brightness",300);TextView note=text("Adjust brightness for this player only.",14,MUTED);note.setPadding(0,dp(12),0,dp(22));content.addView(note);
         SeekBar slider=new SeekBar(activity);slider.setTag("player-brightness-slider");slider.setContentDescription("Player brightness");slider.setMax(95);slider.setProgress(Math.round((activity.getWindow().getAttributes().screenBrightness<0?.5f:activity.getWindow().getAttributes().screenBrightness)*100)-5);slider.setProgressTintList(ColorStateList.valueOf(ACCENT));slider.setThumbTintList(ColorStateList.valueOf(Color.WHITE));content.addView(slider,new LinearLayout.LayoutParams(-1,dp(56)));
         slider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){@Override public void onStartTrackingTouch(SeekBar bar){}@Override public void onStopTrackingTouch(SeekBar bar){}@Override public void onProgressChanged(SeekBar bar,int progress,boolean user){if(user)applyBrightness((progress+5)/100f);}});
         Button reset=plainButton("Use device brightness",()->{applyBrightness(-1f);dialog.dismiss();});content.addView(reset,new LinearLayout.LayoutParams(-1,dp(48)));

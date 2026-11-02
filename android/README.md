@@ -1,12 +1,12 @@
-# StreamGlass for Android phones and tablets, 0.5.0
+# StreamGlass for Android phones and tablets, 0.6.0
 
 An installable Android preview with a dedicated mobile interface: artwork-led
 home, compact poster rows, Home / For You / Search / My List tabs, a profile
 menu, and stream selection in an accessible bottom sheet. It shares the MIT
 Stremio core, account sync, live search and recommendations with the LG version.
 The layout adapts to phones, tablets and landscape. Playback uses native AndroidX
-Media3/ExoPlayer with seeking, audio selection, embedded/external subtitles and
-watch-progress callbacks. It is not the upstream DX.BI Android TV wrapper.
+Media3/ExoPlayer with original fullscreen controls, double-tap seeking, speed
+selection, screen lock, audio/caption settings and watch-progress callbacks. It is not the upstream DX.BI Android TV wrapper.
 
 Package ID: com.streamglass.mobile. Minimum Android: 8.0 (API 26). Compile/target
 SDK: 35. Use an updated Android System WebView. Samsung Galaxy S25 is the intended
@@ -14,7 +14,7 @@ first hardware test device. This version is designed for touch, not Android TV.
 
 ## Install
 
-Download [streamglass-android-0.5.0.apk](https://github.com/skaz101/streamglass/releases/download/v0.5.0/streamglass-android-0.5.0.apk) on your phone and open it. Allow installation
+Download [streamglass-android-0.6.0.apk](https://github.com/skaz101/streamglass/releases/download/v0.6.0/streamglass-android-0.6.0.apk) on your phone and open it. Allow installation
 from that browser or file manager when Android asks. Open StreamGlass and sign
 in with the same Stremio account used on your TV. This is a separate installation;
 it does not replace Stremio or the LG app. Account library/addons/progress sync
@@ -23,14 +23,14 @@ through Stremio. Recommendations are computed separately on each device.
 Alternatively, with Android platform-tools and USB debugging authorized:
 
 ```sh
-adb install -r streamglass-android-0.5.0.apk
+adb install -r streamglass-android-0.6.0.apk
 adb shell am start -n com.streamglass.mobile/.MainActivity
 ```
 
 ## Signing and updates
 
-The 0.5.0 APK is built with the release configuration and signed locally with
-the original preview certificate, so it can update 0.4.0 without uninstalling.
+The 0.6.0 APK is built with the release configuration and signed locally with
+the original preview certificate, so it can update 0.4.0 or 0.5.0 without uninstalling.
 The key remains private. This is still a preview signed with a development
 certificate, not a Play Store release. Release builds disable WebView debugging;
 local debug builds permit inspection through an authorized USB connection.
@@ -43,12 +43,24 @@ update the existing APK in place; keep the original key backed up privately.
 Do not uninstall as a routine update step: that can erase local account data.
 A production release needs a separate private release-signing configuration.
 
+## Player controls
+
+- Tap the video to show/hide controls; double-tap left/right to skip 10 seconds.
+- Use the center button to pause/resume, or drag the red timeline to seek.
+- Playback opens in landscape. The rotation button switches to portrait; the
+  fit/fill button controls whether the entire picture or a cropped view is shown.
+- Speed supports 0.5×–2× and is remembered on this device. Audio & subs lists
+  available tracks; captions can be turned off. Brightness is local to the player.
+- Lock prevents accidental input and holds orientation. Tap to reveal Unlock,
+  or press Android Back once to unlock. Back closes settings before exiting.
+- On an error, retry the stream in place or return to choose another stream.
+
 ## Playback and limits
 
 - Select Torrentio + TorBox direct HTTP/HTTPS links. Raw torrents/magnets are not
   downloaded. No debrid password, API key or extra account is entered here.
 - Native playback supports progressive, HLS and DASH sources, subject to the
-  phone's codecs. Audio and Subs menus list supported tracks. External SRT, VTT,
+  phone's codecs. The Audio & Subtitles panel lists supported tracks. External SRT, VTT,
   ASS/SSA and TTML are handed to Media3. A subtitle URL without a recognized
   extension defaults to SRT. An addon returning another format may fail.
 - Progress is forwarded every second and on pause/exit. Closing the player
@@ -57,7 +69,7 @@ A production release needs a separate private release-signing configuration.
   in picture, casting or downloads are implemented in this release.
 - Late subtitle-addon responses can add tracks after playback starts. A source
   update may briefly rebuffer. Default audio/subtitle languages use the account's
-  playback settings. The TV's full subtitle styling is not ported to native UI.
+  playback settings. Caption size follows the account setting; the TV's full subtitle styling is not ported.
 - Metadata/account requests use the shared web client. Use HTTPS addon URLs.
   HTTP direct media links are allowed in the native player. Signed query strings
   are preserved. Non-sensitive addon media headers apply to the original media
@@ -67,18 +79,19 @@ A production release needs a separate private release-signing configuration.
 
 ## Verification and real-device checklist
 
-CI builds debug and release variants, runs Android lint and three JVM tests
-covering URL rules and subtitle formats. The mobile browser integration uses
+CI builds debug and release variants and runs Android lint and six JVM tests
+covering URL rules, subtitle formats, seek bounds, time labels and playback speeds. The mobile browser integration uses
 real Stremio core WASM with fake account/addon services and a simulated native
 player. It covers login, touch search, 320/390/800-pixel layouts, landscape,
 bottom navigation, My List, episodes, sheet dismissal and focus restoration,
 playback handoff, progress, resume, stale events, and recommendations.
-See [0.5.0 release notes](RELEASE-0.5.0.md) for the verified release checks.
+See [0.6.0 release notes](RELEASE-0.6.0.md) for the verified release checks.
 
-No Android emulator or physical Android device has run this APK yet. Native
-Media3 decoding, audio/subtitle selection, WebView-to-native messaging on Android,
-rotation, keyboard/insets, lifecycle/audio focus and real TorBox links remain
-unverified. Browser simulation and a successful build do not prove those work.
+The Android 35 emulator suite runs the actual native player with isolated local
+H.264/AAC/WebVTT fixtures. It covers pause, skips, double taps, timeline scrubbing,
+speed, track selection, screen lock, rotation, auto-hide, background pause and
+error recovery. Physical-device codecs, real TorBox links, vendor insets, audio
+focus and the full WebView-to-native path still require phone testing.
 
 First phone test:
 
@@ -137,7 +150,11 @@ CHROME_BIN=/path/to/chromium node tests/mobile-browser.mjs
 python3 scripts/collect-sources.py
 ```
 
-Mobile browser tests need Chromium and the webos npm dependencies. vendor/ includes the
+Mobile browser tests need Chromium and the webos npm dependencies. For the native
+player suite, generate fixtures with `python3 tests/make-player-fixture.py`
+(requires ffmpeg), start an Android emulator, and run
+`./gradlew connectedDebugAndroidTest`. Debug-only test media is never packaged
+in the release APK. vendor/ includes the
 resolved runtime sources and notices; one Guava conflict-placeholder JAR contains
 no classes and has no source JAR. See THIRD_PARTY.md and the root GPL license.
 Redistribute the corresponding combined source with the APK/IPK.

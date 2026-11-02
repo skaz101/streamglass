@@ -15,6 +15,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 import java.io.File;
 import java.io.FileOutputStream;
+import android.os.ParcelFileDescriptor;
 import java.util.function.BooleanSupplier;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,6 +40,10 @@ public class NativePlayerTest {
         Thread.sleep(400);Bitmap bitmap=InstrumentationRegistry.getInstrumentation().getUiAutomation().takeScreenshot();assertNotNull(bitmap);
         File folder=new File(activity.getExternalFilesDir(null),"native-player-tests");assertTrue(folder.isDirectory()||folder.mkdirs());
         try(FileOutputStream stream=new FileOutputStream(new File(folder,name+".png"))){assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG,100,stream));}bitmap.recycle();
+        // Gradle uninstalls the test app after execution; preserve previews outside its data.
+        String command="mkdir -p /sdcard/Download/streamglass-native && cp "+new File(folder,name+".png").getAbsolutePath()+" /sdcard/Download/streamglass-native/";
+        try(ParcelFileDescriptor.AutoCloseInputStream output=new ParcelFileDescriptor.AutoCloseInputStream(InstrumentationRegistry.getInstrumentation().getUiAutomation().executeShellCommand(command))){byte[] buffer=new byte[1024];while(output.read(buffer)!=-1){}}
+
     }
     @Test public void nativePlaybackControlsAndRecovery() throws Exception {
         Intent intent=new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(),PlayerPreviewActivity.class);
