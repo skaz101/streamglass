@@ -28,6 +28,7 @@ public class PlayerPreviewActivity extends Activity {
         super.onCreate(state);setRequestedOrientation(orientation);
         getSharedPreferences("streamglass-player",MODE_PRIVATE).edit().clear().commit();
         player=new ExoPlayer.Builder(this).setSeekBackIncrementMs(10000).setSeekForwardIncrementMs(10000).build();
+        player.addAnalyticsListener(new androidx.media3.exoplayer.util.EventLogger("StreamGlassPlayback"));
         player.setTrackSelectionParameters(player.getTrackSelectionParameters().buildUpon().setTrackTypeDisabled(C.TRACK_TYPE_TEXT,true).build());
         controls=new StreamPlayerView(this,player,"The Last Horizon","S1 E2 · Beyond the signal",100,new StreamPlayerView.Callbacks(){
             public void close(){finish();}

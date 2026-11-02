@@ -30,7 +30,8 @@ public class NativePlayerTest {
     private void main(Runnable run){InstrumentationRegistry.getInstrumentation().runOnMainSync(run);}
     private void waitFor(String message,BooleanSupplier condition) throws Exception {
         long end=SystemClock.uptimeMillis()+20000;boolean[] ok={false};
-        while(SystemClock.uptimeMillis()<end){main(()->ok[0]=condition.getAsBoolean());if(ok[0])return;Thread.sleep(100);}fail(message);
+        while(SystemClock.uptimeMillis()<end){main(()->ok[0]=condition.getAsBoolean());if(ok[0])return;Thread.sleep(100);}
+        main(()->Log.i("StreamGlassPreview","NODE failure state="+activity.player.getPlaybackState()+" play="+activity.player.getPlayWhenReady()+" position="+activity.player.getCurrentPosition()+" error="+activity.player.getPlayerError()));fail(message);
     }
     private View tagged(String tag){return activity.controls.findViewWithTag(tag);}
     private void click(String tag){main(()->{View v=tagged(tag);assertNotNull(tag,v);assertTrue(tag,v.isShown());assertTrue(tag,v.performClick());});}
@@ -64,6 +65,7 @@ public class NativePlayerTest {
             main(()->activity.player.seekTo(30000));waitFor("Initial seek",()->activity.player.getCurrentPosition()>=29900);
             click("player-forward");waitFor("10-second forward",()->activity.player.getCurrentPosition()>=39900);
             click("player-rewind");waitFor("10-second rewind",()->activity.player.getCurrentPosition()<31000);
+            waitFor("Seek finishes while paused",()->activity.player.getPlaybackState()==Player.STATE_READY&&!activity.player.getPlayWhenReady());
             screenshot("native-landscape");
             main(()->activity.controls.setControlsVisible(false));int[] location=new int[2];int[] size=new int[2];
             main(()->{activity.controls.getLocationOnScreen(location);size[0]=activity.controls.getWidth();size[1]=activity.controls.getHeight();});
@@ -83,7 +85,9 @@ public class NativePlayerTest {
             waitFor("Audio selection applied",()->activity.player.getTrackSelectionParameters().overrides.values().stream().anyMatch(o->o.getType()==C.TRACK_TYPE_AUDIO));
             node=findNode(automation.getRootInActiveWindow(),"English");assertNotNull("External English captions offered",node);assertTrue(node.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK));
             waitFor("Subtitles enabled",()->!activity.player.getTrackSelectionParameters().disabledTrackTypes.contains(C.TRACK_TYPE_TEXT));
-            waitFor("Caption cues render",()->!activity.player.getCurrentCues().cues.isEmpty());
+            main(()->{assertFalse("Selecting captions keeps playback paused",activity.player.getPlayWhenReady());activity.player.play();});
+            waitFor("Caption cues render during playback",()->activity.player.isPlaying()&&!activity.player.getCurrentCues().cues.isEmpty());
+            main(()->activity.player.pause());
             node=findNode(automation.getRootInActiveWindow(),"Off");assertNotNull(node);assertTrue(node.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK));
             waitFor("Subtitles can be turned off",()->activity.player.getTrackSelectionParameters().disabledTrackTypes.contains(C.TRACK_TYPE_TEXT));
             node=findNode(automation.getRootInActiveWindow(),"English");assertNotNull(node);assertTrue(node.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK));

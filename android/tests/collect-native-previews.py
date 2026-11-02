@@ -7,7 +7,7 @@ chunks=defaultdict(dict)
 for line in (root/'native-log.txt').read_text().splitlines():
     match=re.search(r'NATIVE_IMAGE:([\w-]+):(\d+):([A-Za-z0-9+/=]+)',line)
     if match:chunks[match[1]][int(match[2])]=match[3]
-    elif 'NODE ' in line:print(line)
+    elif 'NODE ' in line or 'StreamGlassPlayback' in line:print(line)
 for name,parts in chunks.items():
     assert set(parts)==set(range(len(parts))),name+' has missing chunks'
     data=base64.b64decode(''.join(parts[i] for i in range(len(parts))),validate=True)

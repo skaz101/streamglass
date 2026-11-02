@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 mkdir -p test-results/native
 collect() {
-  adb logcat -d -s StreamGlassPreview:I > test-results/native/native-log.txt || true
+  adb logcat -d -s StreamGlassPreview:I StreamGlassPlayback:D > test-results/native/native-log.txt || true
   python3 tests/collect-native-previews.py
 }
 trap collect EXIT
