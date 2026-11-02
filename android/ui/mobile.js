@@ -43,7 +43,7 @@
   const mark='<svg class="sg-mobile-mark" viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M7 4h18v6H13v4h10v14H5v-6h12v-4H7Z"/></svg>';
   const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
   const ease='cubic-bezier(.22,1,.36,1)';
-  let dialog=null,lastRoute=null,tabAnimation=null,account=null,snapshot=null,snapshotAnimation=null,lastHash=null,restoreScroll=null,scrollObserver=null,scrollTimer=null;
+  let dialog=null,lastRoute=null,tabAnimation=null,account=null,snapshot=null,snapshotAnimation=null,lastHash=null,restoreScroll=null,scrollObserver=null,scrollTimer=null,screenSequence=0;
   function finishDismiss(state,restore) {
     if(dialog!==state)return;
     dialog=null;
@@ -146,7 +146,7 @@
     const signedIn=window.StreamGlassShell.state.signedIn;
     const overlay=doc.createElement('div');overlay.className='sg-mobile-overlay';
     const links=[['account',signedIn?'Your account':'Sign in to Stremio','user'],['discover','Browse all titles','grid'],['addons','Manage addons','addon'],['settings','App settings','settings']];
-    overlay.innerHTML='<section class="sg-mobile-sheet sg-menu-sheet" role="dialog" aria-modal="true" aria-labelledby="sg-menu-title" tabindex="-1">'+closeButton+'<div class="sg-menu-profile">'+icon('user')+'</div><h2 id="sg-menu-title">Your StreamGlass</h2><p>Your stories. Your way.</p><nav aria-label="Account and app">'+links.map(([route,label,glyph])=>'<a href="#/'+route+'">'+icon(glyph)+'<span>'+label+'</span><span aria-hidden="true">›</span></a>').join('')+'</nav><small>StreamGlass 0.6.2</small></section>';
+    overlay.innerHTML='<section class="sg-mobile-sheet sg-menu-sheet" role="dialog" aria-modal="true" aria-labelledby="sg-menu-title" tabindex="-1">'+closeButton+'<div class="sg-menu-profile">'+icon('user')+'</div><h2 id="sg-menu-title">Your StreamGlass</h2><p>Your stories. Your way.</p><nav aria-label="Account and app">'+links.map(([route,label,glyph])=>'<a href="#/'+route+'">'+icon(glyph)+'<span>'+label+'</span><span aria-hidden="true">›</span></a>').join('')+'</nav><small>StreamGlass 0.6.3</small></section>';
     doc.querySelector('.sg-app').append(overlay);paintAccount();open(overlay,{remove:true});
   }
   function mount(root) {
@@ -187,6 +187,7 @@
   }
   function clearSnapshot(){if(snapshotAnimation)snapshotAnimation.cancel();snapshotAnimation=null;if(snapshot)snapshot.remove();snapshot=null;}
   function beforeScreenChanged(){
+    screenSequence++;
     if(scrollObserver)scrollObserver.disconnect();clearTimeout(scrollTimer);scrollObserver=null;
     const previousView=doc.getElementById('sg-view');restoreScroll=lastHash===location.hash?previousView?.scrollTop:null;
     clearSnapshot();dismiss(false);
@@ -236,8 +237,8 @@
     if(snapshot){const outgoing=snapshot;snapshotAnimation=snapshot.animate([{opacity:1},{opacity:0}],{duration:240,easing:ease});snapshotAnimation.finished.then(()=>{if(snapshot===outgoing)clearSnapshot();}).catch(()=>{});}
     lastRoute=route;lastHash=location.hash;
     if(restoreScroll>0){
-      const position=restoreScroll;
-      const restore=()=>{view.scrollTop=position;if(view.scrollHeight-view.clientHeight>=position){if(scrollObserver)scrollObserver.disconnect();clearTimeout(scrollTimer);scrollObserver=null;}};
+      const position=restoreScroll,version=screenSequence;
+      const restore=()=>{if(version!==screenSequence)return;view.scrollTop=position;if(view.scrollHeight-view.clientHeight>=position){if(scrollObserver)scrollObserver.disconnect();clearTimeout(scrollTimer);scrollObserver=null;}};
       scrollObserver=new MutationObserver(restore);scrollObserver.observe(view,{childList:true,subtree:true});requestAnimationFrame(restore);
       scrollTimer=setTimeout(()=>{if(scrollObserver)scrollObserver.disconnect();scrollObserver=null;},3000);
     }

@@ -43,7 +43,7 @@ jobs:
           npm run test:browser
           node ../android/scripts/sync-assets.mjs
           node ../android/tests/mobile-browser.mjs
-      - run: python3 webos/scripts/source-archive.py --version 0.6.2
+      - run: python3 webos/scripts/source-archive.py --version 0.6.3
       - uses: actions/upload-artifact@v4
         with:
           name: webos-and-source
@@ -70,6 +70,8 @@ jobs:
           done
 
   android:
+    permissions:
+      contents: write # Temporary unsigned-build transfer for local signing.
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -126,3 +128,7 @@ jobs:
             android/app/build/reports/androidTests/
             android/app/build/outputs/androidTest-results/
             android/test-results/native/
+      - name: Stage unsigned build for local signing
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/stage-android-build.py
