@@ -103,7 +103,7 @@
       let full=meta;
       try {full=(await resolveMeta(meta.type||'movie',meta.id||meta._id,meta)).meta;}catch(_){}
       if(sequence!==previewSequence||token!==epoch||doc.activeElement!==node||view.scrollTop>120)return;
-      slot.innerHTML=hero(full);
+      global.dispatchEvent(new CustomEvent('streamglass:preview',{detail:full}));
     },450);
   }
   const e = escapeHTML;
@@ -125,7 +125,9 @@
     if(recommendationController){recommendationController.abort();recommendationController=null;}
     clearInterval(heroTimer);heroTimer=null;clearTimeout(previewTimer);++previewSequence;
     if(host().beforeScreenChanged)host().beforeScreenChanged(route);
-    view.innerHTML=html;view.scrollTop=0;doc.body.dataset.dxRoute=route;
+    global.StreamGlassUI.unmount(view);
+    if(typeof html==='object'){const token=epoch,revision=interaction;global.StreamGlassUI.mount(view,{...html,onReady:()=>restoreScreen(token,revision)});}else view.innerHTML=html;
+    view.scrollTop=0;doc.body.dataset.dxRoute=route;
     root.querySelectorAll('[data-nav]').forEach(node=>{const selected=node.dataset.nav===route;node.classList.toggle('selected',selected);if(selected)node.setAttribute('aria-current','page');else node.removeAttribute('aria-current');});
     if(host().screenChanged)host().screenChanged(route);
   }
@@ -169,70 +171,26 @@
     }));
     return output;
   }
-  function card(meta, options={}) {
-    if(!meta) return '';
-    const id=meta.id||meta._id;if(!id) return '';
-    const type=meta.type||'movie';const key=type+':'+id;cards.set(key,meta);if(cards.size>800)cards.delete(cards.keys().next().value);
-    const href=detailHash(type,id,options.videoId||(meta.state&&meta.state.videoId));
-    const poster=safeURL(options.wide?(meta.background||meta.poster):meta.poster);
-    const progress=progressFraction(meta.progress);
-    const rating=meta.imdbRating||meta.rating;
-    const caption=options.recommendations?meta.recommendationReason:options.wide&&progress>0?Math.round(progress*100)+'% watched':(meta.releaseInfo||meta.year|| (type==='series'?'Series':'Movie'));
-    return '<a class="sg-card meta-item-container'+(options.wide?' sg-card-wide':'')+(options.recommendations?' sg-recommendation':'')+'" href="'+e(href)+'" data-card="'+e(key)+'" aria-label="'+e(meta.name||id)+(options.recommendations?'. '+e(caption):'')+'">'+
-      '<div class="sg-poster poster-container">'+(poster?'<img src="'+e(poster)+'" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer">':'<span class="sg-poster-placeholder">'+e(meta.name||id)+'</span>')+
-      (rating?'<span class="sg-rating"><b>IMDb</b> '+e(rating)+'</span>':'')+(meta.watched?'<span class="sg-watched">✓</span>':'')+
-      (progress>0?'<span class="sg-progress"><i style="width:'+Math.round(progress*100)+'%"></i></span>':'')+'</div><span class="sg-card-title title-label">'+e(meta.name||id)+'</span><span class="sg-card-caption">'+e(caption)+'</span></a>';
-  }
-  function row(title, items, index, options={}) {
-    if(host().rowTitle)title=host().rowTitle(title);
-    return '<section class="sg-row meta-row-container" data-row-key="'+e(Number.isInteger(index)?'catalog:'+index:title)+'"><div class="sg-row-heading"><h2>'+e(title)+'</h2><span class="sg-row-count" aria-live="off"></span>'+(Number.isInteger(index)?'<a class="sg-see-all" href="#/discover?catalog='+index+'">See All <span>›</span></a>':'')+'</div><div class="sg-cards meta-items-container">'+items.map(item=>card(item,options)).join('')+'</div></section>';
-  }
-  function hero(meta,index=0) {
-    if(host().renderHero)return host().renderHero(meta);
-    const type=meta.type||'movie',id=meta.id||meta._id;
-    const picture=safeURL(meta.background||meta.poster),logo=safeURL(meta.logo);
-    const genres=(meta.genres||[]).slice(0,3).join(' · ');
-    return '<section class="dx-hero is-first sg-hero"><div class="dx-hero-slide is-active"><div class="dx-hero-backdrop"'+(picture?' style="background-image:url(&quot;'+e(picture)+'&quot;)"':'')+'></div><div class="dx-hero-shade"></div><div class="dx-hero-content">'+
-      '<div class="dx-hero-kicker"><b>IN THE SPOTLIGHT</b><span>'+e(type==='series'?'SERIES':'MOVIE')+'</span></div>'+(logo?'<img class="dx-hero-logo" src="'+e(logo)+'" alt="'+e(meta.name)+'">':'<h1 class="dx-hero-title">'+e(meta.name)+'</h1>')+
-      '<div class="dx-hero-meta">'+(meta.imdbRating?'<span class="sg-hero-rating">IMDb '+e(meta.imdbRating)+'</span>':'')+'<span>'+e(meta.releaseInfo||meta.year||'')+'</span><span>'+e(genres)+'</span></div><p class="dx-hero-desc">'+e(meta.description||'Explore this title and choose a stream from your installed addons.')+'</p><div class="dx-hero-actions"><a class="dx-btn sg-button sg-primary" href="'+e(detailHash(type,id))+'">▶ Watch now</a><a class="dx-btn sg-button" href="'+e(detailHash(type,id))+'"><span class="sg-info-icon" aria-hidden="true">i</span> More Info</a></div></div></div></section>';
-  }
-  async function home(token) {
-    const filter=new URLSearchParams(location.hash.split('?')[1]||'').get('type')||'';
-    const filters='<div class="sg-home-filters" aria-label="Browse titles">'+[['','All'],['movie','Movies'],['series','Series']].map(([value,label])=>'<a class="sg-filter'+(filter===value?' selected':'')+'" href="#/board'+(value?'?type='+value:'')+'"'+(filter===value?' aria-current="page"':'')+'>'+label+'</a>').join('')+'</div>'; 
-    setScreen('<div class="sg-home board-content">'+filters+'<div id="sg-hero-slot">'+pendingText('Loading your catalogues')+'</div><div id="sg-home-rows" class="sg-home-rows"></div></div>','board');
-    catalogMemory=catalogs();const list=catalogMemory.filter(entry=>!filter||entry.catalog.type===filter);
-    const rows=doc.getElementById('sg-home-rows');
-    const cw=await core.getState('continue_watching_preview').catch(()=>null);
-    if(token!==epoch)return;
-    const continuing=(cw&&cw.items||[]).filter(item=>!filter||item.type===filter);
-    if(continuing.length)rows.insertAdjacentHTML('beforeend',row('Continue Watching',continuing,null,{wide:true}));
-    if(!list.length) {doc.getElementById('sg-hero-slot').innerHTML=empty('Your home starts here','Sign in to sync your Stremio addons, or add a catalog from Addons.','addons','Open Addons');return;}
-    const slots=list.map((entry,index)=>{
-      const section=doc.createElement('div');section.className='sg-catalog-slot';section.dataset.index=index;section.innerHTML='<section class="sg-row"><h2>'+e(entry.catalog.name||entry.addon.manifest.name)+' · '+e(entry.catalog.type)+'</h2><div class="sg-skeleton-row">'+Array(6).fill('<span></span>').join('')+'</div></section>';rows.append(section);return section;
-    });
-    let next=0,heroChosen=false;
-    await Promise.all(Array.from({length:Math.min(4,list.length)},async()=>{
-      while(next<list.length&&token===epoch) {
-        const index=next++,entry=list[index];
-        try {
-          const data=await fetchJSON(resourceURL(entry.addon.transportUrl,'catalog',entry.catalog.type,entry.catalog.id));
-          if(token!==epoch)return;
-          const metas=(data.metas||[]).filter(item=>item&&item.id).map(item=>({...item,type:item.type||entry.catalog.type}));
-          if(!metas.length){slots[index].remove();continue;}
-          slots[index].innerHTML=row((entry.catalog.name||entry.addon.manifest.name)+' · '+entry.catalog.type,metas.slice(0,24),catalogMemory.indexOf(entry),{wide:index===0&&!host().mobile});
-          if(!heroChosen) {
-            heroChosen=true;const chosen=metas.find(meta=>meta.background)||metas[0];doc.getElementById('sg-hero-slot').innerHTML=hero(chosen);
-            resolveMeta(chosen.type,chosen.id,chosen).then(result=>{if(token===epoch&&!doc.getElementById('sg-hero-slot').contains(doc.activeElement)&&!doc.activeElement.closest('.sg-card')){doc.getElementById('sg-hero-slot').innerHTML=hero(result.meta);}}).catch(()=>{});
-          }
-        } catch(error) {
-          if(token!==epoch)return;
-          slots[index].innerHTML='<section class="sg-row"><h2>'+e(entry.catalog.name||entry.addon.manifest.name)+'</h2><p class="sg-muted">This catalog could not load. The addon may be offline or block TV requests.</p><button class="sg-button" data-action="refresh">Retry</button></section>';
-          diagnostic('catalog_failed',{index});
-        }
+  const reactAPI={
+    ...helpers,
+    registerCard(meta){const id=meta.id||meta._id;cards.set((meta.type||'movie')+':'+id,meta);if(cards.size>800)cards.delete(cards.keys().next().value);},
+    get mobile(){return !!host().mobile;},
+    catalogs(){catalogMemory=catalogs();return catalogMemory;},
+    catalog(entry,extra,signal){return fetchJSON(resourceURL(entry.addon.transportUrl,'catalog',entry.catalog.type,entry.catalog.id,extra),true,signal);},
+    continueWatching(){return core.getState('continue_watching_preview').then(state=>state.items||[]).catch(()=>[]);},
+    resolveMeta,
+    calendarLibrary(){return loadLibrary(null,'lastwatched',5);},
+    async calendarMeta(item,signal){
+      const id=item.id||item._id;
+      for(const addon of installed().filter(source=>supports(source,'meta',item.type,id)).slice(0,2)){
+        if(signal.aborted)throw new Error('Cancelled');
+        try{const data=await fetchJSON(resourceURL(addon.transportUrl,'meta',item.type,id),true,signal);if(data.meta)return {...item,...data.meta,id,type:item.type};}catch(error){if(signal.aborted)throw error;}
       }
-    }));
-    if(token===epoch&&!heroChosen)doc.getElementById('sg-hero-slot').innerHTML=empty('No titles loaded','Check the connection or try another catalog addon.','refresh');
-  }
+      return item;
+    }
+  };
+  async function home(token) {setScreen({route:'board',api:reactAPI,params:parseHash(location.hash).query},'board');}
+  function calendar(){setScreen({route:'calendar',api:reactAPI},'calendar');}
   function cancelSearch() {
     if(!searchSession)return;
     clearTimeout(searchSession.timer);
@@ -244,9 +202,9 @@
     return session===searchSession&&session.token===epoch&&session.revision===revision&&session.results.isConnected;
   }
   function searchHint(session) {
-    session.results.innerHTML=host().mobile?empty('What are you in the mood for?','A favorite movie, a new series, or something unexpected.'):empty('Find your next watch','Type at least 2 characters for live results, or press Search for a one-letter title.');
+    global.StreamGlassUI.clear(session.results);session.results.innerHTML=host().mobile?empty('What are you in the mood for?','A favorite movie, a new series, or something unexpected.'):empty('Find your next watch','Type at least 2 characters for live results, or press Search for a one-letter title.');
     session.results.setAttribute('aria-busy','false');
-    session.status.textContent=host().mobile?'':'Results update as you type.';
+    session.status.textContent='';
   }
   function updateSearchQuery(session) {
     const query=session.input.value.trim();
@@ -269,7 +227,7 @@
     clearTimeout(session.timer);
     if(session.query.length<2){searchHint(session);return;}
     session.status.textContent='Waiting for you to finish typing…';
-    session.results.innerHTML=pendingText('Searching your addons');
+    global.StreamGlassUI.clear(session.results);session.results.innerHTML=pendingText('Searching your addons');
     session.results.setAttribute('aria-busy','true');
     session.timer=setTimeout(()=>runSearch(session),450);
   }
@@ -286,7 +244,7 @@
     const list=catalogs(true),results=session.results;
     results.setAttribute('aria-busy','true');session.status.textContent='Searching your addons…';
     if(!list.length){results.innerHTML=empty('No search addons','Install an addon with a searchable catalog.','addons','Open Addons');results.setAttribute('aria-busy','false');session.status.textContent='No searchable catalogs installed.';return;}
-    results.innerHTML='';let count=0,failed=0,next=0;
+    global.StreamGlassUI.clear(results);results.innerHTML='';let count=0,failed=0,next=0;
     const slots=list.map(()=>{const node=doc.createElement('div');results.append(node);return node;});
     const loading=doc.createElement('div');loading.innerHTML=pendingText('Finding titles');results.append(loading);
     // Four concurrent requests at most, cancelled immediately when text changes.
@@ -297,7 +255,7 @@
           const data=await fetchJSON(resourceURL(entry.addon.transportUrl,'catalog',entry.catalog.type,entry.catalog.id,{search:query}),false,signal);
           if(!currentSearch(session,revision))return;
           const metas=(data.metas||[]).filter(item=>item&&item.id).slice(0,40).map(item=>({...item,type:item.type||entry.catalog.type}));
-          if(metas.length){count+=metas.length;slots[index].innerHTML=row((entry.catalog.name||entry.addon.manifest.name)+' · '+entry.catalog.type,metas);loading.hidden=true;}
+          if(metas.length){count+=metas.length;global.StreamGlassUI.region(slots[index],{api:reactAPI,rows:[{title:(entry.catalog.name||entry.addon.manifest.name)+' · '+entry.catalog.type,items:metas}]});loading.hidden=true;}
         }catch(_){if(!currentSearch(session,revision))return;failed++;}
       }
     }));
@@ -308,7 +266,7 @@
     if(failed)session.requested=null; // Permit an explicit retry of failed requests.
   }
   async function search(token,query) {
-    setScreen('<section class="sg-page search-content"><h1>Find your next watch</h1><form id="sg-search-form" class="sg-search-form" role="search"><input id="sg-search-input" type="search" autocomplete="off" spellcheck="false" placeholder="Movies, series, anime…" aria-label="Search titles" aria-describedby="sg-search-status" value="'+e(query)+'"><button class="sg-button sg-primary" type="submit">Search</button></form><p id="sg-search-status" class="sg-search-status" role="status" aria-live="polite"></p><div id="sg-search-results" aria-busy="false"></div></section>','search');
+    setScreen({route:'search',api:reactAPI,query},'search');
     const session={token,query:query.trim(),revision:0,requested:null,composing:false,input:doc.getElementById('sg-search-input'),results:doc.getElementById('sg-search-results'),status:doc.getElementById('sg-search-status')};
     searchSession=session;
     if(query.trim())await runSearch(session);else searchHint(session);
@@ -317,7 +275,7 @@
     catalogMemory=catalogs();const supplied=Number(params.get('catalog')||0);const index=Math.max(0,Math.min(catalogMemory.length-1,Number.isFinite(supplied)?supplied:0));
     const entry=catalogMemory[index];activeCatalog={index,skip:0,count:0,token,entry,genre:params.get('genre')||''};
     const genreExtra=entry&&(entry.catalog.extra||[]).find(item=>item.name==='genre');
-    setScreen('<section class="sg-page discover-content"><h1>Discover</h1><div class="sg-filters"><label>Catalog<select id="sg-catalog-picker">'+catalogMemory.map((item,i)=>'<option value="'+i+'"'+(i===index?' selected':'')+'>'+e((item.catalog.name||item.addon.manifest.name)+' · '+item.catalog.type)+'</option>').join('')+'</select></label>'+(genreExtra&&genreExtra.options?'<label>Genre<select id="sg-genre-picker"><option value="">All genres</option>'+genreExtra.options.map(genre=>'<option'+(genre===activeCatalog.genre?' selected':'')+'>'+e(genre)+'</option>').join('')+'</select></label>':'')+'</div><div id="sg-discover-grid" class="sg-grid"></div><div id="sg-discover-status">'+pendingText('Loading catalog')+'</div></section>','discover');
+    setScreen({route:'discover',api:reactAPI,entries:catalogMemory,activeCatalog},'discover');
     if(!entry){doc.getElementById('sg-discover-status').innerHTML=empty('No catalogs installed','Sign in or add a catalog addon.','addons','Open Addons');return;}
     await nextCatalogPage();
   }
@@ -328,7 +286,7 @@
       const data=await fetchJSON(resourceURL(current.entry.addon.transportUrl,'catalog',current.entry.catalog.type,current.entry.catalog.id,{skip:current.skip||undefined,genre:current.genre||undefined}));
       if(epoch!==current.token)return;
       const metas=data.metas||[],grid=doc.getElementById('sg-discover-grid');
-      grid.insertAdjacentHTML('beforeend',metas.map(meta=>card({...meta,type:meta.type||current.entry.catalog.type})).join(''));
+      global.StreamGlassUI.region(grid,{api:reactAPI,append:true,items:metas.map(meta=>({...meta,type:meta.type||current.entry.catalog.type}))});
       current.skip+=metas.length;current.count+=metas.length;
       const canPage=(current.entry.catalog.extra||[]).some(extra=>extra.name==='skip');
       status.innerHTML=!current.count?empty('No titles found','Choose another catalog or genre.'):canPage&&metas.length?'<button class="sg-button" data-action="catalog-more">Load more</button>':'';
@@ -343,7 +301,7 @@
     const engine=global.StreamGlassRecommendations;
     const filter=['movie','series','anime'].includes(params.get('type'))?params.get('type'):'';
     const filters=[['','All picks'],['movie','Movies'],['series','Series'],['anime','Anime']].map(([value,label])=>'<a class="sg-filter'+(value===filter?' selected':'')+'" href="#/picks'+(value?'?type='+value:'')+'"'+(value===filter?' aria-current="page"':'')+'>'+label+'</a>').join('');
-    setScreen('<section class="sg-page sg-picks"><header class="sg-picks-header"><div><span class="sg-eyebrow">PICKED FOR YOU</span><h1>Your next good watch.</h1><p>Inspired by what you watch and save. A few familiar threads, something new to discover.</p></div><button class="sg-button" data-action="recommendations-refresh">Refresh picks</button></header><div class="sg-picks-filters" aria-label="Recommendation type">'+filters+'</div><p id="sg-picks-note" class="sg-muted" role="status">Reading your available Stremio library and watch progress…</p><div id="sg-picks-results" aria-busy="true">'+pendingText('Finding your next watch','Matching titles from your installed catalogues.')+'</div></section>','picks');
+    setScreen({route:'picks',api:reactAPI,params},'picks');
     const controller=new AbortController();recommendationController=controller;
     const current=()=>token===epoch&&recommendationController===controller;
     const results=doc.getElementById('sg-picks-results'),note=doc.getElementById('sg-picks-note');
@@ -401,18 +359,18 @@
       if(!current())return;
       note.textContent='Based on '+snapshot.seeds.length+' recent watched, started or saved '+(snapshot.seeds.length===1?'title':'titles')+'. New discoveries from your catalogues.'+(state.selectable&&state.selectable.nextPage?' Using your latest 500 library entries.':'')+(snapshot.partial?' Some addons did not finish. Refresh to try again.':'');
       if(!picks.length){results.innerHTML=empty('No new matches yet',snapshot.partial?'Some addons could not be reached. Refresh to try again.':'Try another type, add a catalogue with genre metadata, or watch and save more titles.','recommendations-refresh','Try again');}
-      else results.innerHTML=row('Your next watch',picks.slice(0,4),null,{wide:true,recommendations:true})+(picks.length>4?row('More to explore',picks.slice(4),null,{recommendations:true}):'');
+      else global.StreamGlassUI.region(results,{api:reactAPI,rows:[{title:'Your next watch',items:picks.slice(0,4),wide:true,recommendations:true},...(picks.length>4?[{title:'More to explore',items:picks.slice(4),recommendations:true}]:[])]});
       diagnostic('recommendations_ready',{seedCount:snapshot.seeds.length,candidateCount:snapshot.candidates.length,resultCount:picks.length,partial:snapshot.partial});
     } finally {clearTimeout(timer);if(current())results.setAttribute('aria-busy','false');}
   }
   async function library(token,params) {
-    setScreen('<section class="sg-page library-content"><h1>Your Library</h1><div class="sg-filters"><label>Type<select id="sg-library-type"><option value="">Everything</option><option value="movie">Movies</option><option value="series">Series</option><option value="anime">Anime</option></select></label><label>Sort<select id="sg-library-sort"><option value="lastwatched">Recently watched</option><option value="name">Name</option><option value="watched">Watched first</option><option value="notwatched">Unwatched first</option></select></label><button class="sg-button" data-action="sync">Sync account</button></div><div id="sg-library-grid" class="sg-grid"></div><div id="sg-library-status">'+pendingText('Loading your library')+'</div></section>','library');
+    setScreen({route:'library',api:reactAPI,params},'library');
     doc.getElementById('sg-library-type').value=params.get('type')||'';doc.getElementById('sg-library-sort').value=params.get('sort')||'lastwatched';
     const state=await loadLibrary(params.get('type')||null,params.get('sort')||'lastwatched');if(token!==epoch)return;renderLibrary(state);
   }
   function renderLibrary(state,append=false) {
     const grid=doc.getElementById('sg-library-grid'),status=doc.getElementById('sg-library-status');if(!grid||!status)return;
-    const html=(state.catalog||[]).map(item=>card(item)).join('');if(append)grid.insertAdjacentHTML('beforeend',html);else grid.innerHTML=html;
+    global.StreamGlassUI.region(grid,{api:reactAPI,append,items:state.catalog||[]});
     status.innerHTML=!(state.catalog||[]).length?empty('Your library is empty',profile.auth?'Open a title and choose Add to Library.':'Sign in to sync your saved titles and watch progress.','account',profile.auth?'Account':'Sign in'):(state.selectable&&state.selectable.nextPage?'<button class="sg-button" data-action="library-more">Load more</button>':'');
   }
   async function resolveMeta(type,id,fallback) {
@@ -454,7 +412,7 @@
     const inLibrary=!!(detailState.libraryItem&&!detailState.libraryItem.removed);
     currentDetail={...result,type,id,videoId:selectedVideo,streams:[],token,inLibrary};
     const backdrop=safeURL(meta.background||meta.poster),logo=safeURL(meta.logo);
-    setScreen('<section class="sg-detail metadetails-container">'+(backdrop?'<div class="background-image-layer sg-detail-background"><img src="'+e(backdrop)+'" alt=""></div>':'')+'<div class="sg-detail-content"><a class="sg-back" href="'+e(detailOrigin)+'">‹ Back to browsing</a><div class="sg-detail-top"><div class="sg-detail-info"><span class="sg-eyebrow">'+e(type==='series'?'SERIES':'FILM')+'</span>'+(logo?'<img class="sg-detail-logo" src="'+e(logo)+'" alt="'+e(meta.name)+'">':'<h1>'+e(meta.name)+'</h1>')+'<div class="sg-detail-meta">'+(meta.imdbRating?'<b>IMDb '+e(meta.imdbRating)+'</b>':'')+'<span>'+e(meta.releaseInfo||'')+'</span><span>'+e(meta.runtime||'')+'</span></div><p class="sg-detail-description">'+e(meta.description||'No description provided by this addon.')+'</p><div class="sg-detail-genres">'+e((meta.genres||[]).join(' · '))+'</div><div class="sg-detail-actions"><button class="sg-button sg-primary" data-action="focus-streams">▶ Choose a stream</button><button id="sg-library-toggle" class="sg-button" data-action="library-toggle">'+(inLibrary?'✓ In Library':'+ Add to Library')+'</button></div>'+episodes(meta,selectedVideo)+'</div><aside class="sg-stream-panel" aria-label="Streams"><h2 id="sg-stream-heading">'+e(streamHeading(meta,selectedVideo))+'</h2><p class="sg-muted sg-stream-note">Pick your preferred quality to start watching.</p><div id="sg-streams">'+pendingText('Finding streams')+'</div></aside></div></div></section>','detail');
+    setScreen({route:'detail',api:reactAPI,meta,selectedVideo,inLibrary,origin:detailOrigin,heading:streamHeading(meta,selectedVideo)},'detail');
     if(host().detailReady)host().detailReady({inLibrary,resumable:!!(resumable&&resumable.state&&resumable.state.timeOffset)});
     await streams(currentDetail,selectedVideo);
   }
@@ -547,7 +505,7 @@
   }
   async function addonPage() {
     const list=installed();
-    setScreen('<section class="sg-page addons-content"><h1>Addons</h1><p class="sg-lead">Addons, including your configured Torrentio + TorBox addon, sync from your Stremio account.</p><div class="sg-toolbar"><button class="sg-button sg-primary" data-action="sync">Sync account</button><button class="sg-button" data-action="account">'+(profile.auth?'Account':'Sign in')+'</button></div><form id="sg-addon-form" class="sg-addon-form"><label for="sg-addon-url">Install from a manifest link</label><div><input id="sg-addon-url" type="text" autocomplete="off" spellcheck="false" placeholder="https://addon.example/manifest.json"><button class="sg-button" type="submit">Install</button></div><small>For Torrentio configuration, use Stremio on your phone first, then sync here.</small></form><div class="sg-addon-grid">'+list.map((addon,index)=>'<article class="sg-addon-card"><div class="sg-addon-header">'+(safeURL(addon.manifest.logo)?'<img src="'+e(safeURL(addon.manifest.logo))+'" alt="">':'<span class="sg-addon-icon">＋</span>')+'<div><h2>'+e(addon.manifest.name)+'</h2><small>'+e(addon.manifest.version||'')+'</small></div></div><p>'+e(addon.manifest.description||'')+'</p><div class="sg-addon-types">'+e((addon.manifest.types||[]).join(' · '))+'</div>'+(!(addon.flags&&addon.flags.protected)?'<button class="sg-button" data-remove-addon="'+index+'">Remove addon</button>':'<span class="sg-muted">Default catalog</span>')+'</article>').join('')+'</div></section>','addons');
+    setScreen({route:'addons',api:reactAPI,profile,entries:list},'addons');
   }
   async function installAddon(form) {
     const input=doc.getElementById('sg-addon-url'),button=form.querySelector('button');button.disabled=true;
@@ -570,11 +528,11 @@
     const prefs=profile.settings||{};
     const languages=[['eng','English'],['spa','Spanish'],['hye','Armenian'],['fra','French'],['deu','German'],['rus','Russian'],['ara','Arabic'],['jpn','Japanese'],['kor','Korean'],['zho','Chinese']];
     const languageOptions=(selected,off)=>'<option value="'+(off?'none':'')+'"'+((off?selected==='none':!selected)?' selected':'')+'>'+(off?'Off':'Original / default')+'</option>'+languages.map(([value,label])=>'<option value="'+value+'"'+(selected===value?' selected':'')+'>'+label+'</option>').join('');
-    setScreen('<section class="sg-page settings-content"><h1>Settings</h1><div class="sections-container sg-settings"><button class="sg-settings-row" data-action="account"><span><b>Stremio account</b><small>'+(profile.auth?'Signed in. Your addons, library and watch progress sync through Stremio.':'Sign in to sync your library and addons.')+'</small></span><span>›</span></button><button class="sg-settings-row" data-action="appearance"><span><b>StreamGlass TV</b><small>App information and diagnostics</small></span><span>›</span></button><form id="sg-prefs-form"><label class="sg-settings-row"><span><b>Preferred audio</b><small>Used when the TV exposes matching audio tracks.</small></span><select name="audioLanguage">'+languageOptions(prefs.audioLanguage,false)+'</select></label><label class="sg-settings-row"><span><b>Preferred subtitles</b><small>Choose a default language for external subtitle files.</small></span><select name="subtitlesLanguage">'+languageOptions(prefs.subtitlesLanguage,true)+'</select></label><label class="sg-settings-row"><span><b>Subtitle size</b></span><select name="subtitlesSize">'+[75,100,125,150,175,200].map(value=>'<option value="'+value+'"'+(Number(prefs.subtitlesSize||100)===value?' selected':'')+'>'+value+'%</option>').join('')+'</select></label><button class="sg-button sg-primary" type="submit">Save playback settings</button></form><button class="sg-settings-row" data-action="sync"><span><b>Sync account</b><small>Refresh installed addons and your library.</small></span><span>↻</span></button><p class="sg-muted">StreamGlass TV 0.4.0 · Unofficial webOS 25 port of the DX.BI interface.<br>4K video support depends on the stream format and your TV. External WebVTT and converted SRT subtitles are supported.</p></div></section>','settings');
+    setScreen({route:'settings',api:reactAPI,profile},'settings');
   }
   function accountPage() {
-    if(profile.auth){setScreen('<section class="sg-page sg-account-page"><div class="sg-account-box"><h1>Your Stremio account</h1><p>Signed in. Addons, saved titles and watch progress use your Stremio account.</p><div class="sg-toolbar"><button class="sg-button sg-primary" data-action="sync">Sync account</button><button class="sg-button" data-action="logout">Sign out</button></div><a class="sg-text-link" href="#/board">Back to Home</a></div></section>','account');return;}
-    setScreen('<section class="sg-page sg-account-page"><div class="sg-account-box"><span class="sg-account-mark">STREAMGLASS</span><h1>Sign in to Stremio</h1><p>Use the account that has your Torrentio + TorBox addon.</p><form id="sg-login-form"><label for="sg-email">Email</label><input id="sg-email" name="email" type="email" autocomplete="username" required><label for="sg-password">Password</label><input id="sg-password" name="password" type="password" autocomplete="current-password" required><p id="sg-login-status" role="status"></p><button class="sg-button sg-primary" type="submit">Sign in</button></form><p class="sg-muted">For a social-login account, set a Stremio password on your phone or computer first.</p><a class="sg-text-link" href="#/board">Browse without signing in</a></div></section>','account');
+    setScreen({route:'account',api:reactAPI,profile},'account');
+
   }
   async function login(form) {
     const email=form.elements.email.value.trim(),password=form.elements.password.value,button=form.querySelector('button'),status=doc.getElementById('sg-login-status');
@@ -602,6 +560,7 @@
     try {
       await refreshProfile();if(token!==epoch)return;
       if(parsed.route==='board'||parsed.route==='')return await home(token);
+      if(parsed.route==='calendar')return calendar();
       if(parsed.route==='search')return await search(token,parsed.query.get('search')||'');
       if(parsed.route==='discover')return await discover(token,parsed.query);
       if(parsed.route==='library')return await library(token,parsed.query);
@@ -638,7 +597,7 @@
     if(started)return;started=true;core=global.StreamGlassCore;
     if(!core)throw new Error('Stremio core is not available.');
     root=doc.getElementById('app');if(!root){root=doc.createElement('div');root.id='app';doc.body.append(root);}
-    root.innerHTML='<div class="main-nav-bars-container sg-app"><nav class="horizontal-nav-bar sg-nav"><a class="logo-container sg-brand" href="#/board" aria-label="StreamGlass Home"></a><div class="sg-nav-links">'+[['board','Home'],['picks','For you'],['discover','Discover'],['library','Library'],['addons','Addons'],['settings','Settings']].map(([route,label])=>'<a class="nav-tab-button" data-nav="'+route+'" href="#/'+route+'">'+label+'</a>').join('')+'</div><a class="sg-nav-search" href="#/search" aria-label="Search"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4.5 4.5"></path></svg></a><button id="sg-account" data-action="account" class="sg-account-button">Sign in</button></nav><main id="sg-view" tabindex="-1">'+pendingText('Starting StreamGlass TV')+'</main></div>';
+    root.innerHTML='<div class="main-nav-bars-container sg-app"><nav class="horizontal-nav-bar sg-nav"><a class="logo-container sg-brand" href="#/board" aria-label="StreamGlass Home"></a><div class="sg-nav-links">'+[['board','Home'],['picks','For you'],['discover','Discover'],['library','Library'],['calendar','Calendar'],['addons','Addons'],['settings','Settings']].map(([route,label])=>'<a class="nav-tab-button" data-nav="'+route+'" href="#/'+route+'">'+label+'</a>').join('')+'</div><a class="sg-nav-search" href="#/search" aria-label="Search"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4.5 4.5"></path></svg></a><button id="sg-account" data-action="account" class="sg-account-button">Sign in</button></nav><main id="sg-view" tabindex="-1">'+pendingText('Starting StreamGlass TV')+'</main></div>';
     if(host().mount)host().mount(root);
     view=doc.getElementById('sg-view');
     root.addEventListener('click',event=>{
@@ -678,7 +637,7 @@
       if(event.target.id==='sg-season'&&currentDetail){doc.getElementById('sg-episode-list').innerHTML=episodeList(currentDetail.meta,event.target.value,currentDetail.videoId);}
     });
     root.addEventListener('error',event=>{
-      const img=event.target;if(img.tagName!=='IMG')return;
+      const img=event.target;if(img.tagName!=='IMG'||img.hasAttribute('data-react-art'))return;
       if(img.matches('.dx-hero-logo,.sg-detail-logo')){
         const title=doc.createElement('h1');title.className=img.matches('.dx-hero-logo')?'dx-hero-title':'';title.textContent=img.alt||'Untitled';img.replaceWith(title);
       }else if(img.closest('.sg-poster')){
@@ -711,7 +670,7 @@
         try {
           await refreshProfile();
           const route=parseHash(location.hash).route;
-          const affectsScreen=(updateAddons&&/^(board|picks|addons|discover|search)$/.test(route))||(updateLibrary&&/^(board|picks|library)$/.test(route));
+          const affectsScreen=(updateAddons&&/^(board|calendar|picks|addons|discover|search)$/.test(route))||(updateLibrary&&/^(board|calendar|picks|library)$/.test(route));
           const active=doc.activeElement;
           const editing=active&&active.matches('input,textarea,select');
           // An API completion must never clear a typed search, addon URL or settings form.

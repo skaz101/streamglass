@@ -1,0 +1,42 @@
+@import "tailwindcss/theme.css" layer(theme);
+@tailwind utilities;
+/* Shared React surfaces use StreamGlass's existing theme tokens. */
+:root{--background:#101014;--foreground:#fff;--card:#202024;--primary:#e50914;--primary-foreground:#fff;--muted:#26262c;--muted-foreground:#b9b9c1;--border:#ffffff24;--ring:#fff;--radius:.75rem}
+:root[data-theme=purple]{--primary:#aa82ff;--background:#100c18}
+:root[data-theme=oled]{--background:#000}
+.sg-react-hero{position:relative;min-height:570px;isolation:isolate;overflow:hidden;background:var(--background)}
+.sg-react-hero-art{position:absolute;inset:0;z-index:-2;width:100%;height:100%;object-fit:cover;animation:sg-art-reveal 1.2s cubic-bezier(.22,1,.36,1) both}
+.sg-react-hero:after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(0,0,0,.82),rgba(0,0,0,.15) 85%),linear-gradient(0deg,var(--background),transparent 60%)}
+.sg-react-hero-copy{padding:80px 5vw 100px;max-width:800px;animation:sg-copy-reveal .6s ease both}
+.sg-react-hero-copy h1{font-size:clamp(36px,5vw,76px);line-height:1.02;margin:20px 0;font-weight:800;letter-spacing:-.04em}
+.sg-react-hero-copy p{font-size:20px;line-height:1.6;max-width:52ch;color:#e0e0e5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.sg-react-hero-logo{max-width:440px;max-height:150px;object-fit:contain;object-position:left;margin:24px 0}
+.sg-react-hero-actions,.sg-carousel-controls{display:flex;gap:12px;align-items:center}
+.sg-carousel-controls{position:absolute;bottom:28px;right:5vw;padding:6px;border-radius:30px;background:#0a0a0bb0}
+.sg-carousel-controls button{border:0;background:transparent;color:#fff;min-height:44px;min-width:44px;border-radius:50%;font:inherit;cursor:pointer}
+.sg-carousel-controls span{min-width:50px;text-align:center;font-variant-numeric:tabular-nums;font-size:14px}
+.sg-carousel-controls button:focus-visible,.sg-calendar button:focus-visible{outline:3px solid white;outline-offset:3px}
+.sg-calendar-link{margin-left:auto}
+.sg-react-empty{padding:52px 24px;text-align:center;color:var(--muted-foreground)}
+.sg-react-empty h2{color:var(--foreground)}
+.sg-react-loading{padding:32px 5vw}
+.sg-react-loading .sg-skeleton-row{min-height:220px}
+.sg-calendar-header,.sg-calendar-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sg-calendar-header p{color:var(--muted-foreground);max-width:55ch;line-height:1.5}
+.sg-calendar-layout{display:grid;grid-template-columns:minmax(350px,1fr) minmax(350px,1fr);gap:48px;margin-top:30px}
+.sg-calendar-month{align-self:start;background:var(--card);border-radius:20px;padding:24px}
+.sg-calendar-toolbar h2{font-size:24px;margin:0}
+.sg-calendar-week,.sg-calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;text-align:center}
+.sg-calendar-week{margin:24px 0 12px;color:var(--muted-foreground);font-size:13px}
+.sg-calendar-grid button{position:relative;aspect-ratio:1;border:0;border-radius:12px;background:transparent;color:var(--foreground);font:inherit;cursor:pointer}
+.sg-calendar-grid button[aria-pressed=true]{background:var(--foreground);color:var(--background)}
+.sg-calendar-grid button[data-today=true]{box-shadow:inset 0 0 0 1px var(--muted-foreground)}
+.sg-calendar-grid button i{position:absolute;bottom:8px;left:calc(50% - 2px);width:4px;height:4px;background:currentColor;border-radius:50%}
+.sg-release-item{display:flex;gap:16px;color:inherit;text-decoration:none;align-items:center;padding:16px 0;border-bottom:1px solid var(--border)}
+.sg-release-item img{width:60px;height:84px;object-fit:cover;border-radius:6px}
+.sg-release-item span{display:grid;gap:6px}.sg-release-item small,.sg-calendar-note{color:var(--muted-foreground);line-height:1.5}
+.sg-calendar-day{margin:26px 0 0;font-size:18px}
+@keyframes sg-art-reveal{from{opacity:.25;transform:scale(1.035)}to{opacity:1;transform:scale(1)}}
+@keyframes sg-copy-reveal{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:800px){.sg-react-hero{min-height:510px}.sg-react-hero-copy{padding:200px 22px 90px}.sg-react-hero-copy h1{font-size:38px}.sg-react-hero-copy p{font-size:14px;-webkit-line-clamp:2}.sg-react-hero-logo{max-width:75%;max-height:100px}.sg-react-hero:after{background:linear-gradient(0deg,var(--background),rgba(0,0,0,.65) 45%,transparent 100%)}.sg-carousel-controls{bottom:12px;right:18px}.sg-react-hero-actions .sg-button{min-height:44px}.sg-calendar-layout{grid-template-columns:1fr;gap:20px}.sg-calendar-header{align-items:flex-start}.sg-calendar-header h1{font-size:30px}.sg-calendar-header p{font-size:14px}.sg-calendar-month{padding:16px}.sg-calendar-toolbar h2{font-size:20px}.sg-calendar-link{font-size:12px}.sg-calendar-grid button{min-height:38px}}
+@media(prefers-reduced-motion:reduce){.sg-react-hero-art,.sg-react-hero-copy{animation:none}}

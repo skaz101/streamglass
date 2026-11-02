@@ -40,6 +40,7 @@ jobs:
           node tests/player-browser.cjs
           node tests/review-host-browser.cjs
           node tests/motion-browser.cjs
+          node tests/react-browser.cjs
           npm run test:browser
           node ../android/scripts/sync-assets.mjs
           node ../android/tests/mobile-browser.mjs

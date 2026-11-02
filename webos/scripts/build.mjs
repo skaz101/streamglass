@@ -4,11 +4,21 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Script } from 'node:vm';
 import crypto from 'node:crypto';
+import {build} from 'esbuild';
+import {compile} from 'tailwindcss';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const out = path.join(root, 'build');
 const repo = path.dirname(root);
 await fs.rm(out, {recursive: true, force: true});
 await fs.mkdir(out, {recursive: true});
+await build({entryPoints:[path.join(root,'src/react/app.jsx')],outfile:path.join(out,'react-ui.js'),bundle:true,minify:true,format:'iife',target:['chrome87'],jsx:'automatic',define:{'process.env.NODE_ENV':'"production"'},legalComments:'eof'});
+const candidates=[];
+async function scanReact(dir){for(const entry of await fs.readdir(dir,{withFileTypes:true})){const full=path.join(dir,entry.name);if(entry.isDirectory())await scanReact(full);else if(/\.(jsx?|tsx?)$/.test(entry.name))candidates.push(...(await fs.readFile(full,'utf8')).split(/[\s"'`<>]+/));}}
+await scanReact(path.join(root,'src/react'));
+const cssFile=path.join(out,'react-ui.css');
+const compiler=await compile(await fs.readFile(cssFile,'utf8'));
+await fs.writeFile(cssFile,compiler.build(candidates));
+for(const name of ['react','react-dom','scheduler','clsx','tailwind-merge','class-variance-authority','lucide-react','tailwindcss']){await fs.mkdir(path.join(out,'licenses'),{recursive:true});const dir=path.join(root,'node_modules',name);const license=(await fs.readdir(dir)).find(file=>/^license(?:\.|$)/i.test(file));if(!license)throw new Error('Missing license: '+name);await fs.copyFile(path.join(dir,license),path.join(out,'licenses',name+'-LICENSE.txt'));}
 for (const file of ['core-client.js', 'player.js', 'host.js', 'recommendations.js', 'shell.js']) {
   const source = await fs.readFile(path.join(root, 'src', file), 'utf8');
   new Script(source, {filename: file});
@@ -29,7 +39,7 @@ theme = '/* Modified 2026-10-30 for StreamGlass TV: bundled fonts and fork wordm
   '@font-face{font-family:Inter;src:url("fonts/Inter.ttf");font-weight:100 900;font-display:swap}\n' +
   '@font-face{font-family:"Bebas Neue";src:url("fonts/BebasNeue-Regular.ttf");font-display:swap}\n' + theme;
 await fs.writeFile(path.join(out, 'dxbi.theme.css'), theme);
-await fs.mkdir(path.join(out, 'licenses'));
+await fs.mkdir(path.join(out, 'licenses'),{recursive:true});
 for (const name of ['LICENSE', 'NOTICE.md', 'LICENSE-ANIME4K']) await fs.copyFile(path.join(repo, name), path.join(out, 'licenses', name));
 await fs.copyFile(path.join(lg, 'LICENSE-2.0.txt'), path.join(out, 'licenses/LG-webOSTVjs-Apache-2.0.txt'));
 await fs.copyFile(path.join(root, 'vendor/core/LICENSE.md'), path.join(out, 'licenses/Stremio-core-MIT.txt'));
@@ -42,8 +52,8 @@ await fs.writeFile(path.join(out, 'index.html'), `<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src blob:; style-src 'self' 'unsafe-inline'; connect-src https: http:; img-src 'self' https: http: data: blob:; media-src https: http: blob: 'self'; font-src 'self'; object-src 'none'; base-uri 'self'">
-<title>StreamGlass TV</title><link rel="stylesheet" href="dxbi.theme.css"><link rel="stylesheet" href="shell.css"><link rel="stylesheet" href="player.css"><link rel="stylesheet" href="host.css">
-<script src="webOSTV.js" defer></script><script src="core-worker-source.js" defer></script><script src="core-client.js" defer></script><script src="player.js" defer></script><script src="recommendations.js" defer></script><script src="shell.js" defer></script><script src="host.js" defer></script></head>
+<title>StreamGlass TV</title><link rel="stylesheet" href="dxbi.theme.css"><link rel="stylesheet" href="shell.css"><link rel="stylesheet" href="player.css"><link rel="stylesheet" href="host.css"><link rel="stylesheet" href="react-ui.css">
+<script src="webOSTV.js" defer></script><script src="core-worker-source.js" defer></script><script src="core-client.js" defer></script><script src="player.js" defer></script><script src="recommendations.js" defer></script><script src="react-ui.js" defer></script><script src="shell.js" defer></script><script src="host.js" defer></script></head>
 <body><div id="app"><p style="padding:5vw;font-size:28px;color:white">Starting StreamGlass TV…</p></div><noscript>JavaScript is required.</noscript></body></html>\n`);
 const files = [];
 async function visit(dir) {
