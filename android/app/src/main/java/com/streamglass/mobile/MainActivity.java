@@ -157,7 +157,7 @@ public class MainActivity extends Activity {
                     && !name.matches("(?i)host|connection|content-length|transfer-encoding|cookie|authorization")) headers.put(name,value);
         }
         DefaultHttpDataSource.Factory http = new DefaultHttpDataSource.Factory()
-                .setUserAgent("StreamGlass/0.6.1").setConnectTimeoutMs(15000).setReadTimeoutMs(20000);
+                .setUserAgent("StreamGlass/0.6.2").setConnectTimeoutMs(15000).setReadTimeoutMs(20000);
         ResolvingDataSource.Factory scoped = new ResolvingDataSource.Factory(http, spec ->
                 mediaUri.getAuthority().equals(spec.uri.getAuthority()) ? spec.withAdditionalHeaders(headers) : spec);
         player = new ExoPlayer.Builder(this,PlayerFactories.renderers(this)).setMediaSourceFactory(PlayerFactories.sources(new DefaultDataSource.Factory(this, scoped)))
