@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
-# Keep one shell for the emulator action; always collect screenshots on failure.
+# Keep one shell for the emulator action; collect previews even when a test fails.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 mkdir -p test-results/native
-trap 'adb pull /sdcard/Download/streamglass-native/. test-results/native/ >/dev/null 2>&1 || true' EXIT
+collect() {
+  adb logcat -d -s StreamGlassPreview:I > test-results/native/native-log.txt || true
+  python3 tests/collect-native-previews.py
+}
+trap collect EXIT
+adb logcat -G 16M
+adb logcat -c
 ./gradlew --no-daemon connectedDebugAndroidTest

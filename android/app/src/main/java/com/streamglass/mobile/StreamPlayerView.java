@@ -224,7 +224,7 @@ public final class StreamPlayerView extends FrameLayout {
     private LinearLayout sheet(String title,int preferredHeight){
         sheetHeight=preferredHeight;
         if(dialog!=null)dialog.dismiss();handler.removeCallbacks(hide);
-        dialog=new Dialog(activity);LinearLayout content=column();content.setPadding(dp(22),dp(20),dp(22),dp(22));content.setBackground(round(0xff191919,18));
+        dialog=new Dialog(activity);dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);LinearLayout content=column();content.setPadding(dp(22),dp(20),dp(22),dp(22));content.setBackground(round(0xff191919,18));
         LinearLayout heading=new LinearLayout(activity);heading.setGravity(Gravity.CENTER_VERTICAL);TextView text=text(title,22,Color.WHITE);text.setTypeface(null,Typeface.BOLD);heading.addView(text,new LinearLayout.LayoutParams(0,-2,1));heading.addView(icon(R.drawable.ic_player_close,"Close player settings","player-sheet-close",()->dialog.dismiss()),new LinearLayout.LayoutParams(dp(48),dp(48)));content.addView(heading);
         dialog.setContentView(content);dialog.setOnDismissListener(d->{dialog=null;trackColumns=null;scheduleHide();});
         Window window=dialog.getWindow();if(window!=null){window.setBackgroundDrawableResource(android.R.color.transparent);window.addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);WindowManager.LayoutParams params=window.getAttributes();params.dimAmount=.65f;params.gravity=Gravity.BOTTOM;window.setAttributes(params);}

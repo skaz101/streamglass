@@ -15,7 +15,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 import java.io.File;
 import java.io.FileOutputStream;
-import android.os.ParcelFileDescriptor;
+import java.io.ByteArrayOutputStream;
+import android.util.Base64;
+import android.util.Log;
 import java.util.function.BooleanSupplier;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,12 +41,19 @@ public class NativePlayerTest {
     private void screenshot(String name) throws Exception {
         Thread.sleep(400);Bitmap bitmap=InstrumentationRegistry.getInstrumentation().getUiAutomation().takeScreenshot();assertNotNull(bitmap);
         File folder=new File(activity.getExternalFilesDir(null),"native-player-tests");assertTrue(folder.isDirectory()||folder.mkdirs());
-        try(FileOutputStream stream=new FileOutputStream(new File(folder,name+".png"))){assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG,100,stream));}bitmap.recycle();
-        // Gradle uninstalls the test app after execution; preserve previews outside its data.
-        String command="mkdir -p /sdcard/Download/streamglass-native && cp "+new File(folder,name+".png").getAbsolutePath()+" /sdcard/Download/streamglass-native/";
-        try(ParcelFileDescriptor.AutoCloseInputStream output=new ParcelFileDescriptor.AutoCloseInputStream(InstrumentationRegistry.getInstrumentation().getUiAutomation().executeShellCommand(command))){byte[] buffer=new byte[1024];while(output.read(buffer)!=-1){}}
-
+        try(FileOutputStream stream=new FileOutputStream(new File(folder,name+".png"))){assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG,100,stream));}
+        // Log chunks survive Gradle uninstalling the test app, unlike its external data.
+        ByteArrayOutputStream bytes=new ByteArrayOutputStream();assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG,100,bytes));bitmap.recycle();
+        String encoded=Base64.encodeToString(bytes.toByteArray(),Base64.NO_WRAP);
+        for(int i=0;i<encoded.length();i+=3000)Log.i("StreamGlassPreview","NATIVE_IMAGE:"+name+":"+(i/3000)+":"+encoded.substring(i,Math.min(i+3000,encoded.length())));
+        dumpNode(InstrumentationRegistry.getInstrumentation().getUiAutomation().getRootInActiveWindow(),0);
     }
+    private void dumpNode(android.view.accessibility.AccessibilityNodeInfo node,int depth){
+        if(node==null){Log.i("StreamGlassPreview","NODE null");return;}
+        Log.i("StreamGlassPreview","NODE "+depth+" "+node.getClassName()+" text="+node.getText()+" label="+node.getContentDescription()+" visible="+node.isVisibleToUser());
+        for(int i=0;i<node.getChildCount();i++)dumpNode(node.getChild(i),depth+1);
+    }
+
     @Test public void nativePlaybackControlsAndRecovery() throws Exception {
         Intent intent=new Intent(InstrumentationRegistry.getInstrumentation().getTargetContext(),PlayerPreviewActivity.class);
         try(ActivityScenario<PlayerPreviewActivity> scenario=ActivityScenario.launch(intent)){
