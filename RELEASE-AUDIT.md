@@ -1,5 +1,19 @@
 # StreamGlass release audit
 
+## Android 0.6.3 fluid browsing and controls
+
+[Validation run 41411104884](https://github.com/skaz101/streamglass/actions/runs/41411104884) passed at `aa5f64762946f01935604c987fe097d62ce30b0d`.
+
+Android debug/release builds, both lint variants, JVM/shared tests, six browser suites and native playback on Android 35 passed. Mobile checks include refresh scroll preservation, neutral search focus, removal of live-search instructions, Type/Sort sheet selections, interrupted transitions, reduced motion, theme persistence and existing account/playback behavior. Search and My List screenshots were reviewed. Physical-phone frame pacing remains unverified.
+
+The APK was signed locally with the original preview certificate. SDK apksigner verified v2/v3 signatures. Package `com.streamglass.mobile`, version `0.6.3`, code `603`. Every ZIP entry matches the unsigned build; packaged mobile assets match source. Debug fixture media/activity are excluded.
+
+APK SHA-256: `d9c20ac76689660b4de35da866b7f957fd5e131c65a6160aa9a93e8aac3c7dff`.
+Certificate SHA-256: `167c739ded0846e2e7e31884cef42ec58d1154e1145740c1a6ced15d4f9f3ead`.
+
+The source commit adds this audit and removes temporary build-transfer/visual-review tooling. Android and shared app/test sources match the validated commit. Routine CI is read-only; the signing key stays local.
+
+
 ## Android 0.6.2 appearance and profile
 
 [Validation run 41402266011](https://github.com/skaz101/streamglass/actions/runs/41402266011) passed at `15d9321862bb2f428f662004c736039b80bd0aed`.
