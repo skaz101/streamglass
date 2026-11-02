@@ -111,7 +111,10 @@ try {
   assert.equal(await page.locator('.sg-menu-sheet>p').textContent(),'test@example.invalid');
   await page.evaluate(()=>StreamGlassMobile.dismiss(false));
   await page.locator('.sg-nav-search').tap();
-  await page.locator('#sg-search-input').tap();await page.locator('#sg-search-input').fill('phone');
+  await page.locator('#sg-search-input').tap();
+  assert.equal(await page.locator('#sg-search-input').evaluate(el=>getComputedStyle(el).boxShadow),'none','Search has no red inner glow');
+  assert.equal(await page.locator('#sg-search-status').textContent(),'','No live-search instruction text');
+  await page.locator('#sg-search-input').fill('phone');
   await page.locator('#sg-search-results .sg-card').first().waitFor();
   assert.equal(await page.locator('#sg-search-input').evaluate(el=>el.readOnly),false);
   assert.equal(await page.locator('#sg-search-input').inputValue(),'phone');
@@ -178,6 +181,14 @@ try {
   await page.locator('#sg-library-grid .sg-card').first().waitFor();
   assert.equal(await page.locator('.library-content>h1').textContent(),'My List');
   await screenshot('phone-my-list.png');
+  await page.getByRole('button',{name:'Type: Everything',exact:true}).tap();
+  await page.locator('.sg-choice-option').filter({hasText:'Movies'}).tap();
+  await page.waitForFunction(()=>new URLSearchParams(location.hash.split('?')[1]).get('type')==='movie');
+  await page.getByRole('button',{name:'Sort by: Recently watched',exact:true}).tap();
+  await page.locator('.sg-choice-option').filter({hasText:'Name'}).tap();
+  await page.waitForFunction(()=>new URLSearchParams(location.hash.split('?')[1]).get('sort')==='name');
+  await page.locator('.sg-route-snapshot').waitFor({state:'detached'});
+  await screenshot('phone-list-filters.png');
   await page.locator('[data-nav="board"]').tap();
   await page.locator('a.sg-filter[href="#/board?type=series"]').tap();
   await page.locator('a.sg-filter[href="#/board?type=series"].selected').waitFor();

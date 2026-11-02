@@ -118,12 +118,13 @@
     if (host().showMessage) return host().showMessage(title,message);
     notify(title + ': ' + message);return Promise.resolve();
   }
-  function pendingText(title, subtitle) { return '<div class="sg-empty" role="status"><span class="sg-spinner"></span><h2>'+e(title)+'</h2>'+(subtitle?'<p>'+e(subtitle)+'</p>':'')+'</div>'; }
+  function pendingText(title, subtitle) { if(host().renderPending)return host().renderPending(title,subtitle);return '<div class="sg-empty" role="status"><span class="sg-spinner"></span><h2>'+e(title)+'</h2>'+(subtitle?'<p>'+e(subtitle)+'</p>':'')+'</div>'; }
   function empty(title, message, action, label) { return '<div class="sg-empty"><h2>'+e(title)+'</h2><p>'+e(message)+'</p>'+(action?'<button class="sg-button" data-action="'+e(action)+'">'+e(label||'Retry')+'</button>':'')+'</div>'; }
   function setScreen(html, route) {
     cancelSearch();
     if(recommendationController){recommendationController.abort();recommendationController=null;}
     clearInterval(heroTimer);heroTimer=null;clearTimeout(previewTimer);++previewSequence;
+    if(host().beforeScreenChanged)host().beforeScreenChanged(route);
     view.innerHTML=html;view.scrollTop=0;doc.body.dataset.dxRoute=route;
     root.querySelectorAll('[data-nav]').forEach(node=>{const selected=node.dataset.nav===route;node.classList.toggle('selected',selected);if(selected)node.setAttribute('aria-current','page');else node.removeAttribute('aria-current');});
     if(host().screenChanged)host().screenChanged(route);
@@ -243,9 +244,9 @@
     return session===searchSession&&session.token===epoch&&session.revision===revision&&session.results.isConnected;
   }
   function searchHint(session) {
-    session.results.innerHTML=empty('Find your next watch','Type at least 2 characters for live results, or press Search for a one-letter title.');
+    session.results.innerHTML=host().mobile?empty('What are you in the mood for?','A favorite movie, a new series, or something unexpected.'):empty('Find your next watch','Type at least 2 characters for live results, or press Search for a one-letter title.');
     session.results.setAttribute('aria-busy','false');
-    session.status.textContent='Results update as you type.';
+    session.status.textContent=host().mobile?'':'Results update as you type.';
   }
   function updateSearchQuery(session) {
     const query=session.input.value.trim();

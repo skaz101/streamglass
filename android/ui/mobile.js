@@ -42,8 +42,8 @@
   const icon=name=>'<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">'+paths[name]+'</svg>';
   const mark='<svg class="sg-mobile-mark" viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M7 4h18v6H13v4h10v14H5v-6h12v-4H7Z"/></svg>';
   const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
-  const ease='cubic-bezier(.2,0,0,1)';
-  let dialog=null,lastRoute=null,tabAnimation=null,account=null;
+  const ease='cubic-bezier(.22,1,.36,1)';
+  let dialog=null,lastRoute=null,tabAnimation=null,account=null,snapshot=null,snapshotAnimation=null;
   function finishDismiss(state,restore) {
     if(dialog!==state)return;
     dialog=null;
@@ -75,6 +75,7 @@
     return true;
   }
   reducedMotion.addEventListener('change',()=>{
+    if(reducedMotion.matches)clearSnapshot();
     if(reducedMotion.matches&&tabAnimation){tabAnimation.cancel();tabAnimation=null;}
     if(!reducedMotion.matches||!dialog)return;
     if(dialog.closing)finishDismiss(dialog,true);
@@ -184,6 +185,41 @@
       history.replaceState(null,'',location.hash.replace(/\?play=1$/,''));showStreams();
     }
   }
+  function clearSnapshot(){if(snapshotAnimation)snapshotAnimation.cancel();snapshotAnimation=null;if(snapshot)snapshot.remove();snapshot=null;}
+  function beforeScreenChanged(){
+    clearSnapshot();dismiss(false);
+    const view=doc.getElementById('sg-view');if(reducedMotion.matches||!view?.firstElementChild)return;
+    const rect=view.getBoundingClientRect();snapshot=view.cloneNode(true);snapshot.removeAttribute('id');snapshot.querySelectorAll('[id]').forEach(node=>node.removeAttribute('id'));
+    snapshot.classList.add('sg-route-snapshot');snapshot.inert=true;snapshot.setAttribute('aria-hidden','true');
+    Object.assign(snapshot.style,{position:'fixed',top:rect.top+'px',left:rect.left+'px',width:rect.width+'px',height:rect.height+'px',bottom:'auto',right:'auto'});
+    doc.querySelector('.sg-app').append(snapshot);snapshot.scrollTop=view.scrollTop;
+  }
+  function renderPending(title,subtitle){
+    const e=StreamGlassShell.helpers.escapeHTML;
+    return '<div class="sg-loading-surface" role="status"><span class="sg-loading-label">'+e(title)+'</span><div class="sg-loading-cards" aria-hidden="true">'+Array(6).fill('<i></i>').join('')+'</div>'+(subtitle?'<p>'+e(subtitle)+'</p>':'')+'</div>';
+  }
+  function libraryFilters(view){
+    for(const [id,label] of [['sg-library-type','Type'],['sg-library-sort','Sort by']]){
+      const select=view.querySelector('#'+id);if(!select||select.hidden)return;
+      const wrapper=select.parentElement,button=doc.createElement('button');button.type='button';button.className='sg-choice-trigger';button.setAttribute('aria-haspopup','dialog');
+      const selected=()=>select.selectedOptions[0]?.textContent||'';
+      button.innerHTML='<small>'+label+'</small><span></span>'+icon('back');button.querySelector('span').textContent=selected();
+      button.setAttribute('aria-label',label+': '+selected());
+      select.hidden=true;wrapper.replaceChildren(select,button);
+      button.onclick=()=>{
+        const overlay=doc.createElement('div');overlay.className='sg-mobile-overlay';
+        overlay.innerHTML='<section class="sg-mobile-sheet sg-choice-sheet" role="dialog" aria-modal="true" aria-labelledby="sg-choice-title" tabindex="-1">'+closeButton+'<h2 id="sg-choice-title"></h2><div class="sg-choice-options"></div></section>';
+        overlay.querySelector('h2').textContent=label;
+        for(const option of select.options){
+          const item=doc.createElement('button');item.type='button';item.className='sg-choice-option';item.textContent=option.textContent;item.setAttribute('aria-pressed',String(option.selected));
+          if(option.selected)item.insertAdjacentHTML('beforeend',icon('check'));
+          item.onclick=()=>{const value=option.value;dismiss(false);select.value=value;button.querySelector('span').textContent=selected();button.focus({preventScroll:true});select.dispatchEvent(new Event('change',{bubbles:true}));};
+          overlay.querySelector('.sg-choice-options').append(item);
+        }
+        doc.querySelector('.sg-app').append(overlay);open(overlay,{remove:true});
+      };
+    }
+  }
   function screenChanged(route) {
     dismiss(false);
     const view=doc.getElementById('sg-view');
@@ -192,15 +228,16 @@
     if(tabAnimation){tabAnimation.cancel();tabAnimation=null;}
     if(index>=0){
       const nav=doc.querySelector('.sg-bottom-nav');nav.style.setProperty('--sg-tab',index);nav.dataset.active='true';
-      if(previous>=0&&route!==lastRoute&&!reducedMotion.matches){
-        tabAnimation=view.animate([{opacity:.12},{opacity:1}],{duration:320,easing:ease});
-      }
+
     }else doc.querySelector('.sg-bottom-nav').dataset.active='false';
+    if(!reducedMotion.matches&&lastRoute){tabAnimation=view.animate([{opacity:.45},{opacity:1}],{duration:420,easing:ease});}
+    if(snapshot){const outgoing=snapshot;snapshotAnimation=snapshot.animate([{opacity:1},{opacity:0}],{duration:240,easing:ease});snapshotAnimation.finished.then(()=>{if(snapshot===outgoing)clearSnapshot();}).catch(()=>{});}
     lastRoute=route;
+    if(route==='library')requestAnimationFrame(()=>{if(view.isConnected&&doc.body.dataset.dxRoute==='library')libraryFilters(view);});
     const heading=view.querySelector('.sg-page>h1');
     if(heading&&route==='library')heading.textContent='My List';
     if(heading&&route==='search'){
-      heading.textContent='Find your next watch';
+      heading.textContent='Let’s find something good';
       const form=view.querySelector('.sg-search-form'),input=form.querySelector('input'),submit=form.querySelector('button');
       form.insertAdjacentHTML('afterbegin','<span class="sg-search-glyph">'+icon('search')+'</span>');
       input.placeholder='Search movies, series and more';input.setAttribute('enterkeyhint','search');
@@ -227,7 +264,7 @@
     panel.insertAdjacentHTML('afterbegin','<span class="sg-sheet-handle" aria-hidden="true"></span>'+closeButton);
     overlay.append(panel);detail.append(overlay);
   }
-  window.StreamGlassMobile={mobile:true,mount,renderHero,screenChanged,detailReady,libraryChanged,showStreams,showMessage,dismiss,
+  window.StreamGlassMobile={mobile:true,mount,renderHero,renderPending,beforeScreenChanged,screenChanged,detailReady,libraryChanged,showStreams,showMessage,dismiss,
     rowTitle(title){return title.replace(/\s·\s(movie|series|anime)$/i,(suffix,type)=>{const label=type==='movie'?'movies':type,base=title.slice(0,-suffix.length);return base.toLowerCase().endsWith(label)?'':' '+label;});},
     accountChanged(signedIn,user){account=signedIn?{email:typeof user?.email==='string'?user.email:'',avatar:typeof user?.avatar==='string'?user.avatar:''}:null;paintAccount();}
   };
