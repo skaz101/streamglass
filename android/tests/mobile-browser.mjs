@@ -40,6 +40,7 @@ try {
       await route.fulfill({status:200,contentType:'image/svg+xml',body:svg});return;
     }
     if(url.host==='api.strem.io'){
+      if(url.pathname.endsWith('/getUser')){await reply({result:{_id:'fixture-user',email:'test@example.invalid',lastModified:'2026-01-01T00:00:00Z',dateRegistered:'2020-01-01T00:00:00Z',premium_expire:null,gdpr_consent:{tos:true,privacy:true,marketing:false,from:'tests'}}});return;}
       if(url.pathname.endsWith('/login')){loginRequests++;await reply(acceptLogin?{result:{authKey:'secret-fixture-token',user:{_id:'fixture-user',email:'test@example.invalid',lastModified:'2026-01-01T00:00:00Z',dateRegistered:'2020-01-01T00:00:00Z',premium_expire:null,gdpr_consent:{tos:true,privacy:true,marketing:false,from:'tests'}}}}:{error:{code:1,message:'Invalid fixture credentials'}});return;}
       if(url.pathname.endsWith('/addonCollectionGet')){await reply({result:{addons:storedAddons,lastModified:'2026-01-01T00:00:00Z'}});return;}
       if(url.pathname.endsWith('/addonCollectionSet')){addonWrites++;const body=route.request().postDataJSON();if(Array.isArray(body.addons))storedAddons=body.addons;await reply({result:{success:true}});return;}
@@ -106,6 +107,9 @@ try {
   await page.locator('#sg-login-form button').tap();
   await page.waitForFunction(()=>StreamGlassShell.state.signedIn&&location.hash==='#/board');
   await page.locator('.sg-card').first().waitFor();
+  await page.locator('#sg-profile').tap();
+  assert.equal(await page.locator('.sg-menu-sheet>p').textContent(),'test@example.invalid');
+  await page.evaluate(()=>StreamGlassMobile.dismiss(false));
   await page.locator('.sg-nav-search').tap();
   await page.locator('#sg-search-input').tap();await page.locator('#sg-search-input').fill('phone');
   await page.locator('#sg-search-results .sg-card').first().waitFor();
@@ -194,6 +198,15 @@ try {
   await page.locator('#sg-prefs-form').waitFor();
   assert.equal(await page.locator('.sg-bottom-nav').evaluate(el=>el.inert),false,'Leaving a sheet restores navigation');
   await screenshot('phone-settings.png');
+  assert.equal(await page.locator('[data-action="appearance"]').count(),0);
+  await page.locator('[data-theme-choice="purple"]').tap();
+  assert.equal(await page.evaluate(()=>document.documentElement.dataset.theme),'purple');
+  await screenshot('phone-theme-purple.png');
+  await page.locator('[data-theme-choice="oled"]').tap();
+  assert.equal(await page.locator('.sg-app').evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(0, 0, 0)');
+  await page.reload();await ready();await page.locator('#sg-prefs-form').waitFor();
+  assert.equal(await page.evaluate(()=>document.documentElement.dataset.theme),'oled','Theme survives restart');
+  await page.locator('[data-theme-choice="classic"]').tap();
   await page.emulateMedia({reducedMotion:'reduce'});
   await page.setViewportSize({width:844,height:390});
   await page.locator('[data-nav="board"]').tap();await page.locator('.sg-card').first().waitFor();

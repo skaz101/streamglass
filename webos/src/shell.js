@@ -132,7 +132,7 @@
     const node=doc.getElementById('sg-account');
     const user=profile.auth&&profile.auth.user;
     if (node) {node.textContent=user?'Account':'Sign in';node.title=user?'Stremio account':'Sign in to Stremio';}
-    if(host().accountChanged)host().accountChanged(!!user);
+    if(host().accountChanged)host().accountChanged(!!user,user?{email:user.email,avatar:user.avatar}:null);
   }
   async function refreshProfile() { const state=await core.getState('ctx');profile=state.profile||{};setAccount();return profile; }
   async function fetchJSON(url, useCache=true, signal=null) {
@@ -561,7 +561,7 @@
   async function sync() {
     if(!profile.auth){location.hash='#/account';return;}
     notify('Syncing your Stremio account…');cache.clear();
-    await Promise.all([core.dispatch(ctxAction('PullAddonsFromAPI'),'ctx'),core.dispatch(ctxAction('SyncLibraryWithAPI'),'ctx')]);
+    await Promise.all([core.dispatch(ctxAction('PullUserFromAPI',{}),'ctx'),core.dispatch(ctxAction('PullAddonsFromAPI'),'ctx'),core.dispatch(ctxAction('SyncLibraryWithAPI'),'ctx')]);
     // Completion events refresh the view even if the network takes longer than expected.
     notify('Sync requested. Changes appear when Stremio responds.');
   }
@@ -720,7 +720,7 @@
       },300);
     });
     await refreshProfile();
-    if(profile.auth){core.dispatch(ctxAction('PullAddonsFromAPI'),'ctx').catch(()=>{});core.dispatch(ctxAction('SyncLibraryWithAPI'),'ctx').catch(()=>{});}
+    if(profile.auth){core.dispatch(ctxAction('PullUserFromAPI',{}),'ctx').catch(()=>{});core.dispatch(ctxAction('PullAddonsFromAPI'),'ctx').catch(()=>{});core.dispatch(ctxAction('SyncLibraryWithAPI'),'ctx').catch(()=>{});}
     await render();diagnostic('shell_ready',{signedIn:!!profile.auth});
   }
   global.StreamGlassShell={start,render,back,onProgress,onClose,helpers,get state(){return {route:parseHash(location.hash).route,signedIn:!!profile.auth,addonCount:installed().length,playing:!!activePlayback};}};

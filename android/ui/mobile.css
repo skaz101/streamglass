@@ -255,3 +255,45 @@ body[data-dx-route='detail'] #app #sg-view { top:0; }
  #app .search-content .sg-cards { grid-template-columns:repeat(5,minmax(0,1fr)); }
  #app .sg-bottom-nav::before { left:max(16px,calc((100% - 640px)/2)); width:calc(min(100% - 32px,640px)/4); }
 }
+
+#app .sg-profile-button img,#app .sg-menu-profile img { width:100%; height:100%; object-fit:cover; border-radius:inherit; }
+#app .sg-profile-button:has(img) { padding:0; }
+#app .sg-menu-profile { font-size:24px; font-weight:750; overflow:hidden; }
+#app .sg-menu-sheet>h2,#app .sg-menu-sheet>p { overflow-wrap:anywhere; }
+
+/* Shared mobile color roles keep every browsing surface in the chosen palette. */
+:root { --sg-bg:#080808; --sg-panel:#181818; --sg-raised:#252525; --sg-line:#ffffff1c; --sg-accent:#ef233c; --sg-tint:#491c25; }
+:root[data-theme='purple'] { --sg-bg:#100c19; --sg-panel:#1c162a; --sg-raised:#2b223d; --sg-line:#cbb7ff24; --sg-accent:#b69aff; --sg-tint:#483166; }
+:root[data-theme='oled'] { --sg-bg:#000; --sg-panel:#080808; --sg-raised:#141414; --sg-line:#ffffff24; --sg-accent:#f56d80; --sg-tint:#371820; }
+:root { --dx-accent:var(--sg-accent); }
+body,#app .sg-app,#app .sg-mobile-header,#app .sg-detail.metadetails-container,#app .sg-account-page { background:var(--sg-bg); }
+#app .sg-bottom-nav,#app .sg-mobile-sheet,#app .sg-episode { background:var(--sg-panel); border-color:var(--sg-line); }
+#app .sg-bottom-nav::before,#app .sg-progress i { background:var(--sg-accent); }
+#app .sg-mobile-mark { color:var(--sg-accent); }
+#app .sg-profile-button.signed-in,#app .sg-menu-profile { background:var(--sg-tint); }
+#app .sg-button,#app .sg-stream,#app .sg-settings-row,#app .sg-addon-card,#app .sg-addon-form,#app input,#app select,#app .sg-menu-sheet nav,#app .search-content .sg-search-form,#app #sg-library-toggle { background:var(--sg-raised); border-color:var(--sg-line); }
+#app .sg-button.sg-primary { background:#f3f0f8; color:#100c19; }
+#app .sg-account-box form button { background:var(--sg-accent); color:var(--sg-bg); }
+#app .sg-detail .sg-detail-background::after { background:linear-gradient(0deg,var(--sg-bg),transparent 65%); }
+#app .search-content .sg-search-form input,#app .search-content .sg-search-form button { background:transparent; }
+#app .sg-settings-row { border-radius:14px; padding:18px; }
+#app .sg-appearance { margin:8px 0 26px; padding:20px 0 4px; }
+#app .sg-appearance h2 { margin:0 0 6px; font-size:21px; letter-spacing:-.5px; }
+#app .sg-appearance>p { margin:0 0 18px; color:#b6b0bf; font-size:13px; }
+#app .sg-theme-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; }
+#app .sg-theme-option { min-width:0; padding:8px 8px 12px; background:var(--sg-panel); color:#f4f1f8; border:2px solid var(--sg-line); border-radius:13px; text-align:left; cursor:pointer; }
+#app .sg-theme-option[aria-pressed='true'] { border-color:var(--sg-accent); }
+#app .sg-theme-option b { display:block; font-size:13px; margin:11px 0 4px; }
+#app .sg-theme-option small { display:block; color:#bdb5c7; font-size:10px; line-height:1.5; }
+#app .sg-theme-preview { height:64px; display:flex; align-items:end; gap:4px; padding:9px; border-radius:7px; background:#080808; border-top:3px solid #ef233c; }
+#app .sg-theme-preview i { display:block; flex:1; height:32px; border-radius:3px; background:#333; }
+#app [data-theme-choice='purple'] .sg-theme-preview { background:#100c19; border-color:#b69aff; }
+#app [data-theme-choice='purple'] .sg-theme-preview i { background:#483166; }
+#app [data-theme-choice='oled'] .sg-theme-preview { background:#000; border-color:#f56d80; }
+#app [data-theme-choice='oled'] .sg-theme-preview i { background:#161616; }
+#app .sg-theme-status { display:block; min-height:20px; margin-top:10px; color:var(--sg-accent); font-size:12px; }
+@media (prefers-reduced-motion:no-preference) {
+ #app .sg-theme-option { transition:border-color .18s ease,transform .18s ease; }
+ #app .sg-theme-option:active { transform:scale(.97); }
+ #app .sg-app,#app .sg-mobile-header,#app .sg-bottom-nav,#app .sg-settings-row { transition:background-color .25s ease; }
+}

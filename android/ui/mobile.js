@@ -2,6 +2,27 @@
 (function () {
   'use strict';
   const doc=document;
+  const themes=[['classic','Classic','Charcoal & red'],['purple','Amethyst','Soft purple'],['oled','OLED','True black']];
+  let theme='classic';
+  try{const saved=localStorage.getItem('streamglass-appearance');if(themes.some(([id])=>id===saved))theme=saved;}catch(_){}
+  doc.documentElement.dataset.theme=theme;
+  function appearance(view) {
+    const old=view.querySelector('[data-action="appearance"]');if(!old)return;
+    const section=doc.createElement('section');section.className='sg-appearance';section.setAttribute('aria-labelledby','sg-appearance-title');
+    section.innerHTML='<h2 id="sg-appearance-title">Make it yours</h2><p>Choose the mood for your next watch.</p><div class="sg-theme-options" role="group" aria-label="App theme"></div><small class="sg-theme-status" role="status"></small>';
+    const options=section.querySelector('.sg-theme-options');
+    for(const [id,name,description] of themes){
+      const button=doc.createElement('button');button.type='button';button.className='sg-theme-option';button.dataset.themeChoice=id;button.setAttribute('aria-pressed',String(theme===id));
+      button.innerHTML='<span class="sg-theme-preview" aria-hidden="true"><i></i><i></i><i></i></span><b>'+name+'</b><small>'+description+'</small>';
+      button.onclick=()=>{
+        theme=id;doc.documentElement.dataset.theme=id;
+        options.querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+        let saved=true;try{localStorage.setItem('streamglass-appearance',id);}catch(_){saved=false;}
+        section.querySelector('.sg-theme-status').textContent=saved?name+' theme saved':name+' applied for this session';
+      };options.append(button);
+    }
+    old.replaceWith(section);
+  }
   const paths={
     home:'<path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/>',
     spark:'<path d="m12 3 2.7 6.3L21 12l-6.3 2.7L12 21l-2.7-6.3L3 12l6.3-2.7Z"/>',
@@ -22,7 +43,7 @@
   const mark='<svg class="sg-mobile-mark" viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M7 4h18v6H13v4h10v14H5v-6h12v-4H7Z"/></svg>';
   const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
   const ease='cubic-bezier(.2,0,0,1)';
-  let dialog=null,lastRoute=null,tabAnimation=null;
+  let dialog=null,lastRoute=null,tabAnimation=null,account=null;
   function finishDismiss(state,restore) {
     if(dialog!==state)return;
     dialog=null;
@@ -103,12 +124,29 @@
       doc.querySelector('.sg-app').append(overlay);open(overlay,{remove:true,resolve});
     });
   }
+  function profileAvatar(node) {
+    node.replaceChildren();
+    const fallback=()=>{node.textContent=account?(account.email||'S').trim().slice(0,1).toUpperCase():'';if(!account)node.innerHTML=icon('user');};
+    fallback();
+    if(!account?.avatar)return;
+    let url;try{url=new URL(account.avatar);if(url.protocol!=='https:'||url.username||url.password)return;}catch(_){return;}
+    const img=doc.createElement('img');img.alt='';img.referrerPolicy='no-referrer';img.src=url.href;
+    img.onerror=()=>{if(node.contains(img))fallback();};node.replaceChildren(img);
+  }
+  function paintAccount() {
+    const button=doc.getElementById('sg-profile');
+    if(button){button.classList.toggle('signed-in',!!account);button.setAttribute('aria-label',account?'Open account and settings':'Open profile and sign in');profileAvatar(button);}
+    const menu=doc.querySelector('.sg-menu-sheet');
+    if(menu){profileAvatar(menu.querySelector('.sg-menu-profile'));menu.querySelector('h2').textContent='Your StreamGlass';menu.querySelector('p').textContent=account?.email||'Your stories. Your way.';}
+    const box=doc.querySelector('.sg-account-box');
+    if(account&&box){box.querySelector('h1').textContent='Your Stremio account';box.querySelector('p').textContent=account.email||'Signed in to Stremio';}
+  }
   function menu() {
     const signedIn=window.StreamGlassShell.state.signedIn;
     const overlay=doc.createElement('div');overlay.className='sg-mobile-overlay';
     const links=[['account',signedIn?'Your account':'Sign in to Stremio','user'],['discover','Browse all titles','grid'],['addons','Manage addons','addon'],['settings','App settings','settings']];
     overlay.innerHTML='<section class="sg-mobile-sheet sg-menu-sheet" role="dialog" aria-modal="true" aria-labelledby="sg-menu-title" tabindex="-1">'+closeButton+'<div class="sg-menu-profile">'+icon('user')+'</div><h2 id="sg-menu-title">Your StreamGlass</h2><p>Your stories. Your way.</p><nav aria-label="Account and app">'+links.map(([route,label,glyph])=>'<a href="#/'+route+'">'+icon(glyph)+'<span>'+label+'</span><span aria-hidden="true">›</span></a>').join('')+'</nav><small>StreamGlass 0.6.1</small></section>';
-    doc.querySelector('.sg-app').append(overlay);open(overlay,{remove:true});
+    doc.querySelector('.sg-app').append(overlay);paintAccount();open(overlay,{remove:true});
   }
   function mount(root) {
     root.querySelector('.sg-nav').outerHTML='<header class="sg-mobile-header"><a class="sg-mobile-brand" href="#/board" aria-label="StreamGlass Home">'+mark+'<span>STREAMGLASS</span></a><div class="sg-header-actions"><a class="sg-icon-button" href="#/discover" aria-label="Browse all titles">'+icon('grid')+'</a><button class="sg-icon-button sg-profile-button" id="sg-profile" aria-label="Open profile and settings">'+icon('user')+'</button></div></header>';
@@ -172,7 +210,9 @@
       clear.onclick=()=>{input.value='';input.dispatchEvent(new Event('input',{bubbles:true}));input.focus({preventScroll:true});};
       form.insertBefore(clear,submit);
     }
+    if(route==='settings')appearance(view);
     if(route==='account'){
+      paintAccount();
       const intro=view.querySelector('.sg-account-box>p');
       if(intro&&!StreamGlassShell.state.signedIn)intro.textContent='Bring your saved titles, addons and watch progress with you.';
     }
@@ -189,6 +229,6 @@
   }
   window.StreamGlassMobile={mobile:true,mount,renderHero,screenChanged,detailReady,libraryChanged,showStreams,showMessage,dismiss,
     rowTitle(title){return title.replace(/\s·\s(movie|series|anime)$/i,(suffix,type)=>{const label=type==='movie'?'movies':type,base=title.slice(0,-suffix.length);return base.toLowerCase().endsWith(label)?'':' '+label;});},
-    accountChanged(signedIn){const button=doc.getElementById('sg-profile');if(button){button.classList.toggle('signed-in',signedIn);button.setAttribute('aria-label',signedIn?'Open account and settings':'Open profile and sign in');}}
+    accountChanged(signedIn,user){account=signedIn?{email:typeof user?.email==='string'?user.email:'',avatar:typeof user?.avatar==='string'?user.avatar:''}:null;paintAccount();}
   };
 })();
