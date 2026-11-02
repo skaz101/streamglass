@@ -107,11 +107,7 @@ jobs:
           arch: x86_64
           profile: pixel_5
           disable-animations: true
-          script: |
-            cd android
-            ./gradlew --no-daemon connectedDebugAndroidTest
-            mkdir -p test-results/native
-            adb pull /sdcard/Android/data/com.streamglass.mobile/files/native-player-tests/. test-results/native/
+          script: bash android/scripts/test-native.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:
