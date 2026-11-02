@@ -80,7 +80,7 @@ try {
   await page.locator('[data-nav="board"]').evaluate(el=>el.click());
   await page.waitForFunction(()=>document.querySelector('.sg-card')?.getAnimations().some(a=>a.playState==='running'));
   const sheetMotion=await page.evaluate(()=>{
-    document.getElementById('sg-profile').click();
+    const trigger=document.getElementById('sg-profile');trigger.focus();trigger.click();
     const overlay=document.querySelector('.sg-mobile-overlay'),panel=overlay.querySelector('[role="dialog"]');
     [...overlay.getAnimations(),...panel.getAnimations()].forEach(a=>{a.pause();a.currentTime=80;});
     const opening={opacity:Number(getComputedStyle(overlay).opacity),transform:getComputedStyle(panel).transform};

@@ -57,6 +57,18 @@ jobs:
             android/test-results/
           if-no-files-found: ignore
 
+      - name: Mobile visual review
+        if: always()
+        run: |
+          for name in home-390 phone-detail phone-streams phone-settings; do
+            file="android/test-results/$name.png"
+            [ -f "$file" ] || continue
+            ffmpeg -v error -y -i "$file" -vf 'scale=900:900:force_original_aspect_ratio=decrease' -frames:v 1 -quality 78 /tmp/mobile-preview.webp
+            printf 'MOBILE_PREVIEW:%s:' "$name"
+            base64 -w0 /tmp/mobile-preview.webp
+            printf '\n'
+          done
+
   android:
     permissions:
       contents: write # Temporary unsigned-build transfer; removed before release.
