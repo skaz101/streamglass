@@ -28,3 +28,28 @@ keeps slow addons from blocking the calendar indefinitely; partial results remai
 visible and can be refreshed. It never treats a release
 year as a precise date. Date-only values retain the provider's day; timestamps
 use the device time zone. Missing dates and the library cap are disclosed in UI.
+
+
+## Curated discovery and motion
+
+`curated.mjs` defines an ordered Home independent of installed catalogs. Featured
+and Top feeds come from Cinemeta; Netflix/HBO Max feeds come from Streaming
+Catalogs. Anime and seasonal rows are explicit IMDb selections resolved through
+Cinemeta. Service rows are provider listings, not claims of originals or regional
+availability. Sources never silently substitute for failed provider rows.
+
+Fetches use four workers, twelve-second per-request timeouts, a forty-second
+overall deadline and a fifteen-minute bounded memory cache. Pull refresh bypasses
+that cache, and route cleanup aborts outstanding requests. The device-local
+`streamglass-home-v1` preference opts into installed addon catalogs. Metadata can
+fall back to Cinemeta for IMDb titles; playback still uses installed stream addons.
+
+`Hero.jsx` keeps its eight-second clock and drag progress in refs/CSS transforms.
+It pauses for focus, hover, hidden documents, scrolling and reduced motion.
+Artwork is decoded before a crossfade; horizontal gestures suppress accidental
+link activation while vertical gestures remain available for scrolling.
+`PullRefresh.jsx` locks downward gestures only at the top of the phone viewport;
+visible TV refresh controls and keyboard-accessible phone controls remain.
+
+Run `node tests/curated-browser.cjs` and `node tests/hero-browser.cjs` from `webos/`
+for trusted Chromium touch tests, preference switching, cache behavior and motion.

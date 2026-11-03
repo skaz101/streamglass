@@ -8,6 +8,8 @@ const fs=require('node:fs/promises');
  try{
   const page=await browser.newPage({viewport:{width:1280,height:800}}),errors=[];
   page.on('pageerror',error=>errors.push(error.message));
+  await page.route('https://react.fixtures.invalid/',route=>route.fulfill({contentType:'text/html',body:'<!doctype html><html></html>'}));
+  await page.goto('https://react.fixtures.invalid/');
   await page.setContent('<style>body{margin:0;background:#101014;color:white;font-family:Arial}#sg-view{height:100vh;overflow:auto}.sg-page{padding:30px}</style><div id="app"><main id="sg-view"></main></div>');
   await page.addStyleTag({path:path.resolve(__dirname,'../build/shell.css')});
   await page.addStyleTag({path:path.resolve(__dirname,'../build/react-ui.css')});
@@ -18,6 +20,7 @@ const fs=require('node:fs/promises');
    const entries=[{key:'popular',catalog:{name:'Popular',type:'movie'},addon:{manifest:{name:'Fixture'}}},{key:'featured',catalog:{name:'Featured',type:'series'},addon:{manifest:{name:'Fixture'}}}];
    window.requests=0;window.testAPI={mobile:false,registerCard(){},safeURL(){return '';},progressFraction(){return 0;},detailHash(type,id,video){return '#/detail/'+type+'/'+id+(video?'?video='+encodeURIComponent(video):'');},catalogs(){return entries;},catalog(){return Promise.resolve({metas:items});},continueWatching(){return Promise.resolve([]);},resolveMeta(type,id,fallback){window.requests++;return Promise.resolve({meta:fallback});},calendarLibrary(){return Promise.resolve({catalog:items});},calendarMeta(item){return Promise.resolve(item);}};
    window.mountTest=route=>{const node=document.getElementById('sg-view');StreamGlassUI.unmount(node);StreamGlassUI.mount(node,{route,api:window.testAPI,params:new URLSearchParams()});};
+   try{localStorage.setItem('streamglass-home-v1','addons');}catch(_){}
    window.mountTest('board');
   });
   await page.getByRole('heading',{name:'A quieter tomorrow'}).waitFor();

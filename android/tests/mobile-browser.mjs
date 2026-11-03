@@ -67,6 +67,7 @@ try {
   });
   const ready=()=>page.waitForFunction(()=>window.StreamGlassCore&&StreamGlassCore.ready&&window.StreamGlassShell);
   await page.addInitScript(()=>{window.nativeMessages=[];window.StreamGlassNative={postMessage:data=>window.nativeMessages.push(JSON.parse(data))};});
+  await page.addInitScript(()=>localStorage.setItem('streamglass-home-v1','addons'));
   await page.goto(pathToFileURL(path.join(root,'../android/app/build/generated/assets/app/index.html')).href);
   await ready();await page.locator('.sg-card').first().waitFor();
   await screenshot('home.png');
@@ -109,6 +110,7 @@ try {
   await page.locator('.sg-message-sheet').waitFor();
   assert.equal(await page.locator('.sg-mobile-overlay').count(),1,'Replacing a closing sheet cleans up its overlay');
   await page.evaluate(()=>StreamGlassMobile.dismiss(false));
+  await page.locator('.sg-route-snapshot').waitFor({state:'detached'});
   assert.equal(await page.locator('[inert]').count(),0,'Interrupted dismissal restores every background surface');
   acceptLogin=true;
   await page.locator('#sg-profile').tap();

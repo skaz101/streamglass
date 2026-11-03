@@ -173,10 +173,11 @@
   }
   const reactAPI={
     ...helpers,
+    refresh(){cache.clear();recommendationSnapshot=null;return render();},
     registerCard(meta){const id=meta.id||meta._id;cards.set((meta.type||'movie')+':'+id,meta);if(cards.size>800)cards.delete(cards.keys().next().value);},
     get mobile(){return !!host().mobile;},
     catalogs(){catalogMemory=catalogs();return catalogMemory;},
-    catalog(entry,extra,signal){return fetchJSON(resourceURL(entry.addon.transportUrl,'catalog',entry.catalog.type,entry.catalog.id,extra),true,signal);},
+    catalog(entry,extra,signal,refresh=false){return fetchJSON(resourceURL(entry.addon.transportUrl,'catalog',entry.catalog.type,entry.catalog.id,extra),!refresh,signal);},
     continueWatching(){return core.getState('continue_watching_preview').then(state=>state.items||[]).catch(()=>[]);},
     resolveMeta,
     calendarLibrary(){return loadLibrary(null,'lastwatched',5);},
@@ -375,12 +376,12 @@
   }
   async function resolveMeta(type,id,fallback) {
     const sources=installed().filter(addon=>supports(addon,'meta',type,id));
-    if(!sources.length)throw new Error('No installed addon provides details for this title.');
+    if(!sources.length)return global.StreamGlassUI.resolveCuratedMeta(type,id);
     const attempts=sources.map(async addon=>{
       const data=await fetchJSON(resourceURL(addon.transportUrl,'meta',type,id));if(!data.meta)throw new Error('No details returned.');
       return {meta:{...fallback,...data.meta,id:data.meta.id||id,type:data.meta.type||type},addon};
     });
-    return Promise.any(attempts).catch(()=>{throw new Error('Title details could not load. The addon may be offline or block TV requests.');});
+    return Promise.any(attempts).catch(()=>global.StreamGlassUI.resolveCuratedMeta(type,id));
   }
   function episodes(meta,selectedVideo) {
     const videos=meta.videos||[];

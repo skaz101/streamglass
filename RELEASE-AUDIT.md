@@ -1,5 +1,23 @@
 # StreamGlass release audit
 
+## Unreleased curated Home and motion
+
+Curated Home defaults to Cinemeta Featured/Top, Streaming Catalogs Netflix/HBO
+Max, handpicked anime and date-windowed seasonal selections. Home settings can
+opt into installed addon catalogs. Shared React changes apply to Android and
+LG webOS. No installer has been released for this change.
+
+Local validation: 49 unit tests, built React screens, hero countdown and trusted
+touch swipes, curated preference/cache/refresh failure-and-recovery tests, TV
+full-app integration and Android browser integration. Live provider feeds loaded
+all eleven current-season rows; phone, TV, rows and settings screenshots were
+reviewed. Reduced motion and keyboard/remote access remain covered.
+
+The work used frontend-design and React performance skills, three specialist
+agents, Context7 documentation and the shadcn audit MCP. Browser MCPs could not
+launch their configured Chrome path; visual and gesture checks used installed
+Playwright Chromium. Physical-device frame pacing remains unverified.
+
 ## Android 0.6.3 fluid browsing and controls
 
 [Validation run 41411104884](https://github.com/skaz101/streamglass/actions/runs/41411104884) passed at `aa5f64762946f01935604c987fe097d62ce30b0d`.

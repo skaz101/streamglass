@@ -41,6 +41,8 @@ jobs:
           node tests/review-host-browser.cjs
           node tests/motion-browser.cjs
           node tests/react-browser.cjs
+          node tests/hero-browser.cjs
+          node tests/curated-browser.cjs
           npm run test:browser
           node ../android/scripts/sync-assets.mjs
           node ../android/tests/mobile-browser.mjs

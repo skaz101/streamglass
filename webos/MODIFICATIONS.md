@@ -82,3 +82,13 @@ inventory. See RELEASE-0.4.0.md and ../android/README.md for validation and limi
   put stream choices in a focus-managed sheet with Android Back support.
 - Keep the StreamGlass name and stable application IDs. The preview signing key
   is excluded from source and remains local.
+
+
+## Unreleased: curated Home and touch motion
+
+Added curated Featured, seasonal, provider, Anime and Top collections with an
+explicit addon-catalog setting; bounded discovery requests and metadata fallback;
+a swipeable, timed React billboard; mobile pull-to-refresh; and indigo, iris, rose
+and cyan surfaces with limited backdrop blur. Preserved reduced motion, OLED,
+keyboard/remote controls and existing playback. Added data and trusted-touch
+regressions. GPL-3.0-or-later; existing notices retained.

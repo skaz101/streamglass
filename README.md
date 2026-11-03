@@ -69,6 +69,14 @@ The home screen includes an animated featured carousel and addon catalog rows;
 the release calendar follows dated movies and episodes from saved titles.
 Native playback and Stremio account integration retain their existing adapters.
 
+The next update on `main` makes Home curated by default: Featured and Top movies
+and series, Netflix and HBO Max listings, handpicked anime, and seasonal picks.
+Choose **Settings → Home categories → My addon catalogs** to use your installed
+catalogs instead. Provider listings vary by country; streams still come from your
+addons. Pull down at the top of a phone screen to refresh. The featured carousel
+supports horizontal swipes and an eight-second progress indicator, with manual
+controls and reduced-motion support. These changes are not in the 0.7.0 downloads above.
+
 For component development, work in `webos/`. Its `components.json` configures
 shadcn and the `@react-bits` registry, with Tailwind utilities compiled by the
 shared build. See [React UI development](webos/src/react/README.md) for commands

@@ -1,0 +1,23 @@
+/* One timed billboard, with compositor-only gestures and a continuous clock. */
+#app .sg-hero-premium{touch-action:pan-y pinch-zoom;--sg-swipe-x:0px}
+#app .sg-hero-premium .sg-react-hero-art{transform:translateX(var(--sg-swipe-x)) scale(1.035);transition:transform .5s cubic-bezier(.22,1,.36,1);animation:none}
+#app .sg-hero-premium .sg-hero-art-entering{animation:sg-premium-art-in .72s cubic-bezier(.22,1,.36,1) both}
+#app .sg-hero-premium .sg-hero-art-leaving{animation:sg-premium-art-out .72s ease both}
+#app .sg-hero-premium[data-dragging=true] .sg-react-hero-art{transition:none}
+#app .sg-hero-premium .sg-hero-timeline{position:absolute;z-index:3;left:var(--dx-gutter,5vw);bottom:34px;display:flex;gap:6px;width:min(300px,40%);height:4px;pointer-events:none}
+#app .sg-hero-premium .sg-hero-timer-track{height:100%;flex:1;overflow:hidden;border-radius:20px;background:#ffffff36}
+#app .sg-hero-premium .sg-hero-timer-track i{display:block;width:100%;height:100%;transform:scaleX(0);transform-origin:left;background:linear-gradient(90deg,var(--cinema-accent,#9385ff),var(--cinema-cyan,#66dce7));border-radius:inherit}
+#app .sg-hero-premium .sg-hero-timer-track[data-state=complete] i{transform:scaleX(1);background:#ffffffa6}
+#app .sg-hero-premium[data-slideshow=paused] .sg-hero-timer-track[data-state=current] i{opacity:.65}
+@keyframes sg-premium-art-in{from{opacity:0}to{opacity:1}}
+@keyframes sg-premium-art-out{from{opacity:1}to{opacity:0}}
+:root[data-sg-platform=mobile] #app .sg-hero-premium .sg-hero-timeline{left:24px;right:24px;bottom:74px;width:auto;height:3px;gap:5px}
+:root[data-sg-platform=mobile] #app .sg-hero-premium .sg-react-hero-copy{bottom:90px}
+@media(max-height:500px) and (orientation:landscape){
+ :root[data-sg-platform=mobile] #app .sg-hero-premium .sg-react-hero-copy{bottom:28px}
+ :root[data-sg-platform=mobile] #app .sg-hero-premium .sg-hero-timeline{left:auto;right:24px;bottom:70px;width:150px}
+}
+@media(prefers-reduced-motion:reduce){
+ #app .sg-hero-premium .sg-react-hero-art,#app .sg-hero-premium .sg-react-hero-copy{animation:none;transition:none}
+ #app .sg-hero-premium .sg-hero-art-leaving{display:none}
+}
