@@ -657,7 +657,7 @@
     doc.addEventListener('keydown',()=>{interaction++;},true);
     doc.addEventListener('pointerdown',()=>{interaction++;},true);
     global.addEventListener('hashchange',render);
-    await core.init({appVersion:'0.7.0',shellVersion:'webos25'});global.core=core;global.services={core};
+    await core.init({appVersion:'0.7.1',shellVersion:'webos25'});global.core=core;global.services={core};
     core.on('event', event => {
       if (!event) return;
       const addonsChanged=/^(AddonsPulledFromAPI|AddonInstalled|AddonUninstalled|AddonUpgraded|UserLoggedOut)$/.test(event.event||'');

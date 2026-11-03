@@ -234,6 +234,7 @@ try {
   await page.setViewportSize({width:844,height:390});
   await page.locator('[data-nav="board"]').tap();await page.locator('.sg-card').first().waitFor();
   assert.ok(await page.evaluate(()=>document.getElementById('app').scrollWidth<=innerWidth),'Landscape has no horizontal page overflow');
+  await page.locator('.sg-mobile-hero-actions .sg-primary').waitFor({state:'visible'});
   await screenshot('landscape.png');
   const heroPlay=await page.locator('.sg-mobile-hero-actions .sg-primary').boundingBox();
   const bottomBar=await page.locator('.sg-bottom-nav').boundingBox();

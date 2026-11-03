@@ -2,16 +2,16 @@
 
 An unofficial Stremio client for **LG webOS TVs and Android phones/tablets**, with a dedicated Android interface, a DX.BI-derived TV theme, live search, local recommendations, and watch-progress sync.
 
-Version **0.7.0** brings the shared React interface, a cinematic visual overhaul,
-an animated featured carousel and a release calendar to Android and LG webOS.
+Version **0.7.1** adds curated Home collections, seasonal picks, vibrant glass
+surfaces, pull-to-refresh and a swipeable carousel with an animated countdown.
 Both remain previews; physical-device testing remains.
 
 ## Downloads
 
-- [**Android 0.7.0 APK**](https://github.com/skaz101/streamglass/releases/download/v0.7.0/streamglass-android-0.7.0.apk) — updates the original preview installation.
-- [Android 0.7.0 release, source and checksums](https://github.com/skaz101/streamglass/releases/tag/v0.7.0)
-- [LG TV 0.7.0 installer (.ipk)](https://github.com/skaz101/streamglass/releases/download/v0.7.0/com.streamglass.tv_0.7.0_all.ipk)
-- [LG 0.7.0 release, source and checksums](https://github.com/skaz101/streamglass/releases/tag/v0.7.0)
+- [**Android 0.7.1 APK**](https://github.com/skaz101/streamglass/releases/download/v0.7.1/streamglass-android-0.7.1.apk) — updates the original preview installation.
+- [Android 0.7.1 release, source and checksums](https://github.com/skaz101/streamglass/releases/tag/v0.7.1)
+- [LG TV 0.7.1 installer (.ipk)](https://github.com/skaz101/streamglass/releases/download/v0.7.1/com.streamglass.tv_0.7.1_all.ipk)
+- [LG 0.7.1 release, source and checksums](https://github.com/skaz101/streamglass/releases/tag/v0.7.1)
 
 The Android update retains the original application ID and preview certificate.
 Install it over the existing app to preserve local account data.
@@ -64,18 +64,18 @@ StreamGlass is not endorsed by DX.BI, Stremio, LG, or any addon provider.
 
 ## Shared React interface
 
-Version 0.7.0 uses shared React screens for Android and webOS in `webos/src/react/`.
+Version 0.7.1 uses shared React screens for Android and webOS in `webos/src/react/`.
 The home screen includes an animated featured carousel and addon catalog rows;
 the release calendar follows dated movies and episodes from saved titles.
 Native playback and Stremio account integration retain their existing adapters.
 
-The next update on `main` makes Home curated by default: Featured and Top movies
+Home is curated by default: Featured and Top movies
 and series, Netflix and HBO Max listings, handpicked anime, and seasonal picks.
 Choose **Settings → Home categories → My addon catalogs** to use your installed
 catalogs instead. Provider listings vary by country; streams still come from your
 addons. Pull down at the top of a phone screen to refresh. The featured carousel
 supports horizontal swipes and an eight-second progress indicator, with manual
-controls and reduced-motion support. These changes are not in the 0.7.0 downloads above.
+controls and reduced-motion support.
 
 For component development, work in `webos/`. Its `components.json` configures
 shadcn and the `@react-bits` registry, with Tailwind utilities compiled by the
