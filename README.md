@@ -2,16 +2,16 @@
 
 An unofficial Stremio client for **LG webOS TVs and Android phones/tablets**, with a dedicated Android interface, a DX.BI-derived TV theme, live search, local recommendations, and watch-progress sync.
 
-Android **0.6.3** smooths page and refresh transitions, preserves your place on
-refresh, adds skeleton loading, and refines Search and My List filters.
-LG webOS remains on **0.4.0**. Both are previews; physical-phone testing remains.
+Version **0.7.0** brings the shared React interface, a cinematic visual overhaul,
+an animated featured carousel and a release calendar to Android and LG webOS.
+Both remain previews; physical-device testing remains.
 
 ## Downloads
 
-- [**Android 0.6.3 APK**](https://github.com/skaz101/streamglass/releases/download/v0.6.3/streamglass-android-0.6.3.apk) — updates the original preview installation.
-- [Android 0.6.3 release, source and checksums](https://github.com/skaz101/streamglass/releases/tag/v0.6.3)
-- [LG TV 0.4.0 installer (.ipk)](https://github.com/skaz101/streamglass/releases/download/v0.4.0/com.streamglass.tv_0.4.0_all.ipk)
-- [LG 0.4.0 release, source and checksums](https://github.com/skaz101/streamglass/releases/tag/v0.4.0)
+- [**Android 0.7.0 APK**](https://github.com/skaz101/streamglass/releases/download/v0.7.0/streamglass-android-0.7.0.apk) — updates the original preview installation.
+- [Android 0.7.0 release, source and checksums](https://github.com/skaz101/streamglass/releases/tag/v0.7.0)
+- [LG TV 0.7.0 installer (.ipk)](https://github.com/skaz101/streamglass/releases/download/v0.7.0/com.streamglass.tv_0.7.0_all.ipk)
+- [LG 0.7.0 release, source and checksums](https://github.com/skaz101/streamglass/releases/tag/v0.7.0)
 
 The Android update retains the original application ID and preview certificate.
 Install it over the existing app to preserve local account data.
@@ -64,7 +64,7 @@ StreamGlass is not endorsed by DX.BI, Stremio, LG, or any addon provider.
 
 ## Shared React interface
 
-The development branch (not yet a published installer) uses shared React screens for Android and webOS in `webos/src/react/`.
+Version 0.7.0 uses shared React screens for Android and webOS in `webos/src/react/`.
 The home screen includes an animated featured carousel and addon catalog rows;
 the release calendar follows dated movies and episodes from saved titles.
 Native playback and Stremio account integration retain their existing adapters.
