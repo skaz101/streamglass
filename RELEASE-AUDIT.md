@@ -224,3 +224,29 @@ checksums, tested source-export exclusions, and compared all uploaded asset
 sizes and SHA-256 digests before publishing the draft. The temporary publication
 workflow and duplicate installers were then removed from main. Git history
 retains the original source snapshot; no history was rewritten.
+
+## React UI development validation — 2026-11-03 UTC
+
+This is a development-branch update, not a new published installer.
+Validated source: `b3f971fe668d56420de3205f8bb76771445acb8c`.
+[Validation run 41585509584](https://github.com/skaz101/streamglass/actions/runs/41585509584)
+passed both webOS/browser and Android jobs.
+
+- React route rendering, featured slideshow controls, reduced motion, calendar
+  date selection, episode links and repeated mount/unmount checks passed.
+- Complete TV and Android browser integration passed without runtime errors,
+  including real WASM account/library workflows, live-search cancellation,
+  remote focus, stream selection, watch progress, subtitles and phone landscape.
+- Android debug/release builds, unit tests, lint and Android 35 native-player
+  instrumentation passed. This is emulator validation; physical phone and LG TV
+  checks remain distinct from these automated results.
+- Unit checks cover precise release dates, leap days, duplicate episodes,
+  rejection of year-only metadata and provider-based catalog ordering.
+- Reviewed phone home, landscape controls, calendar and TV calendar screenshots.
+- CLI package downloads were unavailable locally. React and component tooling
+  were configured manually from cached npm packages; clean `npm ci` passed in CI.
+  `webos/components.json` registers `@react-bits`. No React Bits component has
+  been copied into this update.
+
+The following documentation/CI cleanup commit removes temporary screenshot
+transport from the workflow. Runtime source is unchanged from the validated SHA.
