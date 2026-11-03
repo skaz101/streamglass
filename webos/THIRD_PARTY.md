@@ -52,3 +52,14 @@ The flag font is the original, unmodified Twemoji-derived font. Twemoji graphics
 LG's official `@webos-tools/cli` is a build/install tool. It is not a replacement or modified webOS SDK. Its package license is preserved in the npm inventory. The app uses webOS's built-in HTML media and remote APIs; it does not redistribute LG's firmware or media decoders.
 
 Torrentio and TorBox are external services configured through the user's addons. This app does not contain their source, credentials, or media files. Movies, posters, catalog data, and subtitles returned by addons are not included as app assets.
+
+## React UI (2026-11-02)
+
+The shared Android/webOS interface now uses React and React DOM 19.2.7 and
+Scheduler 0.27.0 (MIT). Tailwind CSS 4.3.3, clsx 2.1.1, tailwind-merge 3.6.0,
+class-variance-authority 0.7.1 and lucide-react 0.577.0 support the component
+registry workflow. Each package's original license is copied into the built
+`licenses/` directory. Exact package sources and integrity values are recorded
+in `package-lock.json`. React Bits is configured as a source registry; no React
+Bits component is currently redistributed. StreamGlass's own React components
+remain GPL-3.0-or-later.

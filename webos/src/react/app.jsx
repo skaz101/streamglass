@@ -28,6 +28,17 @@ function Card({meta,api,wide=false,recommendations=false}){
 function Row({title,items,api,index,wide=false,recommendations=false}){
   return <section className="sg-row meta-row-container" data-row-key={Number.isInteger(index)?'catalog:'+index:title}><div className="sg-row-heading"><h2>{title}</h2><span className="sg-row-count"/>{Number.isInteger(index)?<a className="sg-see-all" href={'#/discover?catalog='+index}>See All <span>›</span></a>:null}</div><div className="sg-cards meta-items-container">{items.map(meta=><Card key={`${meta.type}:${meta.id||meta._id}`} meta={meta} api={api} wide={wide} recommendations={recommendations}/>)}</div></section>;
 }
+function HeroArt({src}){
+  const [frames,setFrames]=useState({current:'',previous:''});
+  useEffect(()=>{
+    let alive=true,timer;const image=new Image();image.referrerPolicy='no-referrer';
+    image.onload=()=>{if(!alive)return;setFrames(current=>({current:src,previous:current.current}));timer=setTimeout(()=>{if(alive)setFrames(current=>({...current,previous:''}));},650);};
+    image.onerror=()=>{if(alive)setFrames({current:'',previous:''});};
+    if(src)image.src=src;else setFrames({current:'',previous:''});
+    return()=>{alive=false;image.onload=null;image.onerror=null;clearTimeout(timer);};
+  },[src]);
+  return <>{frames.previous?<img data-react-art="true" className="sg-react-hero-art sg-react-hero-outgoing" src={frames.previous} alt="" referrerPolicy="no-referrer"/>:null}{frames.current?<img data-react-art="true" key={frames.current} className="sg-react-hero-art" src={frames.current} alt="" referrerPolicy="no-referrer"/>:null}</>;
+}
 function Hero({items,api}){
   const [index,setIndex]=useState(0),[paused,setPaused]=useState(false),[full,setFull]=useState(null),[preview,setPreview]=useState(null);
   const container=useRef(null),hover=useRef(false);
@@ -51,7 +62,7 @@ function Hero({items,api}){
   const meta=full||item,href=api.detailHash(meta.type,meta.id),picture=api.safeURL(meta.background||meta.poster),logo=api.safeURL(meta.logo);
   const move=delta=>{setPreview(null);setIndex(value=>(value+delta+items.length)%items.length);};
   return <section id="sg-hero-slot" className="sg-react-hero sg-hero" aria-label="Featured titles" aria-roledescription="carousel" ref={container} onMouseEnter={()=>{hover.current=true;}} onMouseLeave={()=>{hover.current=false;}}>
-    <Artwork key={picture} className="sg-react-hero-art" src={picture}/>
+    <HeroArt src={picture}/>
     <div key={item.id} className="sg-react-hero-copy"><span>{meta.type==='series'?'Series':'Movie'}</span>{logo?<Artwork className="sg-react-hero-logo" src={logo} alt={meta.name}/>:<h1>{meta.name}</h1>}
       <p>{(meta.genres||[]).slice(0,3).join(' · ')}{meta.imdbRating?' · IMDb '+meta.imdbRating:''}</p><p>{meta.description||'Find your next watch in your installed catalogs.'}</p>
       <div className="sg-react-hero-actions sg-mobile-hero-actions"><a className="sg-button sg-primary" href={href+(api.mobile?'?play=1':'')}>▶ {api.mobile?'Play':'Watch now'}</a><a className="sg-button" href={href}>More info</a></div></div>

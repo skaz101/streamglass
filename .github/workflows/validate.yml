@@ -44,6 +44,19 @@ jobs:
           npm run test:browser
           node ../android/scripts/sync-assets.mjs
           node ../android/tests/mobile-browser.mjs
+      - name: React UI visual review
+        if: always()
+        run: |
+          python3 - <<'PYREVIEW'
+          import base64,subprocess
+          from pathlib import Path
+          for folder,name in [('webos/test-results','react-calendar-tv'),('webos/test-results','react-calendar-mobile'),('android/test-results','home'),('android/test-results','landscape')]:
+              png=Path(folder)/(name+'.png')
+              if not png.exists(): continue
+              webp=Path('/tmp')/(name+'.webp')
+              subprocess.run(['ffmpeg','-y','-v','error','-i',str(png),'-q:v','65',str(webp)],check=True)
+              print('REACT_PREVIEW:'+name+':'+base64.b64encode(webp.read_bytes()).decode())
+          PYREVIEW
       - run: python3 webos/scripts/source-archive.py --version 0.6.3
       - uses: actions/upload-artifact@v4
         with:

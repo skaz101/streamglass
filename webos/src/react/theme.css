@@ -40,3 +40,15 @@
 @keyframes sg-copy-reveal{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:800px){.sg-react-hero{min-height:510px}.sg-react-hero-copy{padding:200px 22px 90px}.sg-react-hero-copy h1{font-size:38px}.sg-react-hero-copy p{font-size:14px;-webkit-line-clamp:2}.sg-react-hero-logo{max-width:75%;max-height:100px}.sg-react-hero:after{background:linear-gradient(0deg,var(--background),rgba(0,0,0,.65) 45%,transparent 100%)}.sg-carousel-controls{bottom:12px;right:18px}.sg-react-hero-actions .sg-button{min-height:44px}.sg-calendar-layout{grid-template-columns:1fr;gap:20px}.sg-calendar-header{align-items:flex-start}.sg-calendar-header h1{font-size:30px}.sg-calendar-header p{font-size:14px}.sg-calendar-month{padding:16px}.sg-calendar-toolbar h2{font-size:20px}.sg-calendar-link{font-size:12px}.sg-calendar-grid button{min-height:38px}}
 @media(prefers-reduced-motion:reduce){.sg-react-hero-art,.sg-react-hero-copy{animation:none}}
+
+.sg-react-hero-outgoing{animation:sg-art-out .65s ease both}
+@keyframes sg-art-out{from{opacity:1}to{opacity:0}}
+@media(max-height:500px) and (orientation:landscape){
+  #app .sg-react-hero{min-height:220px;height:220px}
+  #app .sg-react-hero-copy{padding:12px 24px 30px;max-width:68%}
+  #app .sg-react-hero-copy h1{font-size:30px;margin:8px 0}
+  #app .sg-react-hero-logo{max-height:55px;margin:8px 0}
+  #app .sg-react-hero-copy p{font-size:12px;margin:6px 0;-webkit-line-clamp:1}
+  #app .sg-carousel-controls{bottom:12px;right:12px}
+}
+@media(prefers-reduced-motion:reduce){.sg-react-hero-outgoing{display:none;animation:none}}
