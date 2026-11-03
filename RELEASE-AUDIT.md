@@ -327,3 +327,34 @@ waits for the loaded carousel before measuring its controls.
 - The release tag adds documentation only after the validated runtime commit.
   The corresponding source archive includes the release audit and excludes keys.
   Physical Android/LG hardware testing is not claimed by these automated checks.
+
+
+## Published installer build 0.7.2 — 2026-11-03 UTC
+
+Validated runtime source: `3840ce9dc5aad40ceb1a054d749bbcb8efae22bc`.
+[Run 41597702698](https://github.com/skaz101/streamglass/actions/runs/41597702698)
+passed 49 unit tests, TV packaging, browser suites, Android debug/release
+builds and lint, and Android 35 native-player instrumentation.
+
+This design correction puts Top movies and Top series first, restores neutral
+black/charcoal defaults, derives ambient light from the featured artwork, and
+adds explicit header/filter spacing. Phone controls, swipe motion and tab
+transitions were refined. Browser checks verify palette, row order, dynamic
+artwork blur, header gaps and aligned controls at 320/390/800px. Screenshots
+wait for outgoing route layers to disappear. Live-art phone/TV Home, catalog
+rows and settings were reviewed. An intermediate trusted-touch check measured
+matching artwork/copy translation and a nonterminal tab transition.
+
+- Android: `com.streamglass.mobile`, version 0.7.2, code 702, release build.
+- APK: 8,282,032 bytes; SHA-256
+  `ccb4d513af6f6bf102220910a8d4d9e09b7fc923c8954d70c7b2f516506c5a36`.
+- V2/V3 signatures verified; original certificate SHA-256 retained:
+  `167c739ded0846e2e7e31884cef42ec58d1154e1145740c1a6ced15d4f9f3ead`.
+- LG IPK: `com.streamglass.tv`, version 0.7.2; 3,218,484 bytes; SHA-256
+  `1eb69c7e7f02abd787df9ccb6a26acfc036d566384872b77ccaa16a263b80e2e`.
+- Signed APK ZIP entries match the unsigned CI artifact byte-for-byte.
+  Both installers contain source-matching UI bundles/styles/adapters. The APK
+  is not debuggable and excludes native test media.
+- The release tag adds this documentation after the validated runtime commit.
+  The source archive excludes signing keys. Physical-device frame pacing
+  remains unverified; automated checks do not establish device-wide FPS.
