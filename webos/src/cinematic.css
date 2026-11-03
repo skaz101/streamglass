@@ -241,3 +241,6 @@
 :root[data-sg-platform=mobile] #app .sg-hero-premium .sg-react-hero-art{object-position:65% center}
 :root[data-sg-platform=mobile] #app .sg-hero-premium .sg-react-hero-actions .sg-button:not(.sg-primary){background:#ffffff26;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 @media(prefers-reduced-transparency:reduce){:root[data-sg-platform=mobile] #app .sg-hero-premium .sg-react-hero-actions .sg-button:not(.sg-primary){background:#333;backdrop-filter:none;-webkit-backdrop-filter:none}}
+@media(max-width:360px){
+ :root[data-sg-platform=mobile] #app .sg-react-hero-actions .sg-button{font-size:14px;gap:6px;padding-inline:6px;white-space:nowrap}
+}

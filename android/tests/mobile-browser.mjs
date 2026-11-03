@@ -18,6 +18,7 @@ try {
   browser=await chromium.launch({executablePath:process.env.CHROME_BIN||process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE||undefined,headless:true,args:['--no-sandbox','--autoplay-policy=no-user-gesture-required']});
   const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true});
   const screenshot=async name=>{
+    await page.locator('.sg-route-snapshot').waitFor({state:'detached'});
     await page.locator('#sg-toast').waitFor({state:'hidden'});
     await page.evaluate(()=>Promise.all([...document.images].filter(img=>img.complete).map(img=>img.decode().catch(()=>{}))));
     await page.screenshot({path:path.join(shots,name),animations:'disabled'});
@@ -84,6 +85,8 @@ try {
     assert.ok(geometry.artGap>=19.5,'Billboard has breathing room below the filters');
     assert.equal(geometry.background,'rgb(8, 8, 8)','Default chrome is neutral black');
     assert.equal(geometry.decoration,'none','No fixed blue or purple page wash');
+    const actions=await page.locator('.sg-react-hero-actions a').evaluateAll(nodes=>nodes.map(node=>node.getBoundingClientRect().height));
+    assert.ok(Math.abs(actions[0]-actions[1])<1,'Hero action buttons stay on one aligned line, including narrow phones');
   };
   await assertHomeSpacing();
   await page.locator('a[href="#/calendar"]').first().tap();
