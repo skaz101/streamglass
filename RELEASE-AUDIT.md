@@ -266,3 +266,23 @@ landscape, theme persistence, touch navigation, reduced motion and interrupted
 sheet transitions. Native player code is unchanged; this UI validation does not
 claim a fresh physical-device or native emulator test. No new installer is
 published by this source update.
+
+## Published installer build 0.7.0 — 2026-11-03 UTC
+
+Validated runtime source: `7bd99323e9d6109d69328318ba03b27d96524da3`.
+[Run 41590901554](https://github.com/skaz101/streamglass/actions/runs/41590901554)
+passed webOS packaging, all browser integration suites, 43 unit tests, Android
+release/debug builds, lint and Android 35 native-player instrumentation.
+
+- Android: `com.streamglass.mobile`, version 0.7.0, version code 700, release build.
+- APK SHA-256: `1fdaa7a1d392ff69f26eb96536d51af462f818208bdfadb9d817788434435a4b`.
+- APK size: 8,273,840 bytes. V2 and V3 signatures verified.
+- Original certificate SHA-256 retained:
+  `167c739ded0846e2e7e31884cef42ec58d1154e1145740c1a6ced15d4f9f3ead`.
+- LG IPK: `com.streamglass.tv`, version 0.7.0; 3,211,624 bytes.
+- IPK SHA-256: `eb20d0cdd04c2df3cc9808bee790e33242772d2152f79e97392b0555a7dd3376`.
+- Signed APK ZIP contents match the validated unsigned artifact byte-for-byte.
+  Manifest is not debuggable. Shared React, cinematic CSS and platform assets
+  were checked against source-built output; no player test assets are bundled.
+- The release tag includes documentation-only changes after the validated build.
+  Physical Android/LG hardware testing is not claimed by these automated checks.
