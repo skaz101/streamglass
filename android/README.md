@@ -1,4 +1,4 @@
-# StreamGlass for Android phones and tablets, 0.7.1
+# StreamGlass for Android phones and tablets, 0.7.2
 
 An installable Android preview with a dedicated mobile interface: artwork-led
 home, compact poster rows, Home / For You / Search / My List tabs, a profile
@@ -14,7 +14,7 @@ first hardware test device. This version is designed for touch, not Android TV.
 
 ## Install
 
-Download [streamglass-android-0.7.1.apk](https://github.com/skaz101/streamglass/releases/download/v0.7.1/streamglass-android-0.7.1.apk) on your phone and open it. Allow installation
+Download [streamglass-android-0.7.2.apk](https://github.com/skaz101/streamglass/releases/download/v0.7.2/streamglass-android-0.7.2.apk) on your phone and open it. Allow installation
 from that browser or file manager when Android asks. Open StreamGlass and sign
 in with the same Stremio account used on your TV. This is a separate installation;
 it does not replace Stremio or the LG app. Account library/addons/progress sync
@@ -23,13 +23,13 @@ through Stremio. Recommendations are computed separately on each device.
 Alternatively, with Android platform-tools and USB debugging authorized:
 
 ```sh
-adb install -r streamglass-android-0.7.1.apk
+adb install -r streamglass-android-0.7.2.apk
 adb shell am start -n com.streamglass.mobile/.MainActivity
 ```
 
 ## Signing and updates
 
-The 0.7.1 APK is built with the release configuration and signed locally with
+The 0.7.2 APK is built with the release configuration and signed locally with
 the original preview certificate, so it can update earlier previews, including 0.6.0 without uninstalling.
 The key remains private. This is still a preview signed with a development
 certificate, not a Play Store release. Release builds disable WebView debugging;
@@ -93,7 +93,7 @@ player. It covers login, touch search, 320/390/800-pixel layouts, landscape,
 bottom navigation, My List, episodes, animated page/card entrances, sheet entry/exit,
 interrupted transitions, reduced motion, sheet dismissal and focus restoration,
 playback handoff, progress, resume, stale events, and recommendations.
-See [0.7.1 release notes](RELEASE-0.7.1.md) for the verified release checks.
+See [0.7.2 release notes](RELEASE-0.7.2.md) for the verified release checks.
 
 The Android 35 emulator suite runs the actual native player with isolated local
 H.264/AAC/WebVTT fixtures. It covers pause, skips, double taps, timeline scrubbing,

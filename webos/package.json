@@ -1,6 +1,6 @@
 {
   "name": "streamglass-webos",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "private": true,
   "description": "Unofficial webOS 25 port of the DX.BI TV experience",
   "license": "GPL-3.0-or-later",
@@ -23,7 +23,7 @@
     "clsx": "2.1.1",
     "tailwind-merge": "3.6.0",
     "tailwindcss": "4.3.3",
-    "class-variance-authority": "0.7.1",
+    "class-variance-authority": "0.7.2",
     "lucide-react": "0.577.0"
   }
 }

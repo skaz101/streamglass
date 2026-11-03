@@ -8,8 +8,8 @@ android {
         minSdk 26
         targetSdk 35
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
-        versionCode 701
-        versionName '0.7.1'
+        versionCode 702
+        versionName '0.7.2'
     }
     // The original preview key stays local. Other builders get Android's own
     // per-user debug key; it cannot update an APK signed with the original key.

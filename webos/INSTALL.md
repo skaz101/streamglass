@@ -1,6 +1,6 @@
-# Install or update StreamGlass TV 0.7.1
+# Install or update StreamGlass TV 0.7.2
 
-Use `com.streamglass.tv_0.7.1_all.ipk`. The app ID remains `com.streamglass.tv`.
+Use `com.streamglass.tv_0.7.2_all.ipk`. The app ID remains `com.streamglass.tv`.
 Close the app and install over the existing version to retain local login and
 settings. Uninstalling may erase them. Keep your source archive with the installer.
 
@@ -11,7 +11,7 @@ Use the saved `lg-tv` connection. From the installer folder:
 ```sh
 npm exec --yes --package=node@22 --package=@webos-tools/cli@3.2.6 -- ares-setup-device --list
 npm exec --yes --package=node@22 --package=@webos-tools/cli@3.2.6 -- ares-launch --device lg-tv --close com.streamglass.tv
-npm exec --yes --package=node@22 --package=@webos-tools/cli@3.2.6 -- ares-install --device lg-tv ./com.streamglass.tv_0.7.1_all.ipk
+npm exec --yes --package=node@22 --package=@webos-tools/cli@3.2.6 -- ares-install --device lg-tv ./com.streamglass.tv_0.7.2_all.ipk
 npm exec --yes --package=node@22 --package=@webos-tools/cli@3.2.6 -- ares-launch --device lg-tv com.streamglass.tv
 ```
 
@@ -61,7 +61,7 @@ external service; this app has no torrent engine or transcoder.
 Use arrows and OK to browse, Back to leave menus/details/player, and the player
 controls to seek or choose available audio/subtitles. Volume is controlled by
 the TV. Check search, For you, row animation, playback and resume after updating.
-See [0.7.1 release checks](RELEASE-0.7.1.md) and [testing](TESTING.md).
+See [0.7.2 release checks](RELEASE-0.7.2.md) and [testing](TESTING.md).
 
 ## Diagnostics
 

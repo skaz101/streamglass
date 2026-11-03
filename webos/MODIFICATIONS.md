@@ -92,3 +92,11 @@ a swipeable, timed React billboard; mobile pull-to-refresh; and indigo, iris, ro
 and cyan surfaces with limited backdrop blur. Preserved reduced motion, OLED,
 keyboard/remote controls and existing playback. Added data and trusted-touch
 regressions. GPL-3.0-or-later; existing notices retained.
+
+
+## 0.7.2: artwork-led Android Home
+
+Move Top movie/series collections first, restore neutral default chrome, add
+bounded artwork blur and explicit header/filter spacing, simplify phone hero
+controls and refine swipe/tab movement. Extend browser regressions for geometry,
+palette, row order and artwork-dependent lighting. GPL-3.0-or-later.

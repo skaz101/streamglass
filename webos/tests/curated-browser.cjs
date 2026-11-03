@@ -16,9 +16,10 @@ const path=require('node:path');
    if(requestGate)await requestGate;
    if(failRequests){await route.fulfill({status:503,headers:{'access-control-allow-origin':'*'},body:'Unavailable'});return;}
    const [,resource,type,id]=url.pathname.split('/');
-   const meta={id:resource==='meta'?id.replace('.json',''):'tt1000001',type,name:resource==='meta'?'Selection '+id.replace('.json',''):`${id.replace('.json','')} ${type} premiere`,description:'A fixture title for discovery.',genres:['Drama']};
+   const meta={background:`https://react.fixtures.invalid/scene-${type}.svg`,poster:`https://react.fixtures.invalid/scene-${type}.svg`,id:resource==='meta'?id.replace('.json',''):'tt1000001',type,name:resource==='meta'?'Selection '+id.replace('.json',''):`${id.replace('.json','')} ${type} premiere`,description:'A fixture title for discovery.',genres:['Drama']};
    await route.fulfill({contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(resource==='meta'?{meta}:{metas:[meta,{...meta,id:'tt1000002',name:'Another good story'}]})});
   });
+  await page.route('https://react.fixtures.invalid/scene-*.svg',route=>route.fulfill({contentType:'image/svg+xml',body:`<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540"><rect width="960" height="540" fill="${route.request().url().includes('movie')?'#bd5924':'#3d9068'}"/></svg>`}));
   await page.goto('https://react.fixtures.invalid/');
   await page.clock.setFixedTime(new Date('2026-11-02T12:00:00'));
   await page.setContent('<meta name="viewport" content="width=device-width,initial-scale=1"><div id="app"><div class="sg-app"><main id="sg-view"></main></div></div>');
@@ -28,17 +29,18 @@ const path=require('node:path');
   await page.evaluate(()=>{
    const entries=[{key:'fixture-movies',catalog:{name:'Fixture collection',type:'movie'},addon:{manifest:{name:'Fixture'}}}];
    window.addonLists=0;window.addonFetches=[];
-   window.testAPI={mobile:true,registerCard(){},safeURL(){return '';},progressFraction(){return 0;},detailHash(type,id){return '#/detail/'+type+'/'+id;},catalogs(){window.addonLists++;return entries;},catalog(entry,extra,signal,refresh){window.addonFetches.push({key:entry.key,refresh});return Promise.resolve({metas:[{id:'tt9990001',type:'movie',name:'Only from my addon'}]});},continueWatching(){return Promise.resolve([]);},resolveMeta(type,id,fallback){return Promise.resolve({meta:fallback});}};
+   window.testAPI={mobile:true,registerCard(){},safeURL(src){return src||'';},progressFraction(){return 0;},detailHash(type,id){return '#/detail/'+type+'/'+id;},catalogs(){window.addonLists++;return entries;},catalog(entry,extra,signal,refresh){window.addonFetches.push({key:entry.key,refresh});return Promise.resolve({metas:[{id:'tt9990001',type:'movie',name:'Only from my addon'}]});},continueWatching(){return Promise.resolve([]);},resolveMeta(type,id,fallback){return Promise.resolve({meta:fallback});}};
    window.mountTest=(route,query='')=>{const node=document.getElementById('sg-view');StreamGlassUI.unmount(node);node.scrollTop=0;StreamGlassUI.mount(node,{route,api:window.testAPI,params:new URLSearchParams(query)});};
    window.mountTest('board');
   });
   const ready=()=>page.waitForFunction(()=>document.querySelector('.sg-home')&&!document.querySelector('.sg-react-loading')&&!document.querySelector('.sg-refresh-accessible')?.disabled);
   await ready();
-  for(const title of ['Featured · Movies','Featured · Series','Halloween nights','Netflix · Movies','Netflix · Series','HBO Max · Movies','HBO Max · Series','Anime · Movies','Anime · Series','Top · Movies','Top · Series']){
+  for(const title of ['Featured · Movies','Featured · Series','Halloween nights','Netflix · Movies','Netflix · Series','HBO Max · Movies','HBO Max · Series','Anime · Movies','Anime · Series','Top movies','Top series']){
    const row=page.locator('.sg-row').filter({has:page.getByRole('heading',{name:title,exact:true})});
    assert.equal(await row.count(),1,`${title} is present`);
    assert.ok(await row.locator('.sg-card').count()>0,`${title} contains loaded titles`);
   }
+  assert.deepEqual((await page.locator('#sg-home-rows h2').allTextContents()).slice(0,2),['Top movies','Top series']);
   assert.equal(await page.evaluate(()=>addonLists),0,'Curated Home never enumerates installed addon catalogs');
   assert.equal(await page.evaluate(()=>addonFetches.length),0);
   const initial=new Map(requests);
@@ -53,7 +55,13 @@ const path=require('node:path');
    if(release)await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   };
   const indicator=page.locator('.sg-pull-refresh');
+  await page.locator('.sg-home-ambient .sg-hero-art-entering').waitFor();
+  const firstAmbient=await page.locator('.sg-home-ambient .sg-hero-art-entering').getAttribute('src');
+  assert.ok(firstAmbient.endsWith('scene-movie.svg'));
+  assert.ok(await page.locator('.sg-ambient-art').first().evaluate(node=>getComputedStyle(node).filter.includes('blur(')),'Ambient light is genuinely blurred artwork');
   await gesture(-120,12);
+  await page.waitForFunction(()=>document.querySelector('.sg-home-ambient .sg-hero-art-entering')?.src.endsWith('scene-series.svg'));
+  assert.equal(await page.locator('.sg-app').evaluate(node=>getComputedStyle(node).backgroundColor),'rgb(8, 8, 8)','Changing artwork does not recolor the app chrome');
   await page.waitForTimeout(100);
   assert.deepEqual(requests,initial,'Horizontal hero swipes never refresh Home');
   assert.equal(await indicator.getAttribute('data-state'),'idle');
@@ -110,7 +118,7 @@ const path=require('node:path');
   assert.equal(await page.getByRole('radio',{name:/My addon catalogs/}).isChecked(),true,'Preference survives route remount');
   await page.getByRole('radio',{name:/Curated collections/}).check();
   await page.evaluate(()=>mountTest('board','type=series'));await ready();
-  assert.deepEqual(await page.locator('#sg-home-rows h2').allTextContents(),['Featured · Series','Netflix · Series','HBO Max · Series','Anime · Series','Top · Series']);
+  assert.deepEqual(await page.locator('#sg-home-rows h2').allTextContents(),['Top series','Featured · Series','Netflix · Series','HBO Max · Series','Anime · Series']);
   assert.deepEqual(requests,afterRefresh,'Returning to curated mode uses refreshed cache');
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Curated Home fits the phone');
   await page.evaluate(()=>StreamGlassUI.unmount(document.getElementById('sg-view')));

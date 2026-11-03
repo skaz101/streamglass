@@ -71,6 +71,21 @@ try {
   await page.goto(pathToFileURL(path.join(root,'../android/app/build/generated/assets/app/index.html')).href);
   await ready();await page.locator('.sg-card').first().waitFor();
   await screenshot('home.png');
+  const assertHomeSpacing=async()=>{
+    await page.locator('.sg-home-filters').evaluate(node=>Promise.all(node.getAnimations().map(animation=>animation.finished.catch(()=>{}))));
+    const geometry=await page.evaluate(()=>{
+      const header=document.querySelector('.sg-mobile-header').getBoundingClientRect();
+      const filters=[...document.querySelectorAll('.sg-home-filters .sg-filter')].map(node=>node.getBoundingClientRect());
+      const hero=document.querySelector('.sg-react-hero').getBoundingClientRect();
+      const appStyle=getComputedStyle(document.querySelector('.sg-app'));
+      return {headerGap:Math.min(...filters.map(rect=>rect.top))-header.bottom,artGap:hero.top-Math.max(...filters.map(rect=>rect.bottom)),background:appStyle.backgroundColor,decoration:appStyle.backgroundImage};
+    });
+    assert.ok(geometry.headerGap>=15.5,'Home filters have a deliberate gap below the header');
+    assert.ok(geometry.artGap>=19.5,'Billboard has breathing room below the filters');
+    assert.equal(geometry.background,'rgb(8, 8, 8)','Default chrome is neutral black');
+    assert.equal(geometry.decoration,'none','No fixed blue or purple page wash');
+  };
+  await assertHomeSpacing();
   await page.locator('a[href="#/calendar"]').first().tap();
   await page.getByRole('heading',{name:'Your release calendar'}).waitFor();
   await page.waitForFunction(()=>!document.querySelector('.sg-calendar-note')?.textContent.includes('Checking release dates'));
@@ -178,6 +193,7 @@ try {
     await page.locator('[data-nav="board"]').tap();await page.locator('.sg-card').first().waitFor();
     assert.ok(await page.evaluate(()=>document.getElementById('app').scrollWidth<=innerWidth),'Layout fits width '+width);
     await screenshot('home-'+width+'.png');
+    await assertHomeSpacing();
     const nav=await page.locator('.sg-bottom-nav').boundingBox();
     assert.ok(nav.y+nav.height<=900&&nav.y>=830,'Bottom tabs stay in thumb reach');
     assert.equal(await page.locator('[data-nav="board"]').getAttribute('aria-current'),'page');

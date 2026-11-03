@@ -84,6 +84,8 @@
   });
   function open(overlay,{remove=false,resolve}={}) {
     dismiss(false);
+    // A fixed sheet must not inherit a temporary route transform.
+    if(tabAnimation){tabAnimation.cancel();tabAnimation=null;}
     const previous=doc.activeElement,inert=[];
     overlay.hidden=false;
     // Inert only siblings, so the dialog can keep the shell's delegated actions.
@@ -147,7 +149,7 @@
     const signedIn=window.StreamGlassShell.state.signedIn;
     const overlay=doc.createElement('div');overlay.className='sg-mobile-overlay';
     const links=[['account',signedIn?'Your account':'Sign in to Stremio','user'],['calendar','Release calendar','grid'],['discover','Browse all titles','grid'],['addons','Manage addons','addon'],['settings','App settings','settings']];
-    overlay.innerHTML='<section class="sg-mobile-sheet sg-menu-sheet" role="dialog" aria-modal="true" aria-labelledby="sg-menu-title" tabindex="-1">'+closeButton+'<div class="sg-menu-profile">'+icon('user')+'</div><h2 id="sg-menu-title">Your StreamGlass</h2><p>Your stories. Your way.</p><nav aria-label="Account and app">'+links.map(([route,label,glyph])=>'<a href="#/'+route+'">'+icon(glyph)+'<span>'+label+'</span><span aria-hidden="true">›</span></a>').join('')+'</nav><small>StreamGlass 0.7.1</small></section>';
+    overlay.innerHTML='<section class="sg-mobile-sheet sg-menu-sheet" role="dialog" aria-modal="true" aria-labelledby="sg-menu-title" tabindex="-1">'+closeButton+'<div class="sg-menu-profile">'+icon('user')+'</div><h2 id="sg-menu-title">Your StreamGlass</h2><p>Your stories. Your way.</p><nav aria-label="Account and app">'+links.map(([route,label,glyph])=>'<a href="#/'+route+'">'+icon(glyph)+'<span>'+label+'</span><span aria-hidden="true">›</span></a>').join('')+'</nav><small>StreamGlass 0.7.2</small></section>';
     doc.querySelector('.sg-app').append(overlay);paintAccount();open(overlay,{remove:true});
   }
   function mount(root) {
@@ -234,8 +236,9 @@
       const nav=doc.querySelector('.sg-bottom-nav');nav.style.setProperty('--sg-tab',index);nav.dataset.active='true';
 
     }else doc.querySelector('.sg-bottom-nav').dataset.active='false';
-    if(!reducedMotion.matches&&lastRoute){tabAnimation=view.animate([{opacity:.45},{opacity:1}],{duration:420,easing:ease});}
-    if(snapshot){const outgoing=snapshot;snapshotAnimation=snapshot.animate([{opacity:1},{opacity:0}],{duration:240,easing:ease});snapshotAnimation.finished.then(()=>{if(snapshot===outgoing)clearSnapshot();}).catch(()=>{});}
+    const direction=index>=0&&previous>=0?Math.sign(index-previous):route==='detail'?1:lastRoute==='detail'?-1:0;
+    if(!reducedMotion.matches&&lastRoute){tabAnimation=view.animate([{opacity:.7,transform:'translateX('+(direction*18)+'px)'},{opacity:1,transform:'translateX(0)'}],{duration:280,easing:ease});}
+    if(snapshot){const outgoing=snapshot;snapshotAnimation=snapshot.animate([{opacity:1,transform:'translateX(0)'},{opacity:0,transform:'translateX('+(-direction*12)+'px)'}],{duration:220,easing:ease});snapshotAnimation.finished.then(()=>{if(snapshot===outgoing)clearSnapshot();}).catch(()=>{});}
     lastRoute=route;lastHash=location.hash;
     if(restoreScroll>0){
       const position=restoreScroll,version=screenSequence;

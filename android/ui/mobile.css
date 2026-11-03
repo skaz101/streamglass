@@ -28,7 +28,7 @@ body { background:#080808; font-family:Inter,Arial,sans-serif; -webkit-font-smoo
 #app .sg-bottom-nav a[data-nav='picks'].selected svg { fill:currentColor; }
 #app #sg-view { inset:var(--sg-header) 0 calc(var(--sg-bottom) + env(safe-area-inset-bottom)); scroll-padding:16px; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
 #app .sg-home { padding:0 0 12px; }
-#app .sg-home-filters { position:relative; top:auto; left:auto; padding:0 var(--dx-gutter) 15px; display:flex; align-items:center; gap:8px; overflow:auto; scrollbar-width:none; }
+#app .sg-home-filters { position:relative; top:auto; left:auto; padding:16px var(--dx-gutter) 20px; display:flex; align-items:center; gap:8px; overflow:auto; scrollbar-width:none; }
 #app .sg-filter { display:inline-flex; align-items:center; justify-content:center; min-height:44px; padding:8px 17px; font-size:13px; font-weight:500; border:1px solid #707070; background:transparent; white-space:nowrap; }
 #app .sg-filter:focus:not(.selected) { background:transparent; color:#e0e0e4; box-shadow:none; }
 #app .sg-filter.selected { background:#f2f2f2; color:#080808; border-color:#f2f2f2; }
@@ -228,7 +228,7 @@ body[data-dx-route='detail'] #app #sg-view { top:0; }
 }
 #app .sg-sheet-closing .sg-mobile-sheet { pointer-events:none; }
 @keyframes sg-content-in { from { opacity:0; transform:translate(var(--sg-enter-x,0px),var(--sg-enter-y,12px)); } to { opacity:1; transform:translate(0,0); } }
-@keyframes sg-item-in { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+@keyframes sg-item-in { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
 @keyframes sg-fade-in { from { opacity:0; } to { opacity:1; } }
 @keyframes sg-hero-in { from { opacity:0; transform:scale(1.025); } to { opacity:1; transform:scale(1); } }
 @keyframes sg-nav-in { from { transform:scale(.84); } to { transform:scale(1); } }
@@ -323,8 +323,8 @@ body,#app .sg-app,#app .sg-mobile-header,#app .sg-detail.metadetails-container,#
 #app .sg-choice-option[aria-pressed='true'] { background:var(--sg-tint); border-color:var(--sg-accent); }
 #app .library-content .sg-filters>button { background:transparent; border:1px solid var(--sg-line); border-radius:12px; color:#c2bbcb; }
 @media (prefers-reduced-motion:no-preference) {
- #app :is(.sg-home-filters,.sg-page>h1,.sg-picks-header,.sg-search-form,.sg-filters,.sg-account-box,.sg-detail-info,.sg-episodes,.sg-addon-form,.sg-empty) { animation-duration:.42s; animation-timing-function:cubic-bezier(.22,1,.36,1); }
- #app :is(.sg-row-heading,.sg-card,.sg-addon-card,.sg-settings-row) { animation-duration:.42s; animation-timing-function:cubic-bezier(.22,1,.36,1); }
+ #app :is(.sg-home-filters,.sg-page>h1,.sg-picks-header,.sg-search-form,.sg-filters,.sg-account-box,.sg-detail-info,.sg-episodes,.sg-addon-form,.sg-empty) { animation-duration:.28s; animation-timing-function:cubic-bezier(.22,1,.36,1); }
+ #app :is(.sg-row-heading,.sg-card,.sg-addon-card,.sg-settings-row) { animation-duration:.28s; animation-timing-function:cubic-bezier(.22,1,.36,1); }
  #app .sg-card:nth-child(2) { animation-delay:15ms; }
  #app .sg-card:nth-child(3) { animation-delay:30ms; }
  #app .sg-card:nth-child(4) { animation-delay:45ms; }

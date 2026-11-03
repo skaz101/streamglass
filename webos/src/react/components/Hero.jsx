@@ -4,7 +4,7 @@ import './hero.css';
 
 const DURATION=8000;
 const identity=item=>item?`${item.type||'movie'}:${item.id||item._id}`:'';
-function Artwork({src}){
+function useArtwork(src){
   const [frames,setFrames]=useState({current:'',previous:''});
   useEffect(()=>{
     let alive=true,cleanup;const image=new Image();image.referrerPolicy='no-referrer';
@@ -12,13 +12,21 @@ function Artwork({src}){
       try{await image.decode();}catch(_){}
       if(!alive)return;
       setFrames(current=>current.current===src?current:{current:src,previous:current.current});
-      cleanup=setTimeout(()=>{if(alive)setFrames(current=>({...current,previous:''}));},720);
+      cleanup=setTimeout(()=>{if(alive)setFrames(current=>({...current,previous:''}));},600);
     };
     image.onerror=()=>{if(alive)setFrames({current:'',previous:''});};
     if(src)image.src=src;else setFrames({current:'',previous:''});
     return()=>{alive=false;image.onload=null;image.onerror=null;clearTimeout(cleanup);};
   },[src]);
-  return <>{frames.previous?<img data-react-art="true" className="sg-react-hero-art sg-hero-art-leaving" src={frames.previous} alt="" referrerPolicy="no-referrer"/>:null}{frames.current?<img key={frames.current} data-react-art="true" className="sg-react-hero-art sg-hero-art-entering" src={frames.current} alt="" referrerPolicy="no-referrer"/>:null}</>;
+  return frames;
+}
+function Artwork({frames,ambient=false}){
+  const className=ambient?'sg-ambient-art':'sg-react-hero-art';
+  return <>{frames.previous?<img data-react-art="true" className={`${className} sg-hero-art-leaving`} src={frames.previous} alt="" referrerPolicy="no-referrer"/>:null}{frames.current?<img key={frames.current} data-react-art="true" className={`${className} sg-hero-art-entering`} src={frames.current} alt="" referrerPolicy="no-referrer"/>:null}</>;
+}
+function Icon({name}){
+  const paths={play:<path d="m9 5 11 7-11 7Z" fill="currentColor" stroke="none"/>,pause:<path d="M9 5v14M16 5v14"/>,previous:<path d="m15 5-7 7 7 7"/>,next:<path d="m9 5 7 7-7 7"/>,info:<><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/></>};
+  return <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
 function Logo({src,name}){
   const [failed,setFailed]=useState(false);useEffect(()=>setFailed(false),[src]);
@@ -31,7 +39,7 @@ export default function Hero({items,api}){
   const selected=index%Math.max(1,items.length),item=preview||items[selected],key=identity(item);
   latest.current={items,paused,preview,selected};
   const reset=()=>{timer.current.elapsed=0;timer.current.last=0;};
-  const move=delta=>{reset();setPreview(null);setIndex(value=>(value+delta+items.length)%items.length);};
+  const move=delta=>{root.current?.style.setProperty('--sg-slide-direction',delta<0?-1:1);reset();setPreview(null);setIndex(value=>(value+delta+items.length)%items.length);};
   useEffect(()=>{
     const show=event=>{if(event.detail){reset();setPreview(event.detail);}};
     window.addEventListener('streamglass:preview',show);
@@ -64,8 +72,18 @@ export default function Hero({items,api}){
     frame=requestAnimationFrame(tick);
     return()=>{alive=false;cancelAnimationFrame(frame);};
   },[]);
+  const meta=(identity(full)===key?full:item)||{};
+  const source=entry=>api.safeURL(entry?.background||entry?.poster);
+  const picture=source(meta),frames=useArtwork(picture);
+  const nextPicture=source(items[(selected+1)%items.length]),previousPicture=source(items[(selected-1+items.length)%items.length]);
+  useEffect(()=>{
+    const images=[...new Set([nextPicture,previousPicture])].filter(Boolean).map(src=>{
+      const image=new Image();image.referrerPolicy='no-referrer';image.onload=()=>image.decode().catch(()=>{});image.src=src;return image;
+    });
+    return()=>images.forEach(image=>{image.onload=null;});
+  },[nextPicture,previousPicture]);
   if(!item)return null;
-  const meta=identity(full)===key?full:item,href=api.detailHash(meta.type||'movie',meta.id||meta._id),picture=api.safeURL(meta.background||meta.poster),logo=api.safeURL(meta.logo);
+  const href=api.detailHash(meta.type||'movie',meta.id||meta._id),logo=api.safeURL(meta.logo);
   const finishGesture=(event,cancelled=false)=>{
     const current=gesture.current;if(!current||current.id!==event.pointerId)return;
     gesture.current=null;
@@ -77,7 +95,7 @@ export default function Hero({items,api}){
     }
     if(root.current?.hasPointerCapture(event.pointerId))root.current.releasePointerCapture(event.pointerId);
   };
-  return <section id="sg-hero-slot" className="sg-react-hero sg-hero sg-hero-premium" aria-label="Featured titles" aria-roledescription="carousel" ref={root}
+  return <div className="sg-feature-stage">{api.mobile?<div className="sg-home-ambient" aria-hidden="true"><Artwork frames={frames} ambient/></div>:null}<section id="sg-hero-slot" className="sg-react-hero sg-hero sg-hero-premium" aria-label="Featured titles" aria-roledescription="carousel" ref={root}
     onPointerEnter={event=>{if(event.pointerType==='mouse')hover.current=true;}}
     onPointerLeave={event=>{if(event.pointerType==='mouse')hover.current=false;}}
     onPointerDown={event=>{
@@ -91,19 +109,19 @@ export default function Hero({items,api}){
         current.axis=Math.abs(dx)>Math.abs(dy)*1.25?'x':'y';
         if(current.axis==='x')root.current?.setPointerCapture(event.pointerId);
       }
-      if(current.axis==='x'){event.preventDefault();root.current.dataset.dragging='true';root.current.style.setProperty('--sg-swipe-x',`${Math.max(-36,Math.min(36,dx*.16))}px`);}
+      if(current.axis==='x'){event.preventDefault();root.current.dataset.dragging='true';root.current.style.setProperty('--sg-swipe-x',`${Math.max(-72,Math.min(72,dx*.42))}px`);}
     }}
     onPointerUp={event=>finishGesture(event)} onPointerCancel={event=>finishGesture(event,true)}
     onClickCapture={event=>{if(performance.now()<suppressClick.current){event.preventDefault();event.stopPropagation();}}}>
-    <Artwork src={picture}/>
+    <div className="sg-hero-scene"><Artwork frames={frames}/><div className="sg-hero-shade"/>
     <div key={key} className="sg-react-hero-copy"><span>{meta.type==='series'?'Series':'Movie'}</span><Logo src={logo} name={meta.name}/>
       <p>{(meta.genres||[]).slice(0,3).join(' · ')}{meta.imdbRating?' · IMDb '+meta.imdbRating:''}</p><p className="sg-hero-synopsis">{meta.description||'Find something worth watching.'}</p>
-      <div className="sg-react-hero-actions sg-mobile-hero-actions"><a className="sg-button sg-primary" href={href+(api.mobile?'?play=1':'')}>▶ {api.mobile?'Play':'Watch now'}</a><a className="sg-button" href={href}>More info</a></div></div>
+      <div className="sg-react-hero-actions sg-mobile-hero-actions"><a className="sg-button sg-primary" href={href+(api.mobile?'?play=1':'')}><Icon name="play"/>{api.mobile?'Play':'Watch now'}</a><a className="sg-button" href={href}><Icon name="info"/>More info</a></div></div></div>
     {items.length>1?<>
       <div className="sg-hero-timeline" role="progressbar" aria-label="Time until next featured title" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         {items.map((entry,position)=><span className="sg-hero-timer-track" data-state={position===selected?'current':position<selected?'complete':'next'} key={identity(entry)} aria-hidden="true"><i data-current-timer={position===selected?'true':undefined}/></span>)}
       </div>
-      <div className="sg-carousel-controls"><button type="button" aria-label="Previous featured title" onClick={()=>move(-1)}>‹</button><span aria-live="off">{selected+1} / {items.length}</span><button type="button" aria-label="Next featured title" onClick={()=>move(1)}>›</button><button type="button" aria-label={paused?'Resume featured slideshow':'Pause featured slideshow'} aria-pressed={paused} onClick={()=>setPaused(value=>!value)}>{paused?'▶':'Ⅱ'}</button></div>
+      <div className="sg-carousel-controls"><button type="button" aria-label="Previous featured title" onClick={()=>move(-1)}><Icon name="previous"/></button><span aria-live="off">{selected+1} / {items.length}</span><button type="button" aria-label="Next featured title" onClick={()=>move(1)}><Icon name="next"/></button><button type="button" aria-label={paused?'Resume featured slideshow':'Pause featured slideshow'} aria-pressed={paused} onClick={()=>setPaused(value=>!value)}><Icon name={paused?'play':'pause'}/></button></div>
     </>:null}
-  </section>;
+  </section></div>;
 }

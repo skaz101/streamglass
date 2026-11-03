@@ -53,3 +53,12 @@ visible TV refresh controls and keyboard-accessible phone controls remain.
 
 Run `node tests/curated-browser.cjs` and `node tests/hero-browser.cjs` from `webos/`
 for trusted Chromium touch tests, preference switching, cache behavior and motion.
+
+
+The 0.7.2 Home order puts the two Top collections before Continue Watching and
+the remaining collections. Phone ordinal numbers reflect the Cinemeta catalog
+order, not invented watch counts. Black/charcoal is the default palette; the
+phone billboard renders one bounded, blurred copy of its decoded backdrop and
+crossfades that light with the image. Blur radius is static and OLED/reduced
+transparency omit it. The swipe scene groups art, shading and copy under one
+transform; timer/gesture updates remain outside React renders.

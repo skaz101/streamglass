@@ -14,28 +14,28 @@ import {getCuratedRows,loadCuratedRows,resolveCuratedMeta,CURATED_SOURCE_NOTE} f
 const roots=new Map();
 const regions=new Map();
 function Empty({title,children}){return <div className="sg-react-empty"><h2>{title}</h2><p>{children}</p></div>;}
-function Loading({title='Loading your titles'}){return <div className="sg-react-loading" role="status"><p>{title}</p><div className="sg-skeleton-row" aria-hidden="true">{Array.from({length:6},(_,i)=><span key={i}/>)}</div></div>;}
+function Loading({title='Loading your titles',hero=false}){return <div className={`sg-react-loading${hero?' sg-hero-loading':''}`} role="status"><p>{title}</p><div className="sg-skeleton-row" aria-hidden="true">{Array.from({length:6},(_,i)=><span key={i}/>)}</div></div>;}
 function Artwork({src,className='',alt='',fallback=null}) {
   const [failed,setFailed]=useState(false);
   useEffect(()=>setFailed(false),[src]);
   return src&&!failed?<img data-react-art="true" className={className} src={src} alt={alt} loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={event=>{event.stopPropagation();setFailed(true);}}/>:fallback;
 }
-function Card({meta,api,wide=false,recommendations=false}){
+function Card({meta,api,wide=false,recommendations=false,rank}){
   const id=meta.id||meta._id,type=meta.type||'movie';
   const progress=api.progressFraction(meta.progress);
   useEffect(()=>{api.registerCard(meta);},[api,meta]);
-  return <a className={`sg-card meta-item-container${wide?' sg-card-wide':''}${recommendations?' sg-recommendation':''}`} href={api.detailHash(type,id,meta.state?.videoId)} data-card={`${type}:${id}`} aria-label={meta.name||id}>
-    <div className="sg-poster poster-container"><Artwork src={api.safeURL(wide?(meta.background||meta.poster):meta.poster)} fallback={<span className="sg-poster-placeholder">{meta.name}</span>}/>
+  return <a className={`sg-card meta-item-container${wide?' sg-card-wide':''}${recommendations?' sg-recommendation':''}${rank?' sg-card-ranked':''}`} href={api.detailHash(type,id,meta.state?.videoId)} data-card={`${type}:${id}`} aria-label={meta.name||id}>
+    {rank?<span className="sg-card-rank" aria-hidden="true">{rank}</span>:null}<div className="sg-poster poster-container"><Artwork src={api.safeURL(wide?(meta.background||meta.poster):meta.poster)} fallback={<span className="sg-poster-placeholder">{meta.name}</span>}/>
       {meta.imdbRating?<span className="sg-rating"><b>IMDb</b> {meta.imdbRating}</span>:null}{meta.watched?<span className="sg-watched">✓</span>:null}{progress>0?<span className="sg-progress"><i style={{width:Math.round(progress*100)+'%'}}/></span>:null}</div>
     <span className="sg-card-title title-label">{meta.name||id}</span><span className="sg-card-caption">{recommendations?meta.recommendationReason:meta.releaseInfo||meta.year||(type==='series'?'Series':'Movie')}</span>
   </a>;
 }
-function Row({title,description,items,api,index,wide=false,recommendations=false}){
+function Row({title,description,items,api,index,wide=false,recommendations=false,ranked=false}){
   title=title.replace(/\s·\s(movie|series|anime)$/i,(suffix,type)=>{
     const base=title.slice(0,-suffix.length),label=type.toLowerCase()==='movie'?'Movies':type.toLowerCase()==='series'?'Series':'Anime';
     return base.toLowerCase().endsWith(label.toLowerCase())?'':' · '+label;
   });
-  return <section className="sg-row meta-row-container" data-row-key={Number.isInteger(index)?'catalog:'+index:title}><div className="sg-row-heading"><h2>{title}</h2><span className="sg-row-count"/>{Number.isInteger(index)?<a className="sg-see-all" href={'#/discover?catalog='+index}>See All <span>›</span></a>:null}</div>{description?<p className="sg-curated-note">{description}</p>:null}<div className="sg-cards meta-items-container">{items.map(meta=><Card key={`${meta.type}:${meta.id||meta._id}`} meta={meta} api={api} wide={wide} recommendations={recommendations}/>)}</div></section>;
+  return <section className={`sg-row meta-row-container${ranked?' sg-ranked-row':''}`} data-row-key={Number.isInteger(index)?'catalog:'+index:title}><div className="sg-row-heading"><h2>{title}</h2><span className="sg-row-count"/>{Number.isInteger(index)?<a className="sg-see-all" href={'#/discover?catalog='+index}>See All <span>›</span></a>:null}</div>{description?<p className="sg-curated-note">{description}</p>:null}<div className="sg-cards meta-items-container">{(ranked?items.slice(0,10):items).map((meta,position)=><Card rank={ranked?position+1:undefined} key={`${meta.type}:${meta.id||meta._id}`} meta={meta} api={api} wide={wide} recommendations={recommendations}/>)}</div></section>;
 }
 function Home({api,params,onReady}){
   const filter=params.get('type')||'',mode=readHomeMode();
@@ -69,12 +69,19 @@ function Home({api,params,onReady}){
     return()=>{alive=false;controller.abort();};
   },[api,filter,mode,revision]);
   useLayoutEffect(()=>{onReady?.();},[state,onReady]);
-  const featured=state.rows.find(row=>row.loading||row.items.length)?.items.slice(0,8)||[];
+  // Stable first rows drive the billboard, even when lower collections finish first.
+  const leads=mode==='curated'&&!filter?state.rows.slice(0,2):state.rows.slice(0,1);
+  const readyLeads=leads.filter(row=>row.items.length);
+  const topFeatures=Array.from({length:8},(_,index)=>readyLeads[index%readyLeads.length]?.items[Math.floor(index/readyLeads.length)]).filter(Boolean);
+  const featured=mode==='curated'?(leads.some(row=>row.loading)?[]:topFeatures.length?topFeatures:state.rows.find(row=>row.items.length)?.items.slice(0,8)||[]):state.rows.find(row=>row.loading||row.items.length)?.items.slice(0,8)||[];
   const title=entry=>mode==='curated'?entry.title:catalogTitle(entry);
-  return <div className="sg-home board-content"><PullRefresh mobile={api.mobile} onRefresh={refresh}/><div className="sg-home-filters" aria-label="Browse titles">{[['','All'],['movie','Movies'],['series','Series']].map(([value,label])=><a key={value} className={'sg-filter'+(filter===value?' selected':'')} aria-current={filter===value?'page':undefined} href={'#/board'+(value?'?type='+value:'')}>{label}</a>)}<a className="sg-filter sg-calendar-link" href="#/calendar">Release calendar</a></div>
-    {featured.length?<Hero items={featured} api={api}/>:state.loading?<Loading title="Setting the scene"/>:<Empty title={mode==='curated'?'Your Home couldn’t load':'Your home starts here'}>{mode==='curated'?(api.mobile?'Check your connection and pull down to try again.':'Check your connection and choose Refresh to try again.'):<>Sign in or manage your <a href="#/addons">addons</a> to find something to watch.</>}</Empty>}
-    <div className="sg-home-toolbar"><a className="sg-curated-note" href="#/settings">{mode==='curated'?'Curated for your next watch':'Your addon catalogs'} <span aria-hidden="true">⌄</span></a>{!api.mobile?<Button onClick={refresh} disabled={state.loading}>Refresh</Button>:<button className="sg-refresh-accessible" onClick={refresh} disabled={state.loading}>Refresh Home</button>}</div>
-    <div id="sg-home-rows" className="sg-home-rows">{state.continuing.length?<Row title="Continue Watching" items={state.continuing} api={api} wide/>:null}{state.rows.map(({entry,items,loading,error})=><div className="sg-catalog-slot" key={entry.key}>{loading?<Loading title={title(entry)}/>:items.length?<Row title={title(entry)} description={mode==='curated'&&entry.key.startsWith('season-')?entry.description:null} items={items} index={mode==='addons'?entry.index:undefined} api={api}/>:<section className="sg-row sg-curated-empty"><h2>{title(entry)}</h2><p>{error?'This collection is temporarily unavailable.':"No titles are available in this collection yet."}</p></section>}</div>)}</div>{mode==='curated'?<p className="sg-curated-note sg-curated-attribution">{CURATED_SOURCE_NOTE}</p>:null}</div>;
+  const topRows=mode==='curated'?state.rows.filter(row=>row.entry.key.startsWith('top-')):[];
+  const otherRows=mode==='curated'?state.rows.filter(row=>!row.entry.key.startsWith('top-')):state.rows;
+  const renderRow=({entry,items,loading,error})=><div className="sg-catalog-slot" key={entry.key}>{loading?<Loading title={title(entry)}/>:items.length?<Row ranked={mode==='curated'&&entry.key.startsWith('top-')} title={title(entry)} description={mode==='curated'&&entry.key.startsWith('season-')?entry.description:null} items={items} index={mode==='addons'?entry.index:undefined} api={api}/>:<section className="sg-row sg-curated-empty"><h2>{title(entry)}</h2><p>{error?'This collection is temporarily unavailable.':"No titles are available in this collection yet."}</p></section>}</div>;
+  return <div className="sg-home board-content"><PullRefresh mobile={api.mobile} onRefresh={refresh}/><div className="sg-home-filters" aria-label="Browse titles">{[['','All'],['movie','Movies'],['series','Series']].map(([value,label])=><a key={value} className={'sg-filter'+(filter===value?' selected':'')} aria-current={filter===value?'page':undefined} href={'#/board'+(value?'?type='+value:'')}>{label}</a>)}<a className="sg-filter sg-calendar-link" href="#/calendar" aria-label="Release calendar">Calendar</a></div>
+    {featured.length?<Hero items={featured} api={api}/>:state.loading?<Loading hero title="Setting the scene"/>:<Empty title={mode==='curated'?'Your Home couldn’t load':'Your home starts here'}>{mode==='curated'?(api.mobile?'Check your connection and pull down to try again.':'Check your connection and choose Refresh to try again.'):<>Sign in or manage your <a href="#/addons">addons</a> to find something to watch.</>}</Empty>}
+
+    <div id="sg-home-rows" className="sg-home-rows">{topRows.map(renderRow)}{state.continuing.length?<Row title="Continue Watching" items={state.continuing} api={api} wide/>:null}{otherRows.map(renderRow)}</div><div className="sg-home-toolbar"><a className="sg-curated-note" href="#/settings">{mode==='curated'?'Curated for your next watch':'Your addon catalogs'} <span aria-hidden="true">⌄</span></a>{!api.mobile?<Button onClick={refresh} disabled={state.loading}>Refresh</Button>:<button className="sg-refresh-accessible" onClick={refresh} disabled={state.loading}>Refresh Home</button>}</div>{mode==='curated'?<p className="sg-curated-note sg-curated-attribution">{CURATED_SOURCE_NOTE}</p>:null}</div>;
 }
 function Calendar({api}){
   const today=dateKey(new Date().toISOString());

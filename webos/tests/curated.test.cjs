@@ -5,7 +5,7 @@ const date=(month,day)=>new Date(2026,month-1,day,12);
 test('curated discovery is independent of user addons and labels actual catalog sources',async()=>{
  const {getCuratedRows,CINEMETA_URL,STREAMING_CATALOGS_URL}=await modulePromise;
  const rows=getCuratedRows({now:date(3,1)});
- assert.equal(rows.length,10);assert.equal(new Set(rows.map(row=>row.key)).size,10);
+ assert.deepEqual(rows.slice(0,2).map(row=>row.key),['top-movies','top-series']);assert.equal(rows.length,10);assert.equal(new Set(rows.map(row=>row.key)).size,10);
  assert.ok(rows.find(row=>row.key==='nfx-movie').url.startsWith(STREAMING_CATALOGS_URL));
  assert.equal(rows.find(row=>row.key==='featured-series').url,CINEMETA_URL+'/catalog/series/imdbRating.json');
  assert.ok(rows.find(row=>row.key==='top-series').description.includes('not an all-time'));

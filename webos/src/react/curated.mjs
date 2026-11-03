@@ -32,14 +32,14 @@ function selection(key,title,type,ids,description){return {key,title,type,ids:[.
 export function getCuratedRows({type='',now=new Date()}={}){
  const season=seasonalCollection(now);
  return [
+  catalog('top-movies','Top movies','movie',CINEMETA_URL,'top','Cinemeta','Popular movies in Cinemeta’s current catalog; not an all-time rating chart.'),
+  catalog('top-series','Top series','series',CINEMETA_URL,'top','Cinemeta','Popular series in Cinemeta’s current catalog; not an all-time rating chart.'),
   catalog('featured-movies','Featured · Movies','movie',CINEMETA_URL,'imdbRating','Cinemeta','Featured movies from Cinemeta.'),
   catalog('featured-series','Featured · Series','series',CINEMETA_URL,'imdbRating','Cinemeta','Featured series from Cinemeta.'),
   ...(season?[selection('season-'+season.key,season.title,'movie',season.ids,season.description)]:[]),
   ...[['nfx','Netflix'],['hbm','HBO Max']].flatMap(([id,name])=>['movie','series'].map(type=>catalog(`${id}-${type}`,`${name} · ${type==='movie'?'Movies':'Series'}`,type,STREAMING_CATALOGS_URL,id,'Streaming Catalogs','Listed by Streaming Catalogs. Availability varies by country; these are not necessarily originals.'))),
   selection('anime-movies','Anime · Movies','movie',ANIME_MOVIES,'Handpicked anime films, with details from Cinemeta.'),
   selection('anime-series','Anime · Series','series',ANIME_SERIES,'Handpicked anime series, with details from Cinemeta.'),
-  catalog('top-movies','Top · Movies','movie',CINEMETA_URL,'top','Cinemeta','Popular movies in Cinemeta’s current catalog; not an all-time rating chart.'),
-  catalog('top-series','Top · Series','series',CINEMETA_URL,'top','Cinemeta','Popular series in Cinemeta’s current catalog; not an all-time rating chart.')
  ].filter(row=>!type||row.type===type);
 }
 export function clearCuratedCache(){cache.clear();}
