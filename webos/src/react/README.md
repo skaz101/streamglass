@@ -23,6 +23,8 @@ Registry components can add dependencies; review their requirements before use.
 Keep TV remote focus, touch targets and reduced motion when adapting effects.
 
 The release calendar checks up to the latest 500 library entries, at most four
-titles concurrently and two metadata addons per title. It never treats a release
+titles concurrently and two metadata addons per title. A 45-second deadline
+keeps slow addons from blocking the calendar indefinitely; partial results remain
+visible and can be refreshed. It never treats a release
 year as a precise date. Date-only values retain the provider's day; timestamps
 use the device time zone. Missing dates and the library cap are disclosed in UI.

@@ -70,6 +70,12 @@ try {
   await page.goto(pathToFileURL(path.join(root,'../android/app/build/generated/assets/app/index.html')).href);
   await ready();await page.locator('.sg-card').first().waitFor();
   await screenshot('home.png');
+  await page.locator('a[href="#/calendar"]').first().tap();
+  await page.getByRole('heading',{name:'Your release calendar'}).waitFor();
+  await page.waitForFunction(()=>!document.querySelector('.sg-calendar-note')?.textContent.includes('Checking release dates'));
+  await screenshot('phone-calendar.png');
+  assert.ok(await page.evaluate(()=>document.getElementById('app').scrollWidth<=innerWidth),'Release calendar fits the phone');
+  await page.locator('[data-nav="board"]').tap();await page.locator('.sg-card').first().waitFor();
   await page.evaluate(async()=>{document.getElementById('sg-view').scrollTop=100;await StreamGlassShell.render();});
   await page.waitForFunction(()=>document.getElementById('sg-view').scrollTop===100);
   await page.locator('.sg-route-snapshot').waitFor({state:'detached'});

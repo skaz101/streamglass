@@ -180,11 +180,11 @@
     continueWatching(){return core.getState('continue_watching_preview').then(state=>state.items||[]).catch(()=>[]);},
     resolveMeta,
     calendarLibrary(){return loadLibrary(null,'lastwatched',5);},
-    async calendarMeta(item,signal){
+    async calendarMeta(item,signal,refresh=false){
       const id=item.id||item._id;
       for(const addon of installed().filter(source=>supports(source,'meta',item.type,id)).slice(0,2)){
         if(signal.aborted)throw new Error('Cancelled');
-        try{const data=await fetchJSON(resourceURL(addon.transportUrl,'meta',item.type,id),true,signal);if(data.meta)return {...item,...data.meta,id,type:item.type};}catch(error){if(signal.aborted)throw error;}
+        try{const data=await fetchJSON(resourceURL(addon.transportUrl,'meta',item.type,id),!refresh,signal);if(data.meta)return {...item,...data.meta,id,type:item.type};}catch(error){if(signal.aborted)throw error;}
       }
       return item;
     }

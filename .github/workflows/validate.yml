@@ -50,7 +50,7 @@ jobs:
           python3 - <<'PYREVIEW'
           import base64,subprocess
           from pathlib import Path
-          for folder,name in [('webos/test-results','react-calendar-tv'),('webos/test-results','react-calendar-mobile'),('android/test-results','home'),('android/test-results','landscape')]:
+          for folder,name in [('webos/test-results','react-calendar-tv'),('webos/test-results','react-calendar-mobile'),('android/test-results','home'),('android/test-results','landscape'),('android/test-results','phone-calendar')]:
               png=Path(folder)/(name+'.png')
               if not png.exists(): continue
               webp=Path('/tmp')/(name+'.webp')

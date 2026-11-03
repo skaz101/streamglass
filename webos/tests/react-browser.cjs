@@ -8,7 +8,7 @@ const fs=require('node:fs/promises');
  try{
   const page=await browser.newPage({viewport:{width:1280,height:800}}),errors=[];
   page.on('pageerror',error=>errors.push(error.message));
-  await page.setContent('<style>body{margin:0;background:#101014;color:white;font-family:Arial}#sg-view{height:100vh;overflow:auto}.sg-page{padding:30px}</style><main id="sg-view"></main>');
+  await page.setContent('<style>body{margin:0;background:#101014;color:white;font-family:Arial}#sg-view{height:100vh;overflow:auto}.sg-page{padding:30px}</style><div id="app"><main id="sg-view"></main></div>');
   await page.addStyleTag({path:path.resolve(__dirname,'../build/shell.css')});
   await page.addStyleTag({path:path.resolve(__dirname,'../build/react-ui.css')});
   await page.addScriptTag({path:path.resolve(__dirname,'../build/react-ui.js')});

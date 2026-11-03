@@ -61,3 +61,16 @@ New builders use their own automatically generated debug key. The original test 
 StreamGlass and the reused DX.BI theme are GPL-3.0-or-later. See [LICENSE](LICENSE), the original [NOTICE](NOTICE.md), [modification history](webos/MODIFICATIONS.md), and dependency notices for [webOS](webos/THIRD_PARTY.md) and [Android](android/THIRD_PARTY.md). Separately licensed dependencies retain their notices. Supply corresponding source with redistributed installers.
 
 StreamGlass is not endorsed by DX.BI, Stremio, LG, or any addon provider.
+
+## Shared React interface
+
+Android and webOS now use the shared React screens in `webos/src/react/`.
+The home screen includes an animated featured carousel and addon catalog rows;
+the release calendar follows dated movies and episodes from saved titles.
+Native playback and Stremio account integration retain their existing adapters.
+
+For component development, work in `webos/`. Its `components.json` configures
+shadcn and the `@react-bits` registry, with Tailwind utilities compiled by the
+shared build. See [React UI development](webos/src/react/README.md) for commands
+and integration details. The retained upstream Electron application in `app/`
+is separate from the Android/webOS runtime.
