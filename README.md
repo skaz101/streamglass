@@ -65,7 +65,7 @@ StreamGlass is not endorsed by DX.BI, Stremio, LG, or any addon provider.
 ## Shared React interface
 
 Version 0.7.1 uses shared React screens for Android and webOS in `webos/src/react/`.
-The home screen includes an animated featured carousel and addon catalog rows;
+The home screen includes an animated featured carousel and curated catalog rows;
 the release calendar follows dated movies and episodes from saved titles.
 Native playback and Stremio account integration retain their existing adapters.
 

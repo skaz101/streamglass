@@ -1,11 +1,11 @@
 # StreamGlass release audit
 
-## Unreleased curated Home and motion
+## Curated Home and motion — included in 0.7.1
 
 Curated Home defaults to Cinemeta Featured/Top, Streaming Catalogs Netflix/HBO
 Max, handpicked anime and date-windowed seasonal selections. Home settings can
 opt into installed addon catalogs. Shared React changes apply to Android and
-LG webOS. No installer has been released for this change.
+LG webOS. Installer verification is recorded below.
 
 Local validation: 49 unit tests, built React screens, hero countdown and trusted
 touch swipes, curated preference/cache/refresh failure-and-recovery tests, TV
@@ -303,4 +303,27 @@ release/debug builds, lint and Android 35 native-player instrumentation.
   Manifest is not debuggable. Shared React, cinematic CSS and platform assets
   were checked against source-built output; no player test assets are bundled.
 - The release tag includes documentation-only changes after the validated build.
+  Physical Android/LG hardware testing is not claimed by these automated checks.
+
+
+## Published installer build 0.7.1 — 2026-11-03 UTC
+
+Validated runtime source: `a9cf1d3d5690ce162fdf8a3b4a983f253bfb0f36`.
+[Run 41594189047](https://github.com/skaz101/streamglass/actions/runs/41594189047)
+passed TV packaging, all browser suites, 49 unit tests, Android debug/release
+builds, lint and Android 35 native-player instrumentation. The landscape check
+waits for the loaded carousel before measuring its controls.
+
+- Android: `com.streamglass.mobile`, version 0.7.1, code 701, release build.
+- APK: 8,277,936 bytes; SHA-256
+  `b048d35733c725ebeaffaa6d190958b1d9fb7efe55418506ec7ca21fec08c089`.
+- V2/V3 signatures verified; original certificate SHA-256 retained:
+  `167c739ded0846e2e7e31884cef42ec58d1154e1145740c1a6ced15d4f9f3ead`.
+- LG IPK: `com.streamglass.tv`, version 0.7.1; 3,216,802 bytes; SHA-256
+  `37149ce965a64f08fcfde6053c418a744067baa747a9875c497d9fc977754d99`.
+- Every signed APK ZIP entry matches the unsigned CI artifact byte-for-byte.
+  Manifest is not debuggable; test media are excluded. Platform adapters, React
+  bundles and styles in both installers match source-built output.
+- The release tag adds documentation only after the validated runtime commit.
+  The corresponding source archive includes the release audit and excludes keys.
   Physical Android/LG hardware testing is not claimed by these automated checks.
