@@ -1,0 +1,138 @@
+/* StreamGlass cinematic presentation. GPL-3.0-or-later.
+   Loaded after platform styles so this is the single visual override layer. */
+:root{--cinema-bg:#141414;--cinema-panel:#242424;--cinema-raised:#303030;--cinema-text:#f5f5f1;--cinema-muted:#b3b3b3;--cinema-line:#ffffff18;--cinema-accent:#e50914;--background:var(--cinema-bg);--card:var(--cinema-panel)}
+:root[data-theme=purple]{--cinema-bg:#110e19;--cinema-panel:#231c31;--cinema-raised:#332844;--cinema-accent:#b38aff}
+:root[data-theme=oled]{--cinema-bg:#000;--cinema-panel:#111;--cinema-raised:#202020}
+#app .sg-app{background:var(--cinema-bg);color:var(--cinema-text)}
+#app .sg-nav.horizontal-nav-bar{background:var(--cinema-bg);border:0;gap:1rem}
+#app .sg-nav-links{gap:1.15rem}#app .sg-nav-links a{font-size:.83rem}
+#app .sg-nav-links a.selected::after{display:none}#app .sg-nav-links a.selected{color:#fff}
+#app .sg-home-filters{padding-top:12px;padding-bottom:12px}
+#app .sg-filter{border-color:#ffffff40;border-radius:30px;background:transparent;font-weight:500}
+#app .sg-filter.selected{background:#f5f5f1;border-color:#f5f5f1;color:#141414}
+#app .sg-react-hero{height:clamp(560px,70vh,850px);min-height:560px;margin-bottom:16px;background:var(--cinema-bg)}
+#app .sg-react-hero:after{background:linear-gradient(90deg,#000b,transparent 90%),linear-gradient(0deg,var(--cinema-bg),transparent 65%)}
+#app .sg-react-hero-art{object-position:center 28%}
+#app .sg-react-hero-copy{position:absolute;bottom:80px;left:var(--dx-gutter,5vw);padding:0;width:48%;max-width:760px}
+#app .sg-react-hero-copy>span{font-size:14px;letter-spacing:3px;text-transform:uppercase;color:#ddd}
+#app .sg-react-hero-copy h1{font-size:clamp(42px,5vw,82px);font-weight:850;letter-spacing:-.045em;line-height:1.04;margin:20px 0;text-wrap:balance;text-shadow:0 2px 24px #0008}
+#app .sg-react-hero-copy p{font-size:clamp(16px,1.35vw,24px);line-height:1.5;max-width:46ch;color:#eee}
+#app .sg-react-hero-actions{display:flex;width:auto;gap:12px;margin-top:24px}
+#app .sg-react-hero-actions .sg-button{min-width:160px;padding:14px 28px;font-size:20px;border-radius:4px}
+#app .sg-button{border:0;border-radius:4px;background:var(--cinema-raised);color:var(--cinema-text);font-weight:650;box-shadow:none}
+#app .sg-button.sg-primary{background:#f5f5f1;color:#141414}
+#app .sg-carousel-controls{background:#14141470;border-radius:4px;bottom:24px;right:var(--dx-gutter,5vw);gap:8px}
+#app .sg-carousel-controls button:hover{background:#ffffff20}
+#app .sg-row-heading h2{font-size:1.25rem;letter-spacing:-.025em;font-weight:750}
+#app .sg-row{margin-bottom:32px}#app .sg-see-all{color:var(--cinema-muted);font-size:.7rem}
+#app .sg-poster.poster-container{border-radius:5px;box-shadow:none;background:var(--cinema-panel)}
+#app .sg-card-title.title-label{font-weight:600;color:#eee}#app .sg-card-caption{color:var(--cinema-muted)}
+#app .sg-card .sg-rating{background:#141414db;border-radius:3px;box-shadow:none}
+#app .sg-progress{height:4px;background:#ffffff40}#app .sg-progress i{background:var(--cinema-accent)}
+#app .sg-page{padding-top:36px;padding-bottom:70px}
+#app .sg-page>h1,#app .sg-picks-header h1,#app .sg-calendar-header h1{font-size:2.25rem;letter-spacing:-.045em;font-weight:750;margin-bottom:14px}
+#app .sg-page-intro{color:var(--cinema-muted);font-size:.85rem;line-height:1.5;margin:0 0 28px;max-width:56ch}
+#app .sg-search-form{max-width:960px;margin:28px 0 20px}
+#app .search-content .sg-search-form{background:var(--cinema-panel);border:1px solid transparent;border-radius:6px;padding:5px}
+#app .search-content .sg-search-form:focus-within{border-color:#ffffff80;box-shadow:none}
+#app .search-content .sg-search-form input{background:transparent;border:0;box-shadow:none;color:white;padding:16px;font-size:1rem}
+#app .search-content .sg-search-form button{background:transparent;color:#eee}
+#app .sg-search-status{color:var(--cinema-muted);font-size:.75rem}
+#app .sg-search-shortcuts{display:flex;gap:12px;justify-content:center;margin:24px 0;flex-wrap:wrap}
+#app .sg-search-shortcuts a{border:1px solid #ffffff30;border-radius:24px;padding:12px 20px;min-height:44px}
+#app .sg-filters{gap:16px;margin:24px 0 32px}
+#app .sg-filters select,#app #sg-season{border:1px solid #ffffff30;border-radius:4px;background:var(--cinema-panel)}
+#app .sg-picks-header{border:0;background:none;padding:0;margin-bottom:28px}
+#app .sg-picks-header .sg-eyebrow{display:none}
+#app .sg-picks-header p{max-width:48ch;color:var(--cinema-muted);line-height:1.6}
+#app .sg-picks-filters{margin-bottom:28px}
+#app .sg-detail-background{height:70vh;opacity:1}
+#app .sg-detail-background:after{background:linear-gradient(0deg,var(--cinema-bg),transparent 80%)}
+#app .sg-detail-content{position:relative;background:linear-gradient(90deg,var(--cinema-bg),transparent 80%);padding-top:24px}
+#app .sg-detail-info>h1{font-size:clamp(36px,4vw,64px);letter-spacing:-.04em;line-height:1.06}
+#app .sg-detail-description{max-width:60ch;line-height:1.65;color:#ddd}
+#app .sg-detail-meta{color:var(--cinema-muted)}#app .sg-detail-meta b{color:#eee}
+#app .sg-detail-actions{gap:12px;margin:24px 0}
+#app .sg-stream-panel{background:var(--cinema-panel);border:0;border-radius:8px;padding:24px}
+#app .sg-stream{border:1px solid var(--cinema-line);background:var(--cinema-raised);border-radius:6px;box-shadow:none;padding:20px}
+#app .sg-stream-badges span{background:#ffffff12;border:0;color:#ddd;border-radius:3px}
+#app .sg-stream-name{font-weight:700}#app .sg-stream-description{color:var(--cinema-muted);line-height:1.5}
+#app .sg-episode{border-radius:4px;border:0;border-bottom:1px solid var(--cinema-line);background:transparent;padding:20px 12px}
+#app .sg-episode.selected{background:var(--cinema-panel)}
+#app .sg-episode-number{color:var(--cinema-muted);background:none;font-size:24px}
+#app .sg-settings{max-width:1000px;background:none;border:0}
+#app .sg-settings-row{border:0;border-bottom:1px solid var(--cinema-line);background:transparent;border-radius:0;padding:24px 0}
+#app .sg-settings-row small{color:var(--cinema-muted);margin-top:6px;line-height:1.5}
+#app .sg-account-box{max-width:580px;padding:48px;background:var(--cinema-panel);border:0;border-radius:8px;margin:48px auto}
+#app .sg-account-box h1{letter-spacing:-.04em}#app .sg-account-box>p{color:var(--cinema-muted);line-height:1.6}
+#app .sg-account-box input{background:var(--cinema-raised);border:1px solid #ffffff30;border-radius:4px}
+#app .sg-account-box .sg-account-mark{display:none}
+#app .sg-addon-form,#app .sg-addon-card{background:var(--cinema-panel);border:1px solid var(--cinema-line);border-radius:8px}
+#app .sg-addon-card p{color:var(--cinema-muted);line-height:1.6}
+#app .sg-calendar-month{background:var(--cinema-panel);border:1px solid var(--cinema-line);border-radius:10px}
+#app .sg-calendar-toolbar h2{margin:0;font-size:1.1rem}
+#app .sg-calendar-header p,#app .sg-calendar-note{color:var(--cinema-muted)}
+#app .sg-calendar-grid button{border-radius:50%}
+#app .sg-calendar-grid button[aria-pressed=true]{background:#f5f5f1;color:#141414}
+#app .sg-release-item{padding:20px 0;border-color:var(--cinema-line)}
+#app .sg-empty,#app .sg-react-empty{padding:56px 24px;color:var(--cinema-muted)}
+#app .sg-empty h2,#app .sg-react-empty h2{color:#eee;letter-spacing:-.025em}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){
+ #app .sg-card{transition:transform .22s cubic-bezier(.2,.8,.2,1)}
+ #app .sg-card:hover{transform:translateY(-4px)}
+ #app .sg-button{transition:background .18s,opacity .18s}#app .sg-button:hover{opacity:.85}
+}
+/* The mobile shell keeps touch navigation and uses a portrait billboard. */
+:root[data-sg-platform=mobile] #app .sg-mobile-header{background:var(--cinema-bg)}
+:root[data-sg-platform=mobile] #app .sg-bottom-nav{background:var(--cinema-bg);border-color:var(--cinema-line)}
+:root[data-sg-platform=mobile] #app .sg-bottom-nav::before{background:#fff;height:2px;opacity:.65}
+:root[data-sg-platform=mobile] #app .sg-mobile-brand span{font-size:15px;letter-spacing:.5px}
+:root[data-sg-platform=mobile] #app .sg-home-filters{padding-top:0;gap:8px;padding-bottom:16px}
+:root[data-sg-platform=mobile] #app .sg-filter{min-height:40px;padding:8px 14px;font-size:12px}
+:root[data-sg-platform=mobile] #app .sg-react-hero{height:540px;min-height:0;margin:0 16px 20px;border-radius:12px;border:1px solid #ffffff26;background:#181818}
+:root[data-sg-platform=mobile] #app .sg-react-hero:after{background:linear-gradient(0deg,#181818 1%,#181818d9 20%,transparent 85%)}
+:root[data-sg-platform=mobile] #app .sg-react-hero-copy{left:20px;right:20px;bottom:66px;width:auto;max-width:none;text-align:center;padding:0}
+:root[data-sg-platform=mobile] #app .sg-react-hero-copy>span{font-size:10px;letter-spacing:2px}
+:root[data-sg-platform=mobile] #app .sg-react-hero-copy h1{font-size:38px;margin:12px auto;max-width:13ch}
+:root[data-sg-platform=mobile] #app .sg-react-hero-logo{max-width:85%;max-height:110px;object-position:center;margin:16px auto}
+:root[data-sg-platform=mobile] #app .sg-react-hero-copy p{font-size:12px;margin:12px auto;color:#eee}
+:root[data-sg-platform=mobile] #app .sg-hero-synopsis{display:none}
+:root[data-sg-platform=mobile] #app .sg-react-hero-actions{display:grid;grid-template-columns:1fr 1fr;margin-top:20px;width:100%}
+:root[data-sg-platform=mobile] #app .sg-react-hero-actions .sg-button{min-width:0;min-height:46px;font-size:15px;padding:12px 8px}
+:root[data-sg-platform=mobile] #app .sg-carousel-controls{bottom:10px;left:50%;right:auto;transform:translateX(-50%);gap:0;background:transparent}
+:root[data-sg-platform=mobile] #app .sg-row{margin-bottom:24px}
+:root[data-sg-platform=mobile] #app .sg-row-heading h2{font-size:20px;font-weight:750}
+:root[data-sg-platform=mobile] #app .sg-card.meta-item-container{flex-basis:124px;width:124px}
+:root[data-sg-platform=mobile] #app .sg-card.sg-card-wide{flex-basis:248px;width:248px}
+:root[data-sg-platform=mobile] #app .sg-grid .sg-card.meta-item-container{width:100%}
+:root[data-sg-platform=mobile] #app .sg-page{padding-top:24px}
+:root[data-sg-platform=mobile] #app .sg-page>h1,:root[data-sg-platform=mobile] #app .sg-picks-header h1,:root[data-sg-platform=mobile] #app .sg-calendar-header h1{font-size:32px;line-height:1.1;margin-bottom:12px}
+:root[data-sg-platform=mobile] #app .sg-page-intro{font-size:13px;margin-bottom:24px}
+:root[data-sg-platform=mobile] #app .search-content .sg-search-form{margin-top:24px;padding:0;border-radius:6px}
+:root[data-sg-platform=mobile] #app .search-content .sg-search-form input{font-size:15px;padding:16px 6px}
+:root[data-sg-platform=mobile] #app .search-content .sg-cards>.sg-card.meta-item-container{width:100%;min-width:0}
+:root[data-sg-platform=mobile] #app .sg-choice-trigger{background:var(--cinema-panel);border:1px solid var(--cinema-line);border-radius:6px;padding:14px}
+:root[data-sg-platform=mobile] #app .sg-detail-background{height:380px}
+:root[data-sg-platform=mobile] #app .sg-detail-content{padding-top:260px;background:linear-gradient(0deg,var(--cinema-bg) 10%,transparent 100%)}
+:root[data-sg-platform=mobile] #app .sg-detail-info>h1{font-size:34px}
+:root[data-sg-platform=mobile] #app .sg-detail-description{font-size:14px}
+:root[data-sg-platform=mobile] #app .sg-stream-panel{padding:30px 20px;background:var(--cinema-panel);border-radius:16px 16px 0 0}
+:root[data-sg-platform=mobile] #app .sg-mobile-sheet{background:var(--cinema-panel);border-radius:16px 16px 0 0;border:1px solid var(--cinema-line)}
+:root[data-sg-platform=mobile] #app .sg-menu-sheet nav{background:none}
+:root[data-sg-platform=mobile] #app .sg-menu-sheet nav a{border-bottom:1px solid var(--cinema-line);padding:18px 8px}
+:root[data-sg-platform=mobile] #app .sg-account-box{padding:28px 20px;margin:24px auto}
+:root[data-sg-platform=mobile] #app .sg-appearance{border:0;padding:24px 0}
+:root[data-sg-platform=mobile] #app .sg-theme-option{border-radius:8px;background:var(--cinema-panel)}
+:root[data-sg-platform=mobile] #app .sg-calendar-layout{gap:24px;margin-top:24px}
+:root[data-sg-platform=mobile] #app .sg-calendar-toolbar h2{font-size:18px}
+@media(min-width:600px){:root[data-sg-platform=mobile] #app .sg-react-hero{height:480px}:root[data-sg-platform=mobile] #app .sg-react-hero-copy{left:32px;max-width:440px;text-align:left}:root[data-sg-platform=mobile] #app .sg-react-hero-copy h1{margin-left:0;max-width:none}}
+@media(max-height:500px) and (orientation:landscape){
+ :root[data-sg-platform=mobile] #app .sg-react-hero{height:220px;margin-bottom:12px}
+ :root[data-sg-platform=mobile] #app .sg-react-hero-copy{left:20px;bottom:22px;max-width:52%;text-align:left}
+ :root[data-sg-platform=mobile] #app .sg-react-hero-copy h1{font-size:28px;max-width:none;margin:8px 0}
+ :root[data-sg-platform=mobile] #app .sg-react-hero-copy p{margin:6px 0}
+ :root[data-sg-platform=mobile] #app .sg-react-hero-actions{margin-top:10px}
+ :root[data-sg-platform=mobile] #app .sg-carousel-controls{left:auto;right:12px;transform:none;bottom:12px}
+ :root[data-sg-platform=mobile] #app .sg-detail-content{padding-top:150px}
+}
+@media(prefers-reduced-motion:reduce){#app .sg-card,#app .sg-button{transition:none}}

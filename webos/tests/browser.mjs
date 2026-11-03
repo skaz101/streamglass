@@ -70,7 +70,7 @@ try {
   const ready=()=>page.waitForFunction(()=>window.StreamGlassCore&&StreamGlassCore.ready&&window.StreamGlassShell);
   await page.goto(pathToFileURL(path.join(root,'build/index.html')).href);
   await ready();await page.locator('.sg-card').first().waitFor();
-  await page.screenshot({path:path.join(shots,'home.png')});
+  await page.screenshot({path:path.join(shots,'home.png'),animations:'disabled'});
   // D-pad moves focus without pointer input.
   await page.keyboard.press('ArrowDown');
   assert.ok(await page.evaluate(()=>document.activeElement!==document.body),'Remote obtains focus');

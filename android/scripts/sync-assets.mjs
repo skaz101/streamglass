@@ -18,7 +18,8 @@ catch(error){if(error.code!=='ENOENT')throw error;}
 let html=await fs.readFile(path.join(out,'index.html'),'utf8');
 html=html.replace(/<script src="(?:webOSTV|player|host)\.js" defer><\/script>/g,'').replace(/<link rel="stylesheet" href="(?:player|host)\.css">/g,'');
 html=html.replace('<link rel="stylesheet" href="dxbi.theme.css">','');
-html=html.replace('</head>','<link rel="stylesheet" href="mobile.css"><script src="mobile.js" defer></script><script src="android-host.js" defer></script></head>');
+html=html.replace('<link rel="stylesheet" href="cinematic.css">','');
+html=html.replace('</head>','<link rel="stylesheet" href="mobile.css"><script src="mobile.js" defer></script><script src="android-host.js" defer></script><link rel="stylesheet" href="cinematic.css"></head>');
 html=html.replace("object-src 'none'", "frame-src 'none'; object-src 'none'").replace('user-scalable=no','viewport-fit=cover');
 html=html.replace('<title>StreamGlass TV</title>','<title>StreamGlass</title>');
 await fs.writeFile(path.join(out,'index.html'),html);

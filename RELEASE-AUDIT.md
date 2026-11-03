@@ -250,3 +250,19 @@ passed both webOS/browser and Android jobs.
 
 The following documentation/CI cleanup commit removes temporary screenshot
 transport from the workflow. Runtime source is unchanged from the validated SHA.
+
+## Cinematic interface overhaul — 2026-11-03
+
+The shared interface now has a dedicated final presentation layer in
+`webos/src/cinematic.css`, bundled by both webOS and Android. It restyles home,
+search, recommendations, saved titles, details, episodes, stream sheets, account,
+settings, addons and calendar. Phone and TV billboards use distinct compositions;
+Classic, Amethyst and OLED appearance settings remain available.
+
+Local verification: 43 unit tests, complete TV browser integration and Android
+mobile browser integration passed. Reviewed fixture screenshots of phone/TV
+home, search, details and settings. Mobile coverage includes 320/390/800px widths,
+landscape, theme persistence, touch navigation, reduced motion and interrupted
+sheet transitions. Native player code is unchanged; this UI validation does not
+claim a fresh physical-device or native emulator test. No new installer is
+published by this source update.

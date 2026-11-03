@@ -24,7 +24,7 @@ for (const file of ['core-client.js', 'player.js', 'host.js', 'recommendations.j
   new Script(source, {filename: file});
   await fs.writeFile(path.join(out, file), source);
 }
-for (const file of ['shell.css', 'host.css', 'player.css']) await fs.copyFile(path.join(root, 'src', file), path.join(out, file));
+for (const file of ['shell.css', 'host.css', 'player.css', 'cinematic.css']) await fs.copyFile(path.join(root, 'src', file), path.join(out, file));
 await fs.copyFile(path.join(root, 'generated/core-worker-source.js'), path.join(out, 'core-worker-source.js'));
 await fs.copyFile(path.join(root, 'appinfo.json'), path.join(out, 'appinfo.json'));
 for (const file of ['icon.png', 'largeIcon.png']) await fs.copyFile(path.join(root, 'assets', file), path.join(out, file));
@@ -52,7 +52,7 @@ await fs.writeFile(path.join(out, 'index.html'), `<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src blob:; style-src 'self' 'unsafe-inline'; connect-src https: http:; img-src 'self' https: http: data: blob:; media-src https: http: blob: 'self'; font-src 'self'; object-src 'none'; base-uri 'self'">
-<title>StreamGlass TV</title><link rel="stylesheet" href="dxbi.theme.css"><link rel="stylesheet" href="shell.css"><link rel="stylesheet" href="player.css"><link rel="stylesheet" href="host.css"><link rel="stylesheet" href="react-ui.css">
+<title>StreamGlass TV</title><link rel="stylesheet" href="dxbi.theme.css"><link rel="stylesheet" href="shell.css"><link rel="stylesheet" href="player.css"><link rel="stylesheet" href="host.css"><link rel="stylesheet" href="react-ui.css"><link rel="stylesheet" href="cinematic.css">
 <script src="webOSTV.js" defer></script><script src="core-worker-source.js" defer></script><script src="core-client.js" defer></script><script src="player.js" defer></script><script src="recommendations.js" defer></script><script src="react-ui.js" defer></script><script src="shell.js" defer></script><script src="host.js" defer></script></head>
 <body><div id="app"><p style="padding:5vw;font-size:28px;color:white">Starting StreamGlass TV…</p></div><noscript>JavaScript is required.</noscript></body></html>\n`);
 const files = [];

@@ -26,6 +26,10 @@ function Card({meta,api,wide=false,recommendations=false}){
   </a>;
 }
 function Row({title,items,api,index,wide=false,recommendations=false}){
+  title=title.replace(/\s·\s(movie|series|anime)$/i,(suffix,type)=>{
+    const base=title.slice(0,-suffix.length),label=type.toLowerCase()==='movie'?'Movies':type.toLowerCase()==='series'?'Series':'Anime';
+    return base.toLowerCase().endsWith(label.toLowerCase())?'':' · '+label;
+  });
   return <section className="sg-row meta-row-container" data-row-key={Number.isInteger(index)?'catalog:'+index:title}><div className="sg-row-heading"><h2>{title}</h2><span className="sg-row-count"/>{Number.isInteger(index)?<a className="sg-see-all" href={'#/discover?catalog='+index}>See All <span>›</span></a>:null}</div><div className="sg-cards meta-items-container">{items.map(meta=><Card key={`${meta.type}:${meta.id||meta._id}`} meta={meta} api={api} wide={wide} recommendations={recommendations}/>)}</div></section>;
 }
 function HeroArt({src}){
@@ -64,7 +68,7 @@ function Hero({items,api}){
   return <section id="sg-hero-slot" className="sg-react-hero sg-hero" aria-label="Featured titles" aria-roledescription="carousel" ref={container} onMouseEnter={()=>{hover.current=true;}} onMouseLeave={()=>{hover.current=false;}}>
     <HeroArt src={picture}/>
     <div key={item.id} className="sg-react-hero-copy"><span>{meta.type==='series'?'Series':'Movie'}</span>{logo?<Artwork className="sg-react-hero-logo" src={logo} alt={meta.name} fallback={<h1>{meta.name}</h1>}/>:<h1>{meta.name}</h1>}
-      <p>{(meta.genres||[]).slice(0,3).join(' · ')}{meta.imdbRating?' · IMDb '+meta.imdbRating:''}</p><p>{meta.description||'Find your next watch in your installed catalogs.'}</p>
+      <p>{(meta.genres||[]).slice(0,3).join(' · ')}{meta.imdbRating?' · IMDb '+meta.imdbRating:''}</p><p className="sg-hero-synopsis">{meta.description||'Find your next watch in your installed catalogs.'}</p>
       <div className="sg-react-hero-actions sg-mobile-hero-actions"><a className="sg-button sg-primary" href={href+(api.mobile?'?play=1':'')}>▶ {api.mobile?'Play':'Watch now'}</a><a className="sg-button" href={href}>More info</a></div></div>
     {items.length>1?<div className="sg-carousel-controls"><button type="button" aria-label="Previous featured title" onClick={()=>move(-1)}>‹</button><span aria-live="off">{index+1} / {items.length}</span><button type="button" aria-label="Next featured title" onClick={()=>move(1)}>›</button><button type="button" aria-label={paused?'Resume featured slideshow':'Pause featured slideshow'} aria-pressed={paused} onClick={()=>setPaused(value=>!value)}>{paused?'▶':'Ⅱ'}</button></div>:null}
   </section>;

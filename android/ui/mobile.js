@@ -2,6 +2,7 @@
 (function () {
   'use strict';
   const doc=document;
+  doc.documentElement.dataset.sgPlatform='mobile';
   const themes=[['classic','Classic','Charcoal & red'],['purple','Amethyst','Soft purple'],['oled','OLED','True black']];
   let theme='classic';
   try{const saved=localStorage.getItem('streamglass-appearance');if(themes.some(([id])=>id===saved))theme=saved;}catch(_){}
