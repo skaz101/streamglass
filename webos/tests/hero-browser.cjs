@@ -7,7 +7,7 @@ const fs=require('node:fs/promises');
 const os=require('node:os');
 (async()=>{
  const root=path.resolve(__dirname,'..'),temp=await fs.mkdtemp(path.join(os.tmpdir(),'streamglass-hero-'));
- await build({stdin:{contents:`import React from 'react';import {createRoot} from 'react-dom/client';import {flushSync} from 'react-dom';import Hero from './src/react/components/Hero.jsx';const root=createRoot(document.getElementById('sg-view'));const items=[{id:'one',type:'movie',name:'First story'},{id:'two',type:'series',name:'Second story'},{id:'three',type:'movie',name:'Third story'}];const api={mobile:true,safeURL:()=>'',detailHash:(type,id)=>'#/detail/'+type+'/'+id,resolveMeta:(type,id,meta)=>Promise.resolve({meta})};window.mountHero=()=>flushSync(()=>root.render(<Hero items={items} api={api}/>));window.unmountHero=()=>root.unmount();mountHero();`,resolveDir:root,loader:'jsx'},bundle:true,jsx:'automatic',outfile:path.join(temp,'hero.js'),define:{'process.env.NODE_ENV':'"production"'}});
+ await build({stdin:{contents:`import React from 'react';import {createRoot} from 'react-dom/client';import {flushSync} from 'react-dom';import Hero from './src/react/components/Hero.jsx';const root=createRoot(document.getElementById('sg-view'));const items=[{id:'one',type:'movie',name:'First story'},{id:'two',type:'series',name:'Second story'},{id:'three',type:'movie',name:'Third story'}];window.saveCalls=[];window.notices=[];window.deferSave=false;window.failSave=false;const api={mobile:true,savedTitles:async()=>new Set(['movie:one']),saveTitle:(meta,saved)=>{window.saveCalls.push({id:meta.id,saved});if(window.failSave)return Promise.reject(new Error('Offline'));return window.deferSave?new Promise(resolve=>{window.finishSave=resolve;}):Promise.resolve();},notify:message=>window.notices.push(message),safeURL:()=>'',detailHash:(type,id)=>'#/detail/'+type+'/'+id,resolveMeta:(type,id,meta)=>Promise.resolve({meta})};window.mountHero=()=>flushSync(()=>root.render(<Hero items={items} api={api}/>));window.unmountHero=()=>root.unmount();mountHero();`,resolveDir:root,loader:'jsx'},bundle:true,jsx:'automatic',outfile:path.join(temp,'hero.js'),define:{'process.env.NODE_ENV':'"production"'}});
  const browser=await chromium.launch({executablePath:process.env.CHROME_BIN,headless:true,args:['--no-sandbox']});
  try{
   const page=await browser.newPage({viewport:{width:390,height:844},hasTouch:true});const errors=[];page.on('pageerror',error=>errors.push(error.message));
@@ -15,6 +15,7 @@ const os=require('node:os');
   await page.setContent('<html data-sg-platform="mobile"><head><style>body{margin:0;background:#101014;color:white;font-family:Arial}.sg-react-hero{position:relative;height:500px}.sg-react-hero-copy{padding:100px 24px}.sg-carousel-controls{position:absolute;bottom:10px;display:flex}.sg-carousel-controls button{width:44px;height:44px}#sg-view{height:600px;overflow:auto}</style></head><body><button id="outside">Outside carousel</button><div id="app"><main id="sg-view"></main></div></body></html>');
   await page.addStyleTag({path:path.join(temp,'hero.css')});await page.addScriptTag({path:path.join(temp,'hero.js')});
   await page.getByRole('heading',{name:'First story'}).waitFor();
+  await page.waitForFunction(()=>document.querySelector('.sg-hero-save')?.getAttribute('aria-pressed')==='true');
   await page.clock.runFor(2200);
   const fraction=()=>page.locator('[data-current-timer]').evaluate(node=>Number(/scaleX\(([^)]+)/.exec(node.style.transform)?.[1]||0));
   assert.ok(await fraction()>.2,'Countdown advances during the current title');
@@ -36,6 +37,20 @@ const os=require('node:os');
   await swipe(100,5);await page.getByRole('heading',{name:'Third story'}).waitFor();
   await page.emulateMedia({reducedMotion:'reduce'});await page.locator('#outside').focus();await page.mouse.move(0,0);await page.clock.runFor(12000);await page.getByRole('heading',{name:'Third story'}).waitFor();
   assert.equal(await page.locator('.sg-react-hero-copy').evaluate(node=>getComputedStyle(node).animationName),'none');
+  await page.evaluate(()=>{window.deferSave=true;});
+  await page.getByRole('button',{name:'Add to My List: Third story',exact:true}).click();
+  assert.deepEqual(await page.evaluate(()=>window.saveCalls),[{id:'three',saved:true}]);
+  await page.getByRole('button',{name:'Previous featured title'}).click();
+  await page.getByRole('heading',{name:'Second story'}).waitFor();
+  await page.evaluate(()=>window.finishSave());
+  await page.waitForFunction(()=>!document.querySelector('.sg-hero-save').disabled);
+  assert.equal(await page.locator('.sg-hero-save').getAttribute('aria-pressed'),'false','A late save must not mark the newly selected title as saved');
+  await page.getByRole('button',{name:'Next featured title'}).click();
+  assert.equal(await page.locator('.sg-hero-save').getAttribute('aria-pressed'),'true','Saved membership follows the original title');
+  await page.evaluate(()=>{window.failSave=true;});
+  await page.getByRole('button',{name:'Remove from My List: Third story',exact:true}).click();
+  await page.waitForFunction(()=>window.notices.length===1);
+  assert.equal(await page.locator('.sg-hero-save').getAttribute('aria-pressed'),'true','Failed removals retain the saved state');
   await page.evaluate(()=>unmountHero());await page.clock.runFor(10000);assert.deepEqual(errors,[]);
   console.log('Hero countdown, pause/resume, rerender continuity, swipe direction, click suppression, reduced motion and unmount passed.');
  }finally{await browser.close();await fs.rm(temp,{recursive:true,force:true});}

@@ -3,7 +3,7 @@
 #app .sg-hero-premium .sg-hero-scene{position:absolute;inset:0;transform:translateX(var(--sg-swipe-x));transition:transform .42s cubic-bezier(.22,1,.36,1)}
 #app .sg-hero-premium .sg-react-hero-art{z-index:0;transform:scale(1.035);animation:none}
 #app .sg-hero-premium::after{display:none}
-#app .sg-hero-premium .sg-hero-shade{position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,#080808d9,transparent 85%),linear-gradient(0deg,var(--cinema-bg,#080808),transparent 70%)}
+#app .sg-hero-premium .sg-hero-shade{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,#080808d9,transparent 85%),linear-gradient(0deg,var(--cinema-bg,#080808),transparent 70%)}
 #app .sg-hero-premium .sg-react-hero-copy{z-index:2;animation:sg-premium-copy-in .42s cubic-bezier(.22,1,.36,1) both}
 #app .sg-hero-premium .sg-carousel-controls{z-index:4}
 @keyframes sg-premium-copy-in{from{opacity:0;transform:translateX(calc(var(--sg-slide-direction,1) * 16px))}to{opacity:1;transform:translateX(0)}}

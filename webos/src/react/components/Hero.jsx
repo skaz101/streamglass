@@ -1,5 +1,6 @@
 /* StreamGlass featured carousel. GPL-3.0-or-later. */
 import React,{useEffect,useRef,useState} from 'react';
+import {useMyList} from '../hooks/useMyList';
 import './hero.css';
 
 const DURATION=8000;
@@ -25,7 +26,7 @@ function Artwork({frames,ambient=false}){
   return <>{frames.previous?<img data-react-art="true" className={`${className} sg-hero-art-leaving`} src={frames.previous} alt="" referrerPolicy="no-referrer"/>:null}{frames.current?<img key={frames.current} data-react-art="true" className={`${className} sg-hero-art-entering`} src={frames.current} alt="" referrerPolicy="no-referrer"/>:null}</>;
 }
 function Icon({name}){
-  const paths={play:<path d="m9 5 11 7-11 7Z" fill="currentColor" stroke="none"/>,pause:<path d="M9 5v14M16 5v14"/>,previous:<path d="m15 5-7 7 7 7"/>,next:<path d="m9 5 7 7-7 7"/>,info:<><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/></>};
+  const paths={play:<path d="m9 5 11 7-11 7Z" fill="currentColor" stroke="none"/>,plus:<path d="M12 4v16M4 12h16"/>,check:<path d="m5 12 4 4L19 6"/>,pause:<path d="M9 5v14M16 5v14"/>,previous:<path d="m15 5-7 7 7 7"/>,next:<path d="m9 5 7 7-7 7"/>,info:<><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/></>};
   return <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
 function Logo({src,name}){
@@ -35,9 +36,10 @@ function Logo({src,name}){
 
 export default function Hero({items,api}){
   const [index,setIndex]=useState(0),[paused,setPaused]=useState(false),[preview,setPreview]=useState(null),[full,setFull]=useState(null);
+  const list=useMyList(api);
   const root=useRef(null),timer=useRef({elapsed:0,last:0}),gesture=useRef(null),suppressClick=useRef(0),hover=useRef(false),latest=useRef(null);
   const selected=index%Math.max(1,items.length),item=preview||items[selected],key=identity(item);
-  latest.current={items,paused,preview,selected};
+  latest.current={items,paused:paused||!!list.pending,preview,selected};
   const reset=()=>{timer.current.elapsed=0;timer.current.last=0;};
   const move=delta=>{root.current?.style.setProperty('--sg-slide-direction',delta<0?-1:1);reset();setPreview(null);setIndex(value=>(value+delta+items.length)%items.length);};
   useEffect(()=>{
@@ -114,9 +116,10 @@ export default function Hero({items,api}){
     onPointerUp={event=>finishGesture(event)} onPointerCancel={event=>finishGesture(event,true)}
     onClickCapture={event=>{if(performance.now()<suppressClick.current){event.preventDefault();event.stopPropagation();}}}>
     <div className="sg-hero-scene"><Artwork frames={frames}/><div className="sg-hero-shade"/>
+    {api.mobile?<a className="sg-hero-details" href={href} aria-label={`More info about ${meta.name}`}><span><Icon name="info"/></span></a>:null}
     <div key={key} className="sg-react-hero-copy"><span>{meta.type==='series'?'Series':'Movie'}</span><Logo src={logo} name={meta.name}/>
       <p>{(meta.genres||[]).slice(0,3).join(' · ')}{meta.imdbRating?' · IMDb '+meta.imdbRating:''}</p><p className="sg-hero-synopsis">{meta.description||'Find something worth watching.'}</p>
-      <div className="sg-react-hero-actions sg-mobile-hero-actions"><a className="sg-button sg-primary" href={href+(api.mobile?'?play=1':'')}><Icon name="play"/>{api.mobile?'Play':'Watch now'}</a><a className="sg-button" href={href}><Icon name="info"/>More info</a></div></div></div>
+      <div className="sg-react-hero-actions sg-mobile-hero-actions"><a className="sg-button sg-primary" href={href+(api.mobile?'?play=1':'')}><Icon name="play"/>{api.mobile?'Play':'Watch now'}</a>{api.mobile?<button type="button" className="sg-button sg-hero-save" disabled={list.loading||!!list.pending} aria-pressed={list.titles.has(key)} aria-busy={list.loading||list.pending===key} aria-label={list.error?'Retry My List':`${list.titles.has(key)?'Remove from':'Add to'} My List: ${meta.name}`} onClick={()=>list.toggle(meta)}><span className="sg-save-icon" key={String(list.titles.has(key))}><Icon name={list.titles.has(key)?'check':'plus'}/></span>{list.error?'Retry':'My List'}</button>:<a className="sg-button" href={href}><Icon name="info"/>More info</a>}</div></div></div>
     {items.length>1?<>
       <div className="sg-hero-timeline" role="progressbar" aria-label="Time until next featured title" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         {items.map((entry,position)=><span className="sg-hero-timer-track" data-state={position===selected?'current':position<selected?'complete':'next'} key={identity(entry)} aria-hidden="true"><i data-current-timer={position===selected?'true':undefined}/></span>)}

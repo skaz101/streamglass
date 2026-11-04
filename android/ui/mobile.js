@@ -37,6 +37,8 @@
     close:'<path d="m6 6 12 12M6 18 18 6"/>',
     back:'<path d="m14 5-7 7 7 7"/>',
     grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+    calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 11h18m-13 4h2m4 0h2"/>',
+    sort:'<path d="M4 6h12M4 12h8M4 18h4m11-9v12m-3-3 3 3 3-3"/>',
     settings:'<path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="#202020"/><circle cx="15" cy="17" r="3" fill="#202020"/>',
     addon:'<path d="M4 4h6a3 3 0 1 1 6 0h4v6a3 3 0 1 0 0 6v4h-6a3 3 0 1 0-6 0H4V4Z"/>'
   };
@@ -44,7 +46,7 @@
   const mark='<svg class="sg-mobile-mark" viewBox="0 0 32 32" aria-hidden="true"><path fill="currentColor" d="M7 4h18v6H13v4h10v14H5v-6h12v-4H7Z"/></svg>';
   const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
   const ease='cubic-bezier(.22,1,.36,1)';
-  let dialog=null,lastRoute=null,tabAnimation=null,account=null,snapshot=null,snapshotAnimation=null,lastHash=null,restoreScroll=null,scrollObserver=null,scrollTimer=null,screenSequence=0;
+  let dialog=null,lastRoute=null,tabAnimation=null,account=null,snapshot=null,snapshotAnimation=null,lastHash=null,restoreScroll=null,scrollObserver=null,scrollTimer=null,screenSequence=0,activeTab='board',activeTabHash='#/board';
   function finishDismiss(state,restore) {
     if(dialog!==state)return;
     dialog=null;
@@ -148,14 +150,22 @@
   function menu() {
     const signedIn=window.StreamGlassShell.state.signedIn;
     const overlay=doc.createElement('div');overlay.className='sg-mobile-overlay';
-    const links=[['account',signedIn?'Your account':'Sign in to Stremio','user'],['calendar','Release calendar','grid'],['discover','Browse all titles','grid'],['addons','Manage addons','addon'],['settings','App settings','settings']];
-    overlay.innerHTML='<section class="sg-mobile-sheet sg-menu-sheet" role="dialog" aria-modal="true" aria-labelledby="sg-menu-title" tabindex="-1">'+closeButton+'<div class="sg-menu-profile">'+icon('user')+'</div><h2 id="sg-menu-title">Your StreamGlass</h2><p>Your stories. Your way.</p><nav aria-label="Account and app">'+links.map(([route,label,glyph])=>'<a href="#/'+route+'">'+icon(glyph)+'<span>'+label+'</span><span aria-hidden="true">›</span></a>').join('')+'</nav><small>StreamGlass 0.7.2</small></section>';
+    const links=[['account',signedIn?'Your account':'Sign in to Stremio','user'],['calendar','Release calendar','calendar'],['discover','Browse all titles','grid'],['addons','Manage addons','addon'],['settings','App settings','settings']];
+    overlay.innerHTML='<section class="sg-mobile-sheet sg-menu-sheet" role="dialog" aria-modal="true" aria-labelledby="sg-menu-title" tabindex="-1">'+closeButton+'<div class="sg-menu-profile">'+icon('user')+'</div><h2 id="sg-menu-title">Your StreamGlass</h2><p>Your stories. Your way.</p><nav aria-label="Account and app">'+links.map(([route,label,glyph])=>'<a href="#/'+route+'">'+icon(glyph)+'<span>'+label+'</span><span aria-hidden="true">›</span></a>').join('')+'</nav><small>StreamGlass 0.7.3</small></section>';
     doc.querySelector('.sg-app').append(overlay);paintAccount();open(overlay,{remove:true});
   }
   function mount(root) {
-    root.querySelector('.sg-nav').outerHTML='<header class="sg-mobile-header"><a class="sg-mobile-brand" href="#/board" aria-label="StreamGlass Home">'+mark+'<span>STREAMGLASS</span></a><div class="sg-header-actions"><a class="sg-icon-button" href="#/discover" aria-label="Browse all titles">'+icon('grid')+'</a><button class="sg-icon-button sg-profile-button" id="sg-profile" aria-label="Open profile and settings">'+icon('user')+'</button></div></header>';
+    root.querySelector('.sg-nav').outerHTML='<header class="sg-mobile-header"><a class="sg-mobile-brand" href="#/board" aria-label="StreamGlass Home">'+mark+'<span>STREAMGLASS</span></a><a class="sg-header-back sg-icon-button" href="#/board" aria-label="Back to Home" hidden>'+icon('back')+'</a><span class="sg-header-context" hidden></span><div class="sg-header-actions"><a class="sg-icon-button sg-calendar-shortcut" href="#/calendar" aria-label="Release calendar">'+icon('calendar')+'</a><button class="sg-icon-button sg-profile-button" id="sg-profile" aria-label="Open profile and settings">'+icon('user')+'</button></div></header>';
     root.querySelector('.sg-app').insertAdjacentHTML('beforeend','<nav class="sg-bottom-nav" aria-label="Main navigation">'+[['board','Home','home'],['picks','For You','spark'],['search','Search','search'],['library','My List','list']].map(([route,label,glyph])=>'<a data-nav="'+route+'" href="#/'+route+'"'+(route==='search'?' class="sg-nav-search"':'')+'>'+icon(glyph)+'<span>'+label+'</span></a>').join('')+'</nav>');
     doc.getElementById('sg-profile').onclick=menu;
+    root.querySelector('.sg-bottom-nav').addEventListener('click',event=>{
+      const tab=event.target.closest('[data-nav]');if(!tab)return;
+      if(tab.dataset.nav===doc.body.dataset.dxRoute){
+        event.preventDefault();
+        doc.getElementById('sg-view').scrollTo({top:0,behavior:reducedMotion.matches?'instant':'smooth'});
+        if(tab.dataset.nav==='search')doc.getElementById('sg-search-input')?.focus({preventScroll:true});
+      }
+    });
     // Animate artwork when it is decoded, including cached and async catalog
     // images. No observer, scroll handler or retained animation per card.
     root.addEventListener('load',event=>{
@@ -184,13 +194,18 @@
     button.setAttribute('aria-label',(resumable?'Resume':'Play')+' — choose a stream');
     button.setAttribute('aria-haspopup','dialog');
     libraryChanged(inLibrary);
-    if(new URLSearchParams(location.hash.split('?')[1]).has('play')){
-      history.replaceState(null,'',location.hash.replace(/\?play=1$/,''));showStreams();
+    const [path,query]=location.hash.split('?'),params=new URLSearchParams(query);
+    if(params.has('play')){
+      params.delete('play');history.replaceState(null,'',path+(params.size?'?'+params:''));showStreams();
     }
   }
   function clearSnapshot(){if(snapshotAnimation)snapshotAnimation.cancel();snapshotAnimation=null;if(snapshot)snapshot.remove();snapshot=null;}
   function beforeScreenChanged(){
     screenSequence++;
+    if(['board','picks','search','library'].includes(lastRoute)){
+      const query=lastRoute==='search'?doc.getElementById('sg-search-input')?.value.trim():null;
+      activeTabHash=query!=null?'#/search'+(query?'?search='+encodeURIComponent(query):''):lastHash||'#/board';
+    }
     if(scrollObserver)scrollObserver.disconnect();clearTimeout(scrollTimer);scrollObserver=null;
     const previousView=doc.getElementById('sg-view');restoreScroll=lastHash===location.hash?previousView?.scrollTop:null;
     clearSnapshot();dismiss(false);
@@ -205,31 +220,59 @@
     return '<div class="sg-loading-surface" role="status"><span class="sg-loading-label">'+e(title)+'</span><div class="sg-loading-cards" aria-hidden="true">'+Array(6).fill('<i></i>').join('')+'</div>'+(subtitle?'<p>'+e(subtitle)+'</p>':'')+'</div>';
   }
   function libraryFilters(view){
-    for(const [id,label] of [['sg-library-type','Type'],['sg-library-sort','Sort by']]){
-      const select=view.querySelector('#'+id);if(!select||select.hidden)return;
-      const wrapper=select.parentElement,button=doc.createElement('button');button.type='button';button.className='sg-choice-trigger';button.setAttribute('aria-haspopup','dialog');
-      const selected=()=>select.selectedOptions[0]?.textContent||'';
-      button.innerHTML='<small>'+label+'</small><span></span>'+icon('back');button.querySelector('span').textContent=selected();
-      button.setAttribute('aria-label',label+': '+selected());
-      select.hidden=true;wrapper.replaceChildren(select,button);
-      button.onclick=()=>{
-        const overlay=doc.createElement('div');overlay.className='sg-mobile-overlay';
-        overlay.innerHTML='<section class="sg-mobile-sheet sg-choice-sheet" role="dialog" aria-modal="true" aria-labelledby="sg-choice-title" tabindex="-1">'+closeButton+'<h2 id="sg-choice-title"></h2><div class="sg-choice-options"></div></section>';
-        overlay.querySelector('h2').textContent=label;
-        for(const option of select.options){
-          const item=doc.createElement('button');item.type='button';item.className='sg-choice-option';item.textContent=option.textContent;item.setAttribute('aria-pressed',String(option.selected));
-          if(option.selected)item.insertAdjacentHTML('beforeend',icon('check'));
-          item.onclick=()=>{const value=option.value;dismiss(false);select.value=value;button.querySelector('span').textContent=selected();button.focus({preventScroll:true});select.dispatchEvent(new Event('change',{bubbles:true}));};
-          overlay.querySelector('.sg-choice-options').append(item);
-        }
-        doc.querySelector('.sg-app').append(overlay);open(overlay,{remove:true});
-      };
+    const type=view.querySelector('#sg-library-type'),sort=view.querySelector('#sg-library-sort');
+    if(!type||type.hidden)return;
+    const filterLabel=type.parentElement;type.hidden=true;filterLabel.replaceChildren(type);
+    const chips=doc.createElement('div');chips.className='sg-list-types';chips.setAttribute('role','group');chips.setAttribute('aria-label','Filter My List');
+    for(const option of type.options){
+      const chip=doc.createElement('button');chip.type='button';chip.className='sg-filter'+(option.selected?' selected':'');chip.textContent=option.textContent;chip.setAttribute('aria-pressed',String(option.selected));
+      chip.onclick=()=>{type.value=option.value;type.dispatchEvent(new Event('change',{bubbles:true}));};chips.append(chip);
     }
+    filterLabel.append(chips);
+    const wrapper=sort.parentElement,button=doc.createElement('button');button.type='button';button.className='sg-list-sort';button.setAttribute('aria-haspopup','dialog');
+    button.innerHTML=icon('sort')+'<span>Sort</span>';button.setAttribute('aria-label','Sort by: '+sort.selectedOptions[0]?.textContent);
+    sort.hidden=true;wrapper.replaceChildren(sort);wrapper.hidden=true;
+    const heading=view.querySelector('h1'),headingRow=doc.createElement('div');headingRow.className='sg-library-heading';heading.before(headingRow);headingRow.append(heading,button);
+    button.onclick=()=>{
+      let choice=null;const overlay=doc.createElement('div');overlay.className='sg-mobile-overlay';
+      overlay.innerHTML='<section class="sg-mobile-sheet sg-choice-sheet" role="dialog" aria-modal="true" aria-labelledby="sg-choice-title" tabindex="-1">'+closeButton+'<h2 id="sg-choice-title">Sort My List</h2><div class="sg-choice-options"></div></section>';
+      for(const option of sort.options){
+        const item=doc.createElement('button');item.type='button';item.className='sg-choice-option';item.textContent=option.textContent;item.setAttribute('aria-pressed',String(option.selected));
+        if(option.selected)item.insertAdjacentHTML('beforeend',icon('check'));
+        item.onclick=()=>{choice=option.value;dismiss();};overlay.querySelector('.sg-choice-options').append(item);
+      }
+      doc.querySelector('.sg-app').append(overlay);open(overlay,{remove:true,resolve:()=>{if(choice!==null&&sort.isConnected){sort.value=choice;sort.dispatchEvent(new Event('change',{bubbles:true}));}}});
+    };
+  }
+  function showHomeCategories(){
+    let target=null;const overlay=doc.createElement('div');overlay.className='sg-mobile-overlay';
+    overlay.innerHTML='<section class="sg-mobile-sheet sg-categories-sheet" role="dialog" aria-modal="true" aria-labelledby="sg-categories-title" tabindex="-1">'+closeButton+'<h2 id="sg-categories-title">Browse categories</h2><p>Jump to something you’re in the mood for.</p><div class="sg-category-options"></div><nav aria-label="More browsing options"><a href="#/discover">'+icon('grid')+'Browse addon catalogs</a><a href="#/settings">'+icon('settings')+'Choose Home categories</a></nav></section>';
+    const options=overlay.querySelector('.sg-category-options');
+    for(const heading of doc.querySelectorAll('#sg-home-rows .sg-row-heading h2')){
+      const button=doc.createElement('button');button.type='button';button.textContent=heading.textContent;button.onclick=()=>{target=heading;dismiss();};options.append(button);
+    }
+    if(!options.children.length)options.textContent='Your collections will appear here when Home has loaded.';
+    doc.querySelector('.sg-app').append(overlay);open(overlay,{remove:true,resolve:()=>{
+      if(!target?.isConnected)return;
+      target.tabIndex=-1;target.focus({preventScroll:true});target.scrollIntoView({block:'start',behavior:reducedMotion.matches?'instant':'smooth'});
+    }});
   }
   function screenChanged(route) {
     dismiss(false);
     const view=doc.getElementById('sg-view');
     const tabs=['board','picks','search','library'],index=tabs.indexOf(route),previous=tabs.indexOf(lastRoute);
+    if(index>=0){activeTab=route;activeTabHash=location.hash;}
+    const utility=index<0&&route!=='detail',header=doc.querySelector('.sg-mobile-header');
+    header.querySelector('.sg-mobile-brand').hidden=utility;
+    const back=header.querySelector('.sg-header-back'),context=header.querySelector('.sg-header-context');
+    back.hidden=!utility;context.hidden=!utility;
+    back.href=activeTabHash;back.setAttribute('aria-label','Back to '+({board:'Home',picks:'For You',search:'Search',library:'My List'}[activeTab]));
+    context.textContent={calendar:'Release calendar',discover:'Browse',settings:'Settings',account:'Account',addons:'Addons'}[route]||'';
+    header.querySelector('.sg-calendar-shortcut').hidden=utility;
+    doc.querySelectorAll('.sg-bottom-nav [data-nav]').forEach(tab=>{
+      const selected=tab.dataset.nav===activeTab;tab.classList.toggle('selected',selected);
+      if(selected)tab.setAttribute('aria-current','page');else tab.removeAttribute('aria-current');
+    });
     view.dataset.motion=route==='detail'?'forward':lastRoute==='detail'?'back':'tab';
     if(tabAnimation){tabAnimation.cancel();tabAnimation=null;}
     if(index>=0){
@@ -250,15 +293,16 @@
     const heading=view.querySelector('.sg-page>h1');
     if(heading&&route==='library')heading.textContent='My List';
     if(heading&&route==='search'){
-      heading.textContent='Let’s find something good';
+      heading.textContent='Search';
       const form=view.querySelector('.sg-search-form'),input=form.querySelector('input'),submit=form.querySelector('button');
-      form.insertAdjacentHTML('afterbegin','<span class="sg-search-glyph">'+icon('search')+'</span>');
+      view.querySelector('.sg-page-intro')?.remove();
       input.placeholder='Search movies, series and more';input.setAttribute('enterkeyhint','search');
       submit.innerHTML=icon('search');submit.setAttribute('aria-label','Search');submit.title='Search';
+      form.prepend(submit);
       const clear=doc.createElement('button');clear.type='button';clear.className='sg-search-clear';clear.setAttribute('aria-label','Clear search');clear.innerHTML=icon('close');
       const update=()=>{clear.hidden=!input.value;};update();input.addEventListener('input',update);
       clear.onclick=()=>{input.value='';input.dispatchEvent(new Event('input',{bubbles:true}));input.focus({preventScroll:true});};
-      form.insertBefore(clear,submit);
+      form.append(clear);
     }
     if(route==='settings')appearance(view);
     if(route==='account'){
@@ -268,16 +312,15 @@
     }
     if(route!=='detail')return;
     const detail=view.querySelector('.sg-detail');if(!detail)return;
-    const back=detail.querySelector('.sg-back');back.innerHTML=icon('back');back.setAttribute('aria-label','Back to browsing');
-    const info=detail.querySelector('.sg-detail-info'),actions=info.querySelector('.sg-detail-actions');
-    info.insertBefore(actions,info.querySelector('.sg-detail-description'));
+    const detailBack=detail.querySelector('.sg-back');detailBack.innerHTML=icon('back');detailBack.setAttribute('aria-label','Back to browsing');
     const panel=detail.querySelector('.sg-stream-panel'),overlay=doc.createElement('div');
     overlay.className='sg-mobile-overlay sg-stream-sheet';overlay.hidden=true;
     panel.classList.add('sg-mobile-sheet');panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-labelledby','sg-stream-heading');panel.setAttribute('tabindex','-1');
     panel.insertAdjacentHTML('afterbegin','<span class="sg-sheet-handle" aria-hidden="true"></span>'+closeButton);
     overlay.append(panel);detail.append(overlay);
   }
-  window.StreamGlassMobile={mobile:true,mount,renderHero,renderPending,beforeScreenChanged,screenChanged,detailReady,libraryChanged,showStreams,showMessage,dismiss,
+  window.StreamGlassMobile={mobile:true,mount,renderHero,renderPending,beforeScreenChanged,screenChanged,detailReady,libraryChanged,showStreams,showMessage,dismiss,showHomeCategories,
+    backRoute(){return ['calendar','discover','settings','account','addons'].includes(doc.body.dataset.dxRoute)?activeTabHash:null;},
     rowTitle(title){return title.replace(/\s·\s(movie|series|anime)$/i,(suffix,type)=>{const label=type==='movie'?'movies':type,base=title.slice(0,-suffix.length);return base.toLowerCase().endsWith(label)?'':' '+label;});},
     accountChanged(signedIn,user){account=signedIn?{email:typeof user?.email==='string'?user.email:'',avatar:typeof user?.avatar==='string'?user.avatar:''}:null;paintAccount();}
   };

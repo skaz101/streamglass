@@ -85,10 +85,31 @@ try {
     assert.ok(geometry.artGap>=19.5,'Billboard has breathing room below the filters');
     assert.equal(geometry.background,'rgb(8, 8, 8)','Default chrome is neutral black');
     assert.equal(geometry.decoration,'none','No fixed blue or purple page wash');
-    const actions=await page.locator('.sg-react-hero-actions a').evaluateAll(nodes=>nodes.map(node=>node.getBoundingClientRect().height));
+    const actions=await page.locator('.sg-react-hero-actions .sg-button').evaluateAll(nodes=>nodes.map(node=>node.getBoundingClientRect().height));
     assert.ok(Math.abs(actions[0]-actions[1])<1,'Hero action buttons stay on one aligned line, including narrow phones');
   };
   await assertHomeSpacing();
+  await page.getByRole('button',{name:'Pause featured slideshow'}).tap();
+  const featuredHash=await page.locator('.sg-hero-details').getAttribute('href');
+  await page.locator('.sg-hero-save').tap();
+  await page.waitForFunction(()=>document.querySelector('.sg-hero-save')?.getAttribute('aria-pressed')==='true');
+  await page.locator('[data-nav="library"]').tap();
+  await page.locator('#sg-library-grid .sg-card').filter({hasText:'The Last Horizon'}).waitFor();
+  assert.ok((await page.locator('#sg-library-grid .sg-card').getAttribute('href')).startsWith(featuredHash),'The featured save uses the real core library');
+  await page.locator('[data-nav="board"]').tap();
+  await page.waitForFunction(()=>document.querySelector('.sg-hero-save')?.getAttribute('aria-pressed')==='true');
+  await page.locator('.sg-hero-save').tap();
+  await page.waitForFunction(()=>document.querySelector('.sg-hero-save')?.getAttribute('aria-pressed')==='false');
+  await page.getByRole('button',{name:'Categories',exact:true}).tap();
+  await page.getByRole('dialog',{name:'Browse categories'}).waitFor();
+  await screenshot('phone-categories.png');
+  const collection=await page.locator('.sg-category-options button').last().textContent();
+  await page.locator('.sg-category-options button').last().tap();
+  await page.locator('.sg-categories-sheet').waitFor({state:'detached'});
+  await page.waitForFunction(title=>document.activeElement?.textContent===title,collection);
+  await page.waitForFunction(()=>document.getElementById('sg-view').scrollTop>200);
+  await page.locator('[data-nav="board"]').tap();
+  await page.waitForFunction(()=>document.getElementById('sg-view').scrollTop===0);
   await page.locator('a[href="#/calendar"]').first().tap();
   await page.getByRole('heading',{name:'Your release calendar'}).waitFor();
   await page.waitForFunction(()=>!document.querySelector('.sg-calendar-note')?.textContent.includes('Checking release dates'));
@@ -101,8 +122,8 @@ try {
   await page.evaluate(()=>document.getElementById('sg-view').scrollTop=0);
   assert.ok(await page.evaluate(()=>document.getElementById('app').scrollWidth<=innerWidth),'No phone-wide horizontal overflow');
   await page.locator('.sg-nav-search').evaluate(el=>el.click());
-  await page.waitForFunction(()=>document.querySelector('.search-content>h1')?.getAnimations().some(a=>a.playState==='running'));
-  const entrance=await page.locator('.search-content>h1').evaluate(el=>{
+  await page.waitForFunction(()=>document.querySelector('.search-content .sg-search-form')?.getAnimations().some(a=>a.playState==='running'));
+  const entrance=await page.locator('.search-content .sg-search-form').evaluate(el=>{
     const animation=el.getAnimations()[0];animation.pause();animation.currentTime=80;
     const style=getComputedStyle(el),result={opacity:Number(style.opacity),transform:style.transform};animation.finish();return result;
   });
@@ -189,6 +210,9 @@ try {
   await screenshot('phone-picks.png');
   await page.locator('.sg-recommendation').first().tap();await page.locator('[data-action="focus-streams"]').waitFor();
   await screenshot('phone-detail.png');
+  assert.equal(await page.locator('[data-nav="picks"]').getAttribute('aria-current'),'page','Opening details keeps the originating tab selected');
+  const detailLayout=await page.evaluate(()=>({play:document.querySelector('[data-action="focus-streams"]').getBoundingClientRect().bottom,descriptionTop:document.querySelector('.sg-detail-description').getBoundingClientRect().top,descriptionBottom:document.querySelector('.sg-detail-description').getBoundingClientRect().bottom,listTop:document.querySelector('#sg-library-toggle').getBoundingClientRect().top}));
+  assert.ok(detailLayout.play<detailLayout.descriptionTop&&detailLayout.listTop>detailLayout.descriptionBottom,'Play leads, My List is a compact secondary action after the synopsis');
   assert.equal(await page.evaluate(()=>StreamGlassAndroid.back()),true);
   await page.waitForFunction(()=>location.hash==='#/picks');
   for(const width of [320,390,800]){
@@ -210,10 +234,13 @@ try {
   assert.equal(await page.locator('.sg-stream-sheet').isVisible(),false);
   await page.locator('[data-nav="library"]').tap();
   await page.locator('#sg-library-grid .sg-card').first().waitFor();
-  assert.equal(await page.locator('.library-content>h1').textContent(),'My List');
+  assert.equal(await page.locator('.library-content h1').textContent(),'My List');
   await screenshot('phone-my-list.png');
-  await page.getByRole('button',{name:'Type: Everything',exact:true}).tap();
-  await page.locator('.sg-choice-option').filter({hasText:'Movies'}).tap();
+  await page.locator('.sg-calendar-shortcut').tap();
+  await page.getByRole('link',{name:'Back to My List',exact:true}).waitFor();
+  assert.equal(await page.evaluate(()=>StreamGlassAndroid.back()),true);
+  await page.waitForFunction(()=>location.hash==='#/library');
+  await page.getByRole('group',{name:'Filter My List'}).getByRole('button',{name:'Movies',exact:true}).tap();
   await page.waitForFunction(()=>new URLSearchParams(location.hash.split('?')[1]).get('type')==='movie');
   await page.getByRole('button',{name:'Sort by: Recently watched',exact:true}).tap();
   await page.locator('.sg-choice-option').filter({hasText:'Name'}).tap();

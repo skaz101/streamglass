@@ -142,6 +142,55 @@
 :root[data-sg-platform=mobile] #app .sg-theme-option{border-radius:8px;background:var(--cinema-panel)}
 :root[data-sg-platform=mobile] #app .sg-calendar-layout{gap:24px;margin-top:24px}
 :root[data-sg-platform=mobile] #app .sg-calendar-toolbar h2{font-size:18px}
+/* Put everyday actions where the thumb and the title already are. */
+:root[data-sg-platform=mobile] #app .sg-header-context{flex:1;font-size:18px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+:root[data-sg-platform=mobile] #app .sg-header-back{margin-left:-8px}
+:root[data-sg-platform=mobile] #app .sg-categories-trigger{margin-left:auto;gap:4px;background:transparent;border-color:transparent;padding-inline:8px}
+:root[data-sg-platform=mobile] #app .sg-categories-trigger svg{width:16px;height:16px}
+:root[data-sg-platform=mobile] #app .sg-hero-details{position:absolute;inset:0;z-index:2;border-radius:inherit}
+:root[data-sg-platform=mobile] #app .sg-hero-details:focus-visible{outline-offset:-4px!important}
+:root[data-sg-platform=mobile] #app .sg-hero-details>span{position:absolute;right:12px;top:12px;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:#101010b8;color:#fff}
+:root[data-sg-platform=mobile] #app .sg-hero-premium .sg-react-hero-copy{z-index:3;pointer-events:none}
+:root[data-sg-platform=mobile] #app .sg-react-hero-actions>*{pointer-events:auto}
+:root[data-sg-platform=mobile] #app .sg-hero-save:disabled{opacity:.75;cursor:wait}
+:root[data-sg-platform=mobile] #app .sg-save-icon{position:relative;display:block;animation:sg-save-confirm .25s cubic-bezier(.22,1,.36,1)}
+:root[data-sg-platform=mobile] #app .sg-hero-save[aria-busy=true] .sg-save-icon svg{opacity:0}
+:root[data-sg-platform=mobile] #app .sg-hero-save[aria-busy=true] .sg-save-icon:after{content:'';position:absolute;inset:2px;border:2px solid #ffffff40;border-top-color:#fff;border-radius:50%;animation:sg-spin .8s linear infinite}
+:root[data-sg-platform=mobile] #app .sg-categories-sheet{max-height:80dvh;padding-top:28px}
+:root[data-sg-platform=mobile] #app .sg-categories-sheet h2{font-size:24px;letter-spacing:-.5px;padding-right:36px;margin:4px 0 8px}
+:root[data-sg-platform=mobile] #app .sg-categories-sheet>p{font-size:13px;line-height:1.5;color:var(--cinema-muted);margin-bottom:16px}
+:root[data-sg-platform=mobile] #app .sg-category-options{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+:root[data-sg-platform=mobile] #app .sg-category-options button{min-height:52px;padding:12px;text-align:left;border:1px solid var(--cinema-line);border-radius:8px;background:#ffffff08;color:#fff;font-size:13px;line-height:1.35}
+:root[data-sg-platform=mobile] #app .sg-categories-sheet nav{display:grid;margin-top:20px;padding-top:12px;border-top:1px solid var(--cinema-line)}
+:root[data-sg-platform=mobile] #app .sg-categories-sheet nav a{display:flex;align-items:center;gap:12px;min-height:48px;font-size:14px}
+:root[data-sg-platform=mobile] #app .sg-row-heading h2,:root[data-sg-platform=mobile] #app .sg-episodes h2{scroll-margin-top:20px}
+:root[data-sg-platform=mobile] #app .sg-library-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}
+:root[data-sg-platform=mobile] #app .sg-library-heading h1{font-size:32px;line-height:1.1;font-weight:750;letter-spacing:-.045em;margin:0}
+:root[data-sg-platform=mobile] #app .sg-list-sort{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:64px;min-height:44px;padding:8px 0 8px 8px;background:transparent;color:#eee;border:0;font-size:13px}
+:root[data-sg-platform=mobile] #app .sg-list-sort svg{width:20px;height:20px}
+:root[data-sg-platform=mobile] #app .library-content .sg-filters{display:block;margin:0 0 24px}
+:root[data-sg-platform=mobile] #app .sg-list-types{display:flex;gap:8px;overflow-x:auto;padding:2px;scrollbar-width:none}
+:root[data-sg-platform=mobile] #app .sg-list-types .sg-filter{flex:none;min-height:44px;grid-column:auto}
+:root[data-sg-platform=mobile] #app .search-content>h1{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+:root[data-sg-platform=mobile] #app .search-content .sg-search-form{position:sticky;top:0;z-index:5;margin:0 0 20px;background:var(--cinema-panel);box-shadow:0 8px 12px var(--cinema-bg)}
+:root[data-sg-platform=mobile] #app .search-content .sg-search-form button{width:44px;min-height:48px}
+:root[data-sg-platform=mobile] #app .search-content .sg-search-form input{min-height:52px;padding-block:12px}
+:root[data-sg-platform=mobile] #app .sg-detail .sg-back{position:fixed;z-index:15}
+:root[data-sg-platform=mobile] #app .sg-detail-info>.sg-eyebrow{font-size:12px;letter-spacing:0;text-transform:none}
+:root[data-sg-platform=mobile] #app .sg-detail-actions{margin:20px 0 18px}
+:root[data-sg-platform=mobile] #app .sg-detail-actions>.sg-primary{min-height:48px}
+:root[data-sg-platform=mobile] #app .sg-title-tools{display:flex;align-items:start;gap:28px;margin:22px 0 4px}
+:root[data-sg-platform=mobile] #app .sg-title-tools>button,:root[data-sg-platform=mobile] #app .sg-title-tools #sg-library-toggle{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-width:64px;min-height:64px;padding:4px 6px;border:0;border-radius:6px;background:transparent;box-shadow:none;color:#eee;font-size:12px;font-weight:500}
+:root[data-sg-platform=mobile] #app .sg-title-tools svg{width:27px;height:27px}
+@keyframes sg-save-confirm{from{opacity:.45;transform:scale(.75)}to{opacity:1;transform:scale(1)}}
+@media(max-width:360px){
+ :root[data-sg-platform=mobile] #app .sg-home-filters{gap:6px}
+ :root[data-sg-platform=mobile] #app .sg-home-filters .sg-filter{padding-inline:10px;font-size:12px}
+ :root[data-sg-platform=mobile] #app .sg-home-filters .sg-categories-trigger{padding-inline:4px}
+}
+@media(prefers-reduced-motion:reduce){
+ :root[data-sg-platform=mobile] #app .sg-save-icon,:root[data-sg-platform=mobile] #app .sg-hero-save[aria-busy=true] .sg-save-icon:after{animation:none}
+}
 @media(min-width:600px){:root[data-sg-platform=mobile] #app .sg-react-hero{height:480px}:root[data-sg-platform=mobile] #app .sg-react-hero-copy{left:32px;max-width:440px;text-align:left}:root[data-sg-platform=mobile] #app .sg-react-hero-copy h1{margin-left:0;max-width:none}}
 @media(max-height:500px) and (orientation:landscape){
  :root[data-sg-platform=mobile] #app .sg-react-hero{height:220px;margin-bottom:12px}

@@ -29,7 +29,7 @@ const path=require('node:path');
   await page.evaluate(()=>{
    const entries=[{key:'fixture-movies',catalog:{name:'Fixture collection',type:'movie'},addon:{manifest:{name:'Fixture'}}}];
    window.addonLists=0;window.addonFetches=[];
-   window.testAPI={mobile:true,registerCard(){},safeURL(src){return src||'';},progressFraction(){return 0;},detailHash(type,id){return '#/detail/'+type+'/'+id;},catalogs(){window.addonLists++;return entries;},catalog(entry,extra,signal,refresh){window.addonFetches.push({key:entry.key,refresh});return Promise.resolve({metas:[{id:'tt9990001',type:'movie',name:'Only from my addon'}]});},continueWatching(){return Promise.resolve([]);},resolveMeta(type,id,fallback){return Promise.resolve({meta:fallback});}};
+   window.testAPI={mobile:true,savedTitles:async()=>new Set(),saveTitle:async()=>{},showHomeCategories(){},registerCard(){},safeURL(src){return src||'';},progressFraction(){return 0;},detailHash(type,id){return '#/detail/'+type+'/'+id;},catalogs(){window.addonLists++;return entries;},catalog(entry,extra,signal,refresh){window.addonFetches.push({key:entry.key,refresh});return Promise.resolve({metas:[{id:'tt9990001',type:'movie',name:'Only from my addon'}]});},continueWatching(){return Promise.resolve([]);},resolveMeta(type,id,fallback){return Promise.resolve({meta:fallback});}};
    window.mountTest=(route,query='')=>{const node=document.getElementById('sg-view');StreamGlassUI.unmount(node);node.scrollTop=0;StreamGlassUI.mount(node,{route,api:window.testAPI,params:new URLSearchParams(query)});};
    window.mountTest('board');
   });

@@ -173,6 +173,23 @@
   }
   const reactAPI={
     ...helpers,
+    notify,
+    showHomeCategories(){host().showHomeCategories?.();},
+    async savedTitles(signal){
+      const titles=new Set();let page=1;
+      while(!signal.aborted){
+        const state=await loadLibrary(null,'lastwatched',page++);
+        if(signal.aborted)throw new Error('Cancelled');
+        for(const item of state.catalog||[])titles.add((item.type||'movie')+':'+(item.id||item._id));
+        if(!state.selectable?.nextPage)return titles;
+      }
+      throw new Error('Cancelled');
+    },
+    async saveTitle(meta,saved){
+      await core.dispatch(ctxAction(saved?'AddToLibrary':'RemoveFromLibrary',saved?meta:meta.id||meta._id),'ctx');
+      recommendationSnapshot=null;
+      notify(saved?'Added to My List.':'Removed from My List.');
+    },
     refresh(){cache.clear();recommendationSnapshot=null;return render();},
     registerCard(meta){const id=meta.id||meta._id;cards.set((meta.type||'movie')+':'+id,meta);if(cards.size>800)cards.delete(cards.keys().next().value);},
     get mobile(){return !!host().mobile;},
@@ -294,9 +311,15 @@
     } catch(_) {if(epoch===current.token)status.innerHTML=empty('Catalog unavailable','The addon could not be reached.','catalog-more');}
     finally{current.busy=false;}
   }
-  async function loadLibrary(type=null,sort='lastwatched',page=1) {
-    await core.dispatch(loadAction('LibraryWithFilters',{request:{type,sort,page}}),'library');
-    return core.getState('library');
+  let libraryQuery=Promise.resolve();
+  function loadLibrary(type=null,sort='lastwatched',page=1) {
+    // The core has one library model. Keep each request and its snapshot paired
+    // when Home membership and a newly opened list request overlap.
+    const request=libraryQuery.catch(()=>{}).then(async()=>{
+      await core.dispatch(loadAction('LibraryWithFilters',{request:{type,sort,page}}),'library');
+      return core.getState('library');
+    });
+    libraryQuery=request;return request;
   }
   async function recommendations(token,params) {
     const engine=global.StreamGlassRecommendations;
@@ -585,13 +608,15 @@
     if(name==='library-more'){await core.dispatch({action:'LibraryWithFilters',args:{action:'LoadNextPage'}},'library');return renderLibrary(await core.getState('library'));}
     if(name==='streams-retry'&&currentDetail)return streams(currentDetail,currentDetail.videoId);
     if(name==='focus-streams'){if(host().showStreams){host().showStreams();return;}const target=doc.querySelector('#sg-streams button');if(target){target.focus();target.scrollIntoView({block:'nearest'});}return;}
-    if(name==='library-toggle'&&currentDetail){const detail=currentDetail;node.disabled=true;try{await core.dispatch(ctxAction(detail.inLibrary?'RemoveFromLibrary':'AddToLibrary',detail.inLibrary?detail.id:detail.meta),'ctx');detail.inLibrary=!detail.inLibrary;node.textContent=detail.inLibrary?'✓ In Library':'+ Add to Library';if(host().libraryChanged)host().libraryChanged(detail.inLibrary);notify(detail.inLibrary?'Added to your library.':'Removed from your library.');}finally{node.disabled=false;}return;}
+    if(name==='show-episodes'){const target=doc.querySelector('.sg-episodes h2');if(target){target.tabIndex=-1;target.focus({preventScroll:true});target.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}return;}
+    if(name==='library-toggle'&&currentDetail){const detail=currentDetail;node.disabled=true;try{await core.dispatch(ctxAction(detail.inLibrary?'RemoveFromLibrary':'AddToLibrary',detail.inLibrary?detail.id:detail.meta),'ctx');detail.inLibrary=!detail.inLibrary;recommendationSnapshot=null;node.textContent=detail.inLibrary?'✓ In Library':'+ Add to Library';if(host().libraryChanged)host().libraryChanged(detail.inLibrary);notify(host().mobile?(detail.inLibrary?'Added to My List.':'Removed from My List.'):(detail.inLibrary?'Added to your library.':'Removed from your library.'));}finally{node.disabled=false;}return;}
   }
   function back() {
     if(pendingPlayback){++epoch;location.hash='#/board';return true;}
     const parsed=parseHash(location.hash);
     if(parsed.route==='board'||!parsed.route)return false;
     if(parsed.route==='detail'||parsed.route==='metadetails'){location.hash=detailOrigin;return true;}
+    const destination=host().backRoute?.();if(destination){location.hash=destination;return true;}
     location.hash='#/board';return true;
   }
   async function start() {
@@ -657,7 +682,7 @@
     doc.addEventListener('keydown',()=>{interaction++;},true);
     doc.addEventListener('pointerdown',()=>{interaction++;},true);
     global.addEventListener('hashchange',render);
-    await core.init({appVersion:'0.7.2',shellVersion:'webos25'});global.core=core;global.services={core};
+    await core.init({appVersion:'0.7.3',shellVersion:'webos25'});global.core=core;global.services={core};
     core.on('event', event => {
       if (!event) return;
       const addonsChanged=/^(AddonsPulledFromAPI|AddonInstalled|AddonUninstalled|AddonUpgraded|UserLoggedOut)$/.test(event.event||'');
