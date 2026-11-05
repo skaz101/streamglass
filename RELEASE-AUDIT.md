@@ -1,5 +1,43 @@
 # StreamGlass release audit
 
+## Published installer build 0.7.3 — 2026-11-05 UTC
+
+Validated runtime source: `39e7cdb899d3bfcd439c09319123d2bdd12e6eaf`.
+[Run 41931755034](https://github.com/skaz101/streamglass/actions/runs/41931755034)
+passed 49 unit tests, all browser suites, TV packaging, Android debug/release
+builds, JVM tests, lint and Android 35 native-player instrumentation. The Android
+job passed on attempt 2 after its first runner's slow package download was
+cancelled; application source did not change between attempts.
+
+The Android layout now groups Play and My List on featured titles, opens Home
+collections in a Categories sheet, puts Calendar in the header, and separates
+primary playback from compact title actions. My List uses type chips and a
+Sort control beside its heading. Search keeps its field available above results.
+Details retain the originating tab; utility pages return to that tab and filters.
+
+Browser checks cover real-core saves/removals from Home, membership after
+navigation, late saves during carousel changes, failed mutations, category jumps,
+tab reselection, list filters/sorting, contextual Back, and title-action order.
+Existing swipe, countdown, refresh failure/recovery, account, playback, focus,
+reduced-motion and TV remote checks passed. Reviewed live-art Home on phone/TV,
+320/390/800px layouts, landscape, categories, search, list, details and episodes.
+The frontend-design and React performance skills, Context7 documentation and
+shadcn audit MCP informed the work; visual checks used installed Playwright.
+
+- Android: `com.streamglass.mobile`, version 0.7.3, code 703, release build.
+- APK: 8,286,128 bytes; SHA-256
+  `daaa8f4c72f9300251a50dce9ec243ba05eec08db39421e1117ddba1833bf0aa`.
+- V2/V3 signatures verified; original certificate SHA-256 retained:
+  `167c739ded0846e2e7e31884cef42ec58d1154e1145740c1a6ced15d4f9f3ead`.
+- LG IPK: `com.streamglass.tv`, version 0.7.3; 3,221,526 bytes; SHA-256
+  `fe81fe8330f3178dbded00618120d5c7e29d0df0e3367b031970165d3e4df8a9`.
+- Signed APK ZIP entries match the unsigned CI artifact byte-for-byte. Both
+  installers' runtime bundles, styles and adapters match the source build.
+  The APK is not debuggable and excludes native test media.
+- The release tag adds only this audit after the validated runtime commit.
+  The source archive excludes signing keys. Physical-phone frame pacing has
+  not been measured; the automated checks do not establish device-wide FPS.
+
 ## Curated Home and motion — included in 0.7.1
 
 Curated Home defaults to Cinemeta Featured/Top, Streaming Catalogs Netflix/HBO
