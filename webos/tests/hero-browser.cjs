@@ -83,11 +83,13 @@ const os=require('node:os');
   releaseArtwork();await page.getByRole('heading',{name:'Artwork two'}).waitFor();
   assert.match(await page.locator('.sg-primary').getAttribute('href'),/art-two\?play=1$/);
   assert.ok(await page.locator('.sg-react-hero-art.sg-hero-art-entering').evaluate(node=>node.src.endsWith('/two.svg')));
+  assert.equal(await page.locator('.sg-react-hero-art.sg-hero-art-entering').evaluate(node=>getComputedStyle(node).willChange),'auto','TV artwork promotion does not affect Android');
+  assert.equal(await page.locator('.sg-hero-art-warming').count(),0,'Android does not allocate TV prewarm artwork');
   await page.evaluate(()=>unmountHero());await page.clock.runFor(10000);assert.deepEqual(errors,[]);
   // Real-time TV check: countdown is visibly progressing on the compositor and
   // the hero does not schedule a recurring JavaScript animation-frame loop.
   const tv=await browser.newPage({viewport:{width:1920,height:1080}});
-  await tv.setContent('<html><head><style>body{margin:0;background:#080808;color:#fff}.sg-react-hero{position:relative;isolation:isolate;overflow:hidden}#sg-view{height:900px;overflow:auto}</style></head><body><div id="app"><main id="sg-view"></main></div></body></html>');
+  await tv.setContent('<html><head><style>body{margin:0;background:#080808;color:#fff}.sg-react-hero{position:relative;isolation:isolate;overflow:hidden}.sg-react-hero-art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.sg-carousel-controls{position:absolute;bottom:20px;right:0;display:flex}#sg-view{height:900px;overflow:auto}</style></head><body><div id="app"><main id="sg-view"></main></div></body></html>');
   await tv.evaluate(()=>{window.heroFrames=0;const raf=window.requestAnimationFrame;window.requestAnimationFrame=fn=>{window.heroFrames++;return raf.call(window,fn);};});
   await tv.addStyleTag({path:path.join(temp,'hero.css')});await tv.addScriptTag({path:path.join(temp,'hero.js')});
   await tv.evaluate(()=>setHeroPlatform(false));
@@ -98,6 +100,75 @@ const os=require('node:os');
   await tv.locator('.sg-primary').focus();
   await tv.waitForFunction(()=>document.querySelector('.sg-hero-premium').dataset.slideshow==='paused');
   assert.equal(await tv.locator('[data-current-timer]').evaluate(node=>node.getAnimations().filter(animation=>animation.playState==='running').length),0);
+  assert.equal(await tv.locator('.sg-hero-scene').evaluate(node=>getComputedStyle(node).transform),'none','TV scene container does not create a blanket transform layer');
+  // Keep the existing decoded image beneath one incoming fade. Pause that fade
+  // to simulate a delayed presentation frame: wall time must not remove its base.
+  let releaseSlowLogo;const slowLogo=new Promise(resolve=>{releaseSlowLogo=resolve;});
+  await tv.route('https://transition.invalid/**',async route=>{
+    const url=route.request().url();
+    if(url.endsWith('/failed-logo.svg')){await route.fulfill({status:404,body:'Missing logo'});return;}
+    if(url.endsWith('/slow-logo.svg'))await slowLogo;
+    await route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720"><rect width="1280" height="720" fill="#88502e"/></svg>'});
+  });
+  await tv.evaluate(()=>replaceHeroItems([{id:'frame-one',type:'movie',name:'Frame one',background:'https://transition.invalid/one.svg'},{id:'frame-two',type:'movie',name:'Frame two',background:'https://transition.invalid/two.svg'},{id:'frame-three',type:'movie',name:'Frame three',background:'https://transition.invalid/three.svg'}]));
+  await tv.getByRole('heading',{name:'Frame one'}).waitFor();
+  await tv.waitForFunction(()=>document.querySelector('.sg-hero-art-warming')?.complete&&document.querySelector('.sg-hero-art-warming').naturalWidth>0);
+  await tv.evaluate(()=>{window.originalArtwork=document.querySelector('.sg-react-hero-art.sg-hero-art-entering');window.warmedArtwork=document.querySelector('.sg-hero-art-warming');window.originalPlay=document.querySelector('.sg-primary');});
+  assert.equal(await tv.locator('.sg-react-hero-art').count(),2,'TV keeps only current and one next artwork while settled');
+  assert.equal(await tv.locator('.sg-hero-art-warming').getAttribute('aria-hidden'),'true');
+  assert.ok(await tv.locator('.sg-hero-art-warming').evaluate(node=>{const alpha=Number(getComputedStyle(node).opacity);return alpha>0&&alpha<.01;}),'Next artwork is paintable without a visible overlay');
+  const warmCountdown=await tv.getByRole('progressbar').getAttribute('aria-valuenow'),warmFrames=await tv.evaluate(()=>heroFrames);
+  await tv.waitForTimeout(80);
+  assert.equal(await tv.evaluate(()=>heroFrames),warmFrames,'Mounted prewarm artwork schedules no animation-frame loop');
+  assert.equal(await tv.getByRole('progressbar').getAttribute('aria-valuenow'),warmCountdown,'Warming never advances a paused slideshow');
+  const holdFade=await tv.addStyleTag({content:'.sg-react-hero-art.sg-hero-art-entering{animation-play-state:paused!important}'});
+  await tv.getByRole('button',{name:'Next featured title'}).click();
+  assert.equal(await tv.evaluate(()=>warmedArtwork.isConnected),true,'Requesting the next title does not discard its warm image');
+  await tv.getByRole('heading',{name:'Frame two'}).waitFor();
+  assert.equal(await tv.evaluate(()=>warmedArtwork===document.querySelector('.sg-react-hero-art.sg-hero-art-entering')),true,'The prepainted node becomes incoming without replacement');
+  assert.equal(await tv.evaluate(()=>originalArtwork===document.querySelector('.sg-react-hero-art.sg-hero-art-leaving')),true,'Outgoing artwork keeps its decoded DOM element');
+  assert.equal(await tv.evaluate(()=>getComputedStyle(originalArtwork).opacity),'1','Opaque outgoing artwork avoids the dip through black');
+  assert.deepEqual(await tv.locator('.sg-react-hero-art').evaluateAll(nodes=>nodes.map(node=>getComputedStyle(node).willChange)),['opacity','opacity'],'Only the two transition artwork elements stay compositor-ready');
+  await tv.waitForTimeout(550);
+  assert.equal(await tv.evaluate(()=>originalArtwork.isConnected),true,'Old artwork remains until the visual fade finishes');
+  await tv.getByRole('button',{name:'Next featured title'}).click();
+  await tv.waitForTimeout(80);
+  assert.equal(await tv.locator('.sg-react-hero-art').count(),2,'Rapid advance stays within two artwork layers');
+  await tv.getByRole('heading',{name:'Frame two'}).waitFor();
+  await holdFade.evaluate(node=>node.remove());
+  await tv.getByRole('heading',{name:'Frame three'}).waitFor();
+  await tv.waitForFunction(()=>!document.querySelector('.sg-react-hero-art.sg-hero-art-leaving'));
+  assert.equal(await tv.evaluate(()=>originalArtwork.isConnected),false);
+  await tv.waitForFunction(()=>document.querySelector('.sg-hero-art-warming')?.complete&&document.querySelector('.sg-hero-art-warming').naturalWidth>0);
+  assert.equal(await tv.locator('.sg-react-hero-art').count(),2,'Settled TV keeps one current and one next promoted image');
+  assert.equal(await tv.locator('.sg-react-hero-art.sg-hero-art-entering').evaluate(node=>getComputedStyle(node).willChange),'opacity');
+  assert.equal(await tv.evaluate(()=>originalPlay===document.querySelector('.sg-primary')),true,'Scene changes preserve the primary action element');
+  const tvMedia=await tv.context().newCDPSession(tv);
+  await tvMedia.send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-transparency',value:'reduce'}]});
+  await tv.waitForFunction(()=>!document.querySelector('.sg-hero-art-warming'));
+  await tv.getByRole('heading',{name:'Frame three'}).waitFor();
+  assert.equal(await tv.locator('.sg-react-hero-art').count(),1,'Reduced transparency disables the near-transparent next image');
+  await tvMedia.send('Emulation.setEmulatedMedia',{features:[]});
+  await tv.waitForFunction(()=>!!document.querySelector('.sg-hero-art-warming'));
+
+  // Logo loading has a bounded budget; a slow or failed logo never blocks Play.
+  await tv.evaluate(()=>replaceHeroItems([{id:'slow-logo',type:'movie',name:'Slow logo title',background:'https://transition.invalid/four.svg',logo:'https://transition.invalid/slow-logo.svg'}]));
+  await tv.getByRole('heading',{name:'Slow logo title'}).waitFor({timeout:2000});
+  assert.match(await tv.locator('.sg-primary').getAttribute('href'),/slow-logo\?play=1$/);
+  assert.equal(await tv.locator('.sg-hero-title-ready').count(),0);
+  const fallbackAction=await tv.locator('.sg-primary').boundingBox();
+  releaseSlowLogo();await tv.locator('.sg-hero-title-ready').waitFor();
+  assert.equal((await tv.locator('.sg-primary').boundingBox()).y,fallbackAction.y,'Late logo decoding preserves the action location');
+  await tv.evaluate(()=>replaceHeroItems([{id:'failed-logo',type:'movie',name:'Missing logo title',background:'https://transition.invalid/five.svg',logo:'https://transition.invalid/failed-logo.svg'}]));
+  await tv.getByRole('heading',{name:'Missing logo title'}).waitFor({timeout:2000});
+  assert.equal(await tv.locator('.sg-react-hero-logo').count(),0);
+  assert.match(await tv.locator('.sg-primary').getAttribute('href'),/failed-logo\?play=1$/);
+  await tv.emulateMedia({reducedMotion:'reduce'});
+  await tv.evaluate(()=>replaceHeroItems([{id:'reduced',type:'movie',name:'Still artwork',background:'https://transition.invalid/six.svg'}]));
+  await tv.getByRole('heading',{name:'Still artwork'}).waitFor();
+  await tv.waitForFunction(()=>document.querySelectorAll('.sg-react-hero-art').length===1);
+  assert.equal(await tv.locator('.sg-hero-story').evaluate(node=>getComputedStyle(node).animationName),'none');
+  assert.equal(await tv.locator('.sg-hero-art-warming').count(),0,'Reduced motion disables speculative artwork');
   await tv.close();
   // A transparent logo must be readable on small phones without moving Play
   // when its network request finishes.
@@ -128,6 +199,6 @@ const os=require('node:os');
     assert.equal(await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'Phone title creates no horizontal overflow');
     await phone.close();
   }
-  console.log('Hero clock, offscreen/hidden pause, stable identity, decoded scene handoff, swipe, saved state, TV compositor countdown (zero JS rAF),390/320px mobile logo layout stability, reduced motion and unmount passed.');
+  console.log('Hero clock, offscreen/hidden pause, stable identity, decoded scene handoff, swipe, saved state, TV compositor countdown (zero JS rAF), retained artwork layers, bounded TV-only promotion and prewarming, frame-driven fade cleanup, bounded logo loading,390/320px mobile logo layout stability, reduced motion and unmount passed.');
  }finally{await browser.close();await fs.rm(temp,{recursive:true,force:true});}
 })().catch(error=>{console.error(error);process.exitCode=1;});

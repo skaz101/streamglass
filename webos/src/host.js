@@ -1,7 +1,7 @@
 /* StreamGlass TV webOS adapter. Modified 2026-10-30. GPL-3.0-or-later. */
 (function () {
   'use strict';
-  const VERSION = '0.8.0';
+  const VERSION = '0.8.1';
   const APP_ID = 'com.streamglass.tv';
   const events = [];
   // Deliberately allow only numeric/boolean diagnostics. Never record account data,
@@ -186,16 +186,19 @@
     if (!next || !next.isConnected || next.disabled || next.hidden) return false;
     const rail=next.closest('.sg-cards');
     const view=document.getElementById('sg-view');
+    // The featured scene and its controls are one destination. Keeping only the
+    // Play button visible leaves the title/artwork clipped after row browsing.
+    const returnToTop=!!view&&!!next.closest('.sg-hero,.sg-home-filters,.sg-nav');
     // Batch geometry before focus: focusin updates the row counter and preview,
     // and reading layout afterward would force a second layout on every key.
     // Insets also reserve room for the card's focused outline and scale.
     const box=next.getBoundingClientRect();
     const bounds=rail&&rail.getBoundingClientRect();
     const area=view&&view.contains(next)&&!next.closest('#sg-streams')?view.getBoundingClientRect():null;
-    const left=rail?rail.scrollLeft:0,top=area?view.scrollTop:0;
+    const left=rail?rail.scrollLeft:0,top=(area||returnToTop)?view.scrollTop:0;
     const dx=bounds?(box.right>bounds.right-18?box.right-bounds.right+18:box.left<bounds.left+18?box.left-bounds.left-18:0):0;
-    const dy=area?(box.bottom>area.bottom-24?box.bottom-area.bottom+24:box.top<area.top+24?box.top-area.top-24:0):0;
-    const moveRail=rail&&(dx||scrolling.has(rail)),moveView=area&&(Math.abs(dy)>1||scrolling.has(view));
+    const dy=returnToTop?-top:area?(box.bottom>area.bottom-24?box.bottom-area.bottom+24:box.top<area.top+24?box.top-area.top-24:0):0;
+    const moveRail=rail&&(dx||scrolling.has(rail)),moveView=(area||returnToTop)&&(Math.abs(dy)>1||scrolling.has(view));
     next.focus({preventScroll:true});
     if(rail){
       rowFocus.set(rail,next);
@@ -204,7 +207,7 @@
       if(moveRail)scrollTo(rail,{left:left+dx});
     }
     if(moveView)scrollTo(view,{top:top+dy});
-    else if(!area&&!rail)next.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});
+    else if(!area&&!rail&&!returnToTop)next.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});
     return true;
   }
   function rememberedCard(rail) {
@@ -237,6 +240,14 @@
         if(last&&last.isConnected&&view.contains(last)&&visible(last))return focusTarget(last);
         return focusTarget(view&&view.querySelector('.sg-hero .sg-primary,button:not(:disabled),a[href],input,select'));
       }
+    }
+    const filterStrip=!dialog&&current&&current.closest('.sg-home-filters');
+    if(filterStrip){
+      const filters=[...filterStrip.querySelectorAll('a[href],button')].filter(visible);
+      if(key==='ArrowLeft'||key==='ArrowRight')focusTarget(filters[filters.indexOf(current)+(key==='ArrowRight'?1:-1)]);
+      else if(key==='ArrowUp')focusTarget(navTarget());
+      else if(key==='ArrowDown')focusTarget(document.querySelector('#sg-view .sg-hero .sg-primary,#sg-view .sg-cards .sg-card'));
+      return true;
     }
     const streamList=!dialog&&current&&current.closest('#sg-streams');
     if(streamList){
@@ -281,7 +292,11 @@
         const first=document.querySelector('#sg-view .sg-cards');
         return first?focusTarget(rememberedCard(first)):true;
       }
-      if(key==='ArrowUp')return focusTarget(navTarget());
+      if(key==='ArrowUp'){
+        const filters=[...document.querySelectorAll('#sg-view .sg-home-filters a[href],#sg-view .sg-home-filters button')].filter(visible);
+        const selected=filters.find(filter=>filter.classList.contains('selected')||filter.getAttribute('aria-current')==='page');
+        return focusTarget(selected||filters[0]||navTarget());
+      }
     }
     const grid=!dialog&&current&&current.closest('.sg-grid');
     if(grid&&current.classList.contains('sg-card')){

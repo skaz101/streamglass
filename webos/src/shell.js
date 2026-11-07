@@ -737,7 +737,7 @@
     const cancelPendingPlayback=()=>{if(!host().mobile)playbackGeneration++;};
     doc.addEventListener('visibilitychange',()=>{if(doc.hidden){cancelPendingPlayback();discardHome();}});
     global.addEventListener('pagehide',cancelPendingPlayback);
-    await core.init({appVersion:'0.8.0',shellVersion:'webos25'});global.core=core;global.services={core};
+    await core.init({appVersion:'0.8.1',shellVersion:'webos25'});global.core=core;global.services={core};
     core.on('event', event => {
       if (!event) return;
       const addonsChanged=/^(AddonsPulledFromAPI|AddonInstalled|AddonUninstalled|AddonUpgraded|UserLoggedOut)$/.test(event.event||'');

@@ -7,10 +7,11 @@ html,body{font-family:Inter,Arial,sans-serif;background:#080808}
  * Black #080808, raised #202020, focus #f5f5f5, secondary #b8b8b8,
  * accent #e50914. Inter for navigation and reading; title logos retain identity.
  * One featured scene + a complete landscape rail in the first viewport.
- * No animated blur, background video, per-card entrance cascade or permanent layers.
+ * No animated blur, background video or per-card entrance cascade.
+ * Only the bounded hero artwork layers stay ready for transitions.
  * GPL-3.0-or-later. */
 :root:not([data-sg-platform=mobile]){--dx-gutter:4vw;--dx-nav-h:96px;--sg-tv-card-width:calc((100vw - 8vw - 80px)/5)}
-:root:not([data-sg-platform=mobile]) #app .sg-nav.horizontal-nav-bar{height:var(--dx-nav-h);gap:22px;background:#080808;border:0;padding-inline:var(--dx-gutter)}
+:root:not([data-sg-platform=mobile]) #app .sg-nav.horizontal-nav-bar{height:var(--dx-nav-h);gap:22px;background:#080808;border:0;padding-inline:var(--dx-gutter);backdrop-filter:none;-webkit-backdrop-filter:none;contain:layout paint}
 :root:not([data-sg-platform=mobile]) #app .sg-nav .sg-brand{width:190px;min-width:190px;height:60px;margin-right:38px;justify-content:flex-start}
 :root:not([data-sg-platform=mobile]) #app .sg-nav .sg-brand::before{font-size:36px;letter-spacing:.02em}
 :root:not([data-sg-platform=mobile]) #app .sg-nav-links{gap:14px}
@@ -20,7 +21,7 @@ html,body{font-family:Inter,Arial,sans-serif;background:#080808}
 :root:not([data-sg-platform=mobile]) #app .sg-nav-search,:root:not([data-sg-platform=mobile]) #app .sg-nav-settings{display:flex;align-items:center;justify-content:center;width:54px;height:54px;border-radius:50%;flex-shrink:0}
 :root:not([data-sg-platform=mobile]) #app .sg-nav-settings{color:#b8b8b8}
 :root:not([data-sg-platform=mobile]) #app .sg-account-button{border:1px solid #ffffff30;background:transparent;border-radius:28px;min-height:52px;padding:10px 20px;font-size:20px}
-:root:not([data-sg-platform=mobile]) #app #sg-view{scrollbar-width:none;scroll-padding:30px;overscroll-behavior:contain}
+:root:not([data-sg-platform=mobile]) #app #sg-view{top:var(--dx-nav-h);scrollbar-width:none;scroll-padding:30px;overscroll-behavior:contain}
 :root:not([data-sg-platform=mobile]) #app #sg-view::-webkit-scrollbar{display:none}
 :root:not([data-sg-platform=mobile]) #app .sg-home-filters{top:12px;left:var(--dx-gutter);gap:10px;padding-top:12px;padding-bottom:12px}
 :root:not([data-sg-platform=mobile]) #app .sg-filter{min-height:44px;padding:9px 22px;border:1px solid #ffffff30;background:#08080850;backdrop-filter:none;border-radius:26px;font-size:19px}
@@ -95,3 +96,20 @@ html,body{font-family:Inter,Arial,sans-serif;background:#080808}
 /* Frame the backdrop to the right so a shallow TV billboard keeps faces in view. */
 :root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-react-hero-art{left:18%;width:82%;object-position:center 20%}
 :root:not([data-sg-platform=mobile]) #app .sg-nav-settings.selected{color:#fff;background:#ffffff12}
+/* A remote press gives immediate contrast, followed by one short focus response.
+ * Animate the small control, not its paint colors or the full-width header blur. */
+:root:not([data-sg-platform=mobile]) #app .sg-nav-links a,
+:root:not([data-sg-platform=mobile]) #app .sg-nav-search,
+:root:not([data-sg-platform=mobile]) #app .sg-nav-settings,
+:root:not([data-sg-platform=mobile]) #app .sg-account-button,
+:root:not([data-sg-platform=mobile]) #app .sg-home-filters .sg-filter{transform:scale(1);transition:transform 160ms cubic-bezier(.2,.8,.2,1)}
+:root:not([data-sg-platform=mobile]) #app .sg-nav-links a:focus,
+:root:not([data-sg-platform=mobile]) #app .sg-nav-search:focus,
+:root:not([data-sg-platform=mobile]) #app .sg-nav-settings:focus,
+:root:not([data-sg-platform=mobile]) #app .sg-account-button:focus,
+:root:not([data-sg-platform=mobile]) #app .sg-home-filters .sg-filter:focus{transform:scale(1.035)}
+@media(prefers-reduced-motion:reduce){
+ :root:not([data-sg-platform=mobile]) #app .sg-nav a,
+ :root:not([data-sg-platform=mobile]) #app .sg-nav button,
+ :root:not([data-sg-platform=mobile]) #app .sg-home-filters .sg-filter{transform:none!important;transition:none}
+}

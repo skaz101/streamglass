@@ -1,7 +1,7 @@
 /* One timed billboard, with compositor-only gestures and a continuous clock. */
 #app .sg-hero-premium{touch-action:pan-y pinch-zoom;--sg-swipe-x:0px}
 #app .sg-hero-premium .sg-hero-scene{position:absolute;inset:0;transform:translateX(var(--sg-swipe-x));transition:transform .42s cubic-bezier(.22,1,.36,1)}
-#app .sg-hero-premium .sg-react-hero-art{z-index:0;transform:scale(1.035);animation:none}
+#app .sg-hero-premium .sg-react-hero-art{pointer-events:none;z-index:0;transform:scale(1.035);animation:none}
 #app .sg-hero-premium::after{display:none}
 #app .sg-hero-premium .sg-hero-shade{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,#080808d9,transparent 85%),linear-gradient(0deg,var(--cinema-bg,#080808),transparent 70%)}
 #app .sg-hero-premium .sg-react-hero-copy{z-index:2;animation:sg-premium-copy-in .42s cubic-bezier(.22,1,.36,1) both}
@@ -65,3 +65,29 @@
 /* Reserve the same readable phone title area before and after logo decoding. */
 :root[data-sg-platform=mobile] #app .sg-hero-premium .sg-hero-title{min-height:80px;display:flex;align-items:center;justify-content:center}
 :root[data-sg-platform=mobile] #app .sg-hero-premium .sg-hero-title h1{margin:10px auto}
+/* Keep the old decoded layer opaque until the incoming layer covers it. Two
+   opposing fades reveal black underneath and make each switch visibly dip. */
+#app .sg-hero-premium .sg-hero-art-leaving{animation:none;opacity:1}
+#app .sg-hero-premium .sg-hero-title h1{transition:opacity .16s ease}
+#app .sg-hero-premium .sg-hero-title-ready .sg-react-hero-logo{animation:sg-premium-art-in .16s ease both}
+:root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-hero-scene{transform:none;transition:none}
+:root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-hero-art-entering{animation-duration:.36s;animation-timing-function:ease-in-out}
+:root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-hero-story{animation:sg-premium-story-in .24s ease-out both}
+@keyframes sg-premium-story-in{from{opacity:0}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){
+ #app .sg-hero-premium .sg-hero-art-leaving{display:none}
+ #app .sg-hero-premium .sg-hero-title h1{transition:none}
+ #app .sg-hero-premium .sg-hero-title-ready .sg-react-hero-logo,
+ :root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-hero-story{animation:none}
+}
+/* The TV still uploads decoded image pixels when an opacity fade starts.
+   Keep only the bounded artwork set (current plus one outgoing/next image)
+   compositor-ready; promoting the whole scene or every shelf card costs much more memory. */
+:root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-react-hero-art{will-change:opacity}
+
+/* One TV-only next frame remains paintable at roughly one 8-bit alpha step.
+   Fully transparent or hidden images may skip raster/upload until promotion. */
+:root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-hero-art-warming{opacity:.004;animation:none}
+@media(prefers-reduced-motion:reduce),(prefers-reduced-transparency:reduce){
+ :root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-hero-art-warming{display:none}
+}

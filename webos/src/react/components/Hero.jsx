@@ -7,23 +7,48 @@ const DURATION=8000;
 const identity=item=>item?`${item.type||'movie'}:${item.id||item._id}`:'';
 // Keep artwork and its title together: a slow image must not leave the previous
 // film behind the next film's copy and Play action.
-function useScene(meta,src){
-  const key=identity(meta),signature=key+'|'+(src||''),latest=useRef({meta,signature});
+function useScene(meta,src,logo){
+  const signature=identity(meta)+'|'+(src||'')+'|'+(logo||''),latest=useRef({meta,signature});
   latest.current={meta,signature};
-  const [scene,setScene]=useState(()=>({signature:src?'':signature,meta,src:'',previous:''}));
+  const [scene,setScene]=useState(()=>({signature:src||logo?'':signature,meta,src:'',previous:'',logoReady:false}));
+  const [prepared,setPrepared]=useState(null);
   useEffect(()=>{
-    let alive=true,cleanup;const image=new Image();image.referrerPolicy='no-referrer';
-    const present=picture=>{
-      if(!alive||latest.current.signature!==signature)return;
-      setScene(current=>({signature,meta:latest.current.meta,src:picture,previous:current.src!==picture?current.src:''}));
-      cleanup=setTimeout(()=>{if(alive)setScene(current=>({...current,previous:''}));},480);
+    let alive=true,logoTimer,logoDecoded=false;const images=[];
+    const decode=source=>{
+      if(!source)return Promise.resolve(false);
+      return new Promise(resolve=>{
+        const image=new Image();images.push(image);image.referrerPolicy='no-referrer';
+        image.onload=async()=>{try{await image.decode();}catch(_){}resolve(image.naturalWidth>0);};
+        image.onerror=()=>resolve(false);image.src=source;
+      });
     };
-    image.onload=async()=>{try{await image.decode();}catch(_){}present(src);};
-    image.onerror=()=>present('');
-    if(src)image.src=src;else present('');
-    return()=>{alive=false;image.onload=null;image.onerror=null;clearTimeout(cleanup);};
+    const logoResult=decode(logo).then(ready=>{
+      logoDecoded=ready;
+      if(alive&&latest.current.signature===signature)setPrepared(current=>current?.signature===signature?{...current,logoReady:ready}:current);
+      return ready;
+    });
+    // A missing/slow branding asset must not hold a decoded film or its Play
+    // action hostage. If it arrives later, it fades over the readable heading.
+    const logoBudget=logo?Promise.race([logoResult,new Promise(resolve=>{logoTimer=setTimeout(()=>resolve(false),240);})]):Promise.resolve(false);
+    Promise.all([decode(src),logoBudget]).then(([artReady,logoReady])=>{
+      clearTimeout(logoTimer);
+      if(!alive||latest.current.signature!==signature)return;
+      setPrepared({signature,meta:latest.current.meta,src:artReady?src:'',logoReady:logoReady||logoDecoded});
+    });
+    return()=>{alive=false;clearTimeout(logoTimer);images.forEach(image=>{image.onload=null;image.onerror=null;});};
   },[signature]);
-  return {meta:scene.signature===signature?meta:scene.meta,frames:{current:scene.src,previous:scene.previous},pending:scene.signature!==signature};
+  useEffect(()=>{
+    if(!prepared||prepared.signature!==signature||scene.signature===prepared.signature||scene.previous)return;
+    setScene(current=>({...prepared,previous:prepared.src&&current.src!==prepared.src?current.src:''}));
+  },[prepared,signature,scene.signature,scene.previous]);
+  const settle=picture=>setScene(current=>current.src===picture&&current.previous?{...current,previous:''}:current);
+  useEffect(()=>{
+    if(!scene.previous)return;
+    const media=matchMedia('(prefers-reduced-motion: reduce)');
+    const finish=()=>{if(media.matches)settle(scene.src);};finish();media.addEventListener('change',finish);
+    return()=>media.removeEventListener('change',finish);
+  },[scene.src,scene.previous]);
+  return {meta:scene.signature===signature?meta:scene.meta,frames:{current:scene.src,previous:scene.previous},logoReady:prepared?.signature===scene.signature?prepared.logoReady:scene.logoReady,pending:scene.signature!==signature,settle};
 }
 // The compositor draws the countdown. JS wakes only on interaction, once per
 // second for its accessible value, and at the next slide—not on every frame.
@@ -72,30 +97,41 @@ function useCarouselClock({root,timerFill,timeline,clock,wake,hover,gesture,paus
     };
   },[sceneKey,selected,count,paused,pending,!!preview]);
 }
-function Artwork({frames,ambient=false}){
+// A TV may decode an off-DOM Image without uploading its pixels for painting.
+// Keep one next image paintable at near-zero opacity, never an entire catalog.
+function useTVPrewarming(mobile){
+  const [allowed,setAllowed]=useState(false);
+  useEffect(()=>{
+    if(mobile){setAllowed(false);return;}
+    const preferences=[matchMedia('(prefers-reduced-motion: reduce)'),matchMedia('(prefers-reduced-transparency: reduce)')];
+    const update=()=>setAllowed(!preferences.some(preference=>preference.matches));update();
+    preferences.forEach(preference=>preference.addEventListener('change',update));
+    return()=>preferences.forEach(preference=>preference.removeEventListener('change',update));
+  },[mobile]);
+  return !mobile&&allowed;
+}
+function Artwork({frames,ambient=false,onSettled,warm=''}){
   const className=ambient?'sg-ambient-art':'sg-react-hero-art';
-  return <>{frames.previous?<img data-react-art="true" className={`${className} sg-hero-art-leaving`} src={frames.previous} alt="" referrerPolicy="no-referrer"/>:null}{frames.current?<img key={frames.current} data-react-art="true" className={`${className} sg-hero-art-entering`} src={frames.current} alt="" referrerPolicy="no-referrer"/>:null}</>;
+  const warming=frames.current&&!frames.previous&&warm!==frames.current?warm:'';
+  // URL keys preserve the prepared DOM/texture when warming becomes incoming.
+  // During a fade only previous+current remain; otherwise current+next remain.
+  return [frames.previous,frames.current,warming].filter(Boolean).map(src=>{
+    const role=src===frames.current?'entering':src===warming?'warming':'leaving';
+    return <img key={src} data-react-art="true" className={`${className} sg-hero-art-${role}`} src={src} alt="" aria-hidden="true" referrerPolicy="no-referrer" onAnimationEnd={event=>{if(src===frames.current&&event.animationName==='sg-premium-art-in')onSettled?.(src);}}/>;
+  });
 }
 function Icon({name}){
   const paths={play:<path d="m9 5 11 7-11 7Z" fill="currentColor" stroke="none"/>,plus:<path d="M12 4v16M4 12h16"/>,check:<path d="m5 12 4 4L19 6"/>,pause:<path d="M9 5v14M16 5v14"/>,previous:<path d="m15 5-7 7 7 7"/>,next:<path d="m9 5 7 7-7 7"/>,info:<><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/></>};
   return <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
-function Logo({src,name}){
-  const [ready,setReady]=useState('');
-  useEffect(()=>{
-    if(!src)return;
-    let alive=true;const image=new Image();image.referrerPolicy='no-referrer';
-    image.onload=async()=>{try{await image.decode();}catch(_){}if(alive)setReady(src);};image.src=src;
-    return()=>{alive=false;image.onload=null;};
-  },[src]);
-  // Keep a readable title until its transparent logo has decoded, and preserve
-  // the heading for assistive technology when the logo replaces it visually.
-  return <div className={'sg-hero-title'+(src&&ready===src?' sg-hero-title-ready':'')}><h1>{name}</h1>{src&&ready===src?<img data-react-art="true" className="sg-react-hero-logo" src={src} alt="" aria-hidden="true" referrerPolicy="no-referrer"/>:null}</div>;
+function Logo({src,name,ready}){
+  return <div className={'sg-hero-title'+(src&&ready?' sg-hero-title-ready':'')}><h1>{name}</h1>{src&&ready?<img data-react-art="true" className="sg-react-hero-logo" src={src} alt="" aria-hidden="true" referrerPolicy="no-referrer"/>:null}</div>;
 }
 
 export default function Hero({items,api}){
   const [selectedKey,setSelectedKey]=useState(()=>identity(items[0])),[paused,setPaused]=useState(false),[preview,setPreview]=useState(null),[full,setFull]=useState(null);
-  const list=useMyList(api);
+  const list=useMyList(api),prewarm=useTVPrewarming(api.mobile);
+  const [settledArtwork,setSettledArtwork]=useState('');
   const root=useRef(null),clock=useRef({key:'',elapsed:0}),timerFill=useRef(null),timeline=useRef(null),wake=useRef(null),gesture=useRef(null),suppressClick=useRef(0),hover=useRef(false),latest=useRef(null);
   const selected=Math.max(0,items.findIndex(entry=>identity(entry)===selectedKey)),item=preview||items[selected],key=identity(item);
   latest.current={items,selected};
@@ -116,16 +152,20 @@ export default function Hero({items,api}){
   },[key,api]);
   const incoming=(identity(full)===key?full:item)||{};
   const source=entry=>api.safeURL(entry?.background||entry?.poster);
-  const scene=useScene(incoming,source(incoming)),meta=scene.meta,frames=scene.frames,shownKey=identity(meta);
-  const shownPosition=Math.max(0,items.findIndex(entry=>identity(entry)===shownKey));
+  const scene=useScene(incoming,source(incoming),api.safeURL(incoming.logo)),meta=scene.meta,frames=scene.frames,shownKey=identity(meta);
+  const shownIndex=items.findIndex(entry=>identity(entry)===shownKey),shownPosition=Math.max(0,shownIndex);
+  // The requested selection changes before the decoded scene does. Deriving
+  // this from selected would discard the warmed node at precisely that moment.
+  const warmPicture=prewarm&&frames.current===settledArtwork&&!preview&&shownIndex>=0&&items.length>1?source(items[(shownIndex+1)%items.length]):'';
   useCarouselClock({root,timerFill,timeline,clock,wake,hover,gesture,paused:paused||!!list.pending,pending:scene.pending,preview,selected:shownPosition,count:items.length,sceneKey:shownKey,advance:()=>move(1)});
-  const nextPicture=source(items[(selected+1)%items.length]),previousPicture=source(items[(selected-1+items.length)%items.length]);
+  const nextItem=items[(selected+1)%items.length],previousItem=items[(selected-1+items.length)%items.length];
+  const nextPicture=source(nextItem),previousPicture=source(previousItem),nextLogo=api.safeURL(nextItem?.logo),previousLogo=api.safeURL(previousItem?.logo);
   useEffect(()=>{
-    const images=[...new Set([nextPicture,previousPicture])].filter(Boolean).map(src=>{
+    const images=[...new Set([nextPicture,previousPicture,nextLogo,previousLogo])].filter(Boolean).map(src=>{
       const image=new Image();image.referrerPolicy='no-referrer';image.onload=()=>image.decode().catch(()=>{});image.src=src;return image;
     });
     return()=>images.forEach(image=>{image.onload=null;});
-  },[nextPicture,previousPicture]);
+  },[nextPicture,previousPicture,nextLogo,previousLogo]);
   if(!item)return null;
   const href=api.detailHash(meta.type||'movie',meta.id||meta._id),logo=api.safeURL(meta.logo);
   const finishGesture=(event,cancelled=false)=>{
@@ -158,9 +198,9 @@ export default function Hero({items,api}){
     }}
     onPointerUp={event=>finishGesture(event)} onPointerCancel={event=>finishGesture(event,true)}
     onClickCapture={event=>{if(performance.now()<suppressClick.current){event.preventDefault();event.stopPropagation();}}}>
-    <div className="sg-hero-scene"><Artwork frames={frames}/><div className="sg-hero-shade"/>
+    <div className="sg-hero-scene"><Artwork frames={frames} onSettled={picture=>{scene.settle(picture);if(!api.mobile)setSettledArtwork(picture);}} warm={warmPicture}/><div className="sg-hero-shade"/>
     {api.mobile?<a className="sg-hero-details" href={href} aria-label={`More info about ${meta.name}`}><span><Icon name="info"/></span></a>:null}
-    <div className="sg-react-hero-copy"><div key={shownKey} className="sg-hero-story"><Logo src={logo} name={meta.name}/>
+    <div className="sg-react-hero-copy"><div key={shownKey} className="sg-hero-story"><Logo src={logo} name={meta.name} ready={scene.logoReady}/>
       <div className="sg-hero-meta"><span>{meta.type==='series'?'Series':'Movie'}</span>{meta.releaseInfo?<span>{String(meta.releaseInfo).slice(0,4)}</span>:null}{meta.imdbRating?<span className="sg-hero-score">IMDb {meta.imdbRating}</span>:null}{(meta.genres||[]).slice(0,2).map(genre=><span key={genre}>{genre}</span>)}</div>{meta.description?<p className="sg-hero-synopsis">{meta.description}</p>:null}</div>
       <div className="sg-react-hero-actions sg-mobile-hero-actions"><a className="sg-button sg-primary" href={href+'?play=1'}><Icon name="play"/>Play</a>{api.mobile?<button type="button" className="sg-button sg-hero-save" disabled={list.loading||!!list.pending} aria-pressed={list.titles.has(shownKey)} aria-busy={list.loading||list.pending===shownKey} aria-label={list.error?'Retry My List':`${list.titles.has(shownKey)?'Remove from':'Add to'} My List: ${meta.name}`} onClick={()=>list.toggle(meta)}><span className="sg-save-icon" key={String(list.titles.has(shownKey))}><Icon name={list.titles.has(shownKey)?'check':'plus'}/></span>{list.error?'Retry':'My List'}</button>:<a className="sg-button" href={href}><Icon name="info"/>More info</a>}</div></div></div>
     {items.length>1?<>

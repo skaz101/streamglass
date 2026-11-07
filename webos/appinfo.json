@@ -1,6 +1,6 @@
 {
   "id": "com.streamglass.tv",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "vendor": "StreamGlass contributors (unofficial fork)",
   "type": "web",
   "main": "index.html",
