@@ -1,5 +1,5 @@
 /*
- * StreamGlass webOS player, modified 2026-10-30.
+ * StreamGlass webOS player, modified 2026-11-06.
  * Copyright (C) 2026 contributors. GPL-3.0-or-later; see ../../LICENSE.
  * Uses public HTMLMediaElement APIs, including LG's documented audioTracks API.
  */
@@ -79,8 +79,8 @@
       if (!this.overlay) return null;
       return {hash: this.payload.hash, videoId: this.payload.videoId, timeMs: this.position(), durationMs: this.duration(), paused: this.video.paused};
     }
-    position() { return Math.max(0, Math.round((this.video && Number.isFinite(this.video.currentTime) ? this.video.currentTime : 0) * 1000)); }
-    duration() { return Math.max(0, Math.round((this.video && Number.isFinite(this.video.duration) ? this.video.duration : 0) * 1000)); }
+    position() { if (this.failedState) return this.failedState.timeMs; return Math.max(0, Math.round((this.video && Number.isFinite(this.video.currentTime) ? this.video.currentTime : 0) * 1000)); }
+    duration() { if (this.failedState) return this.failedState.durationMs; return Math.max(0, Math.round((this.video && Number.isFinite(this.video.duration) ? this.video.duration : 0) * 1000)); }
     progress() {
       if (!this.overlay) return;
       const duration = this.duration(), time = this.position();
@@ -93,6 +93,8 @@
     }
     play(payload) {
       this.destroy();
+      if (document.hidden) throw new Error('Return to StreamGlass before opening a stream.');
+      this.failedState = null;
       this.payload = payload || {};
       payload = this.payload;
       this.pendingError = null;
@@ -125,12 +127,12 @@
       document.body.append(root);
       document.documentElement.classList.add('webos-playing');
       this.playButton.focus();
-      const current = () => this.session === session && this.overlay === root;
+      const current = () => this.session === session && this.overlay === root && !this.failedState;
       this.visibilityHandler = () => {
-        if (current() && document.hidden) { this.video.pause(); this.progress(); }
+        if (this.overlay === root && document.hidden) this.close({reason: 'hidden'});
       };
       this.pageHideHandler = () => {
-        if (current()) { this.video.pause(); this.progress(); }
+        if (this.overlay === root) this.close({reason: 'pagehide'});
       };
       document.addEventListener('visibilitychange', this.visibilityHandler);
       window.addEventListener('pagehide', this.pageHideHandler);
@@ -173,7 +175,7 @@
         if (payload.headers && Object.keys(payload.headers).length) throw new Error('This stream requires custom request headers, which the webOS video player cannot send. Choose another direct debrid stream.');
         this.video.src = url;
         this.video.load();
-        this.video.play().catch((error) => { if (current()) this.fail(error && error.name === 'NotAllowedError' ? 'Press Play to start the stream.' : errorMessage(this.video.error && this.video.error.code)); });
+        this.video.play().catch((error) => { if (current()) this.playRejected(error); });
         this.log('load', {protocol: new URL(url).protocol, resume: Number(payload.startMs) > 0});
       } catch (error) { this.fail(error.message); }
       return this.active();
@@ -195,8 +197,23 @@
       this.status.textContent = text;
       this.status.hidden = !text;
     }
+    playRejected(error) {
+      // Autoplay denial is recoverable with OK; decoder/network failures are not.
+      if (error && error.name === 'NotAllowedError') {
+        this.message('Press Play to start the stream.');
+        this.showControls();
+      } else this.fail(errorMessage(this.video && this.video.error && this.video.error.code));
+    }
     fail(text) {
+      if (!this.overlay || this.failedState) return;
+      this.failedState = {timeMs: this.position(), durationMs: this.duration()};
       this.pendingError = text;
+      clearInterval(this.interval);
+      this.releaseMedia();
+      this.closeMenu(false);
+      this.seekBar.disabled = true;
+      this.overlay.querySelectorAll('[data-action]').forEach((button) => { button.disabled = button.dataset.action !== 'close'; });
+      this.overlay.querySelector('[data-action="close"]').focus();
       this.message(text);
       this.showControls();
       this.log('playback-error', {message: text});
@@ -211,7 +228,7 @@
     }
     seekTo(seconds, resuming = false) {
       if (!resuming) this.resumePending = false;
-      if (!this.video || !Number.isFinite(Number(seconds))) return;
+      if (!this.video || this.failedState || !Number.isFinite(Number(seconds))) return;
       const max = Number.isFinite(this.video.duration) ? Math.max(0, this.video.duration - 0.05) : Math.max(0, seconds);
       let target = clamp(Number(seconds), 0, max);
       // Seek only within the available seekable window for live/DVR content.
@@ -222,13 +239,14 @@
     }
     seek(offset) { if (this.video) this.seekTo(this.video.currentTime + offset); }
     toggle() {
-      if (!this.video) return;
+      if (!this.video || this.failedState) return;
       if (this.video.paused) {
         const session = this.session;
-        this.video.play().then(() => { if (this.session === session) this.pendingError = null; }).catch(() => { if (this.session === session) this.fail(errorMessage(this.video.error && this.video.error.code)); });
+        this.video.play().then(() => { if (this.session === session && !this.failedState) this.pendingError = null; }).catch((error) => { if (this.session === session && !this.failedState) this.playRejected(error); });
       } else this.video.pause();
     }
     action(name) {
+      if (this.failedState && name !== 'close') return;
       if (name === 'close') this.close();
       else if (name === 'play') this.toggle();
       else if (name === 'rewind') this.seek(-10);
@@ -317,7 +335,7 @@
       this.openMenu('Subtitles', entries, 'External WebVTT and SRT subtitles are supported. Embedded subtitles appear only when the TV exposes them.');
     }
     async selectSubtitle(choice) {
-      if (!this.video) return;
+      if (!this.video || this.failedState) return;
       const sequence = ++this.subtitleSequence, session = this.session;
       if (this.abort) this.abort.abort();
       this.abort = null;
@@ -397,6 +415,10 @@
         return true;
       }
       if (key === 'MediaStop') { this.close(); return true; }
+      if (this.failedState) {
+        if (key === 'Enter') this.close();
+        return true;
+      }
       if (key === 'MediaPlay') { if (this.video.paused) this.toggle(); return true; }
       if (key === 'MediaPause') { this.video.pause(); return true; }
       if (key === 'MediaPlayPause') { this.toggle(); return true; }
@@ -433,23 +455,29 @@
     close(details) {
       if (!this.overlay) return;
       const result = Object.assign({timeMs: this.position(), durationMs: this.duration(), paused: true, ended: false, error: this.pendingError, hash: this.payload.hash, videoId: this.payload.videoId}, details || {});
-      this.progress();
+      // Release before invoking application code: a failing callback must never
+      // leave a decoder or a network request alive in a suspended TV app.
       this.destroy();
       if (typeof this.options.onClose === 'function') this.options.onClose(result);
     }
+    releaseMedia() {
+      ++this.subtitleSequence;
+      if (this.abort) this.abort.abort(); this.abort = null;
+      if (this.trackElement) this.trackElement.remove();
+      this.trackElement = null; this.externalTrack = null;
+      if (this.blobURL) URL.revokeObjectURL(this.blobURL); this.blobURL = null;
+      if (this.video) { this.video.pause(); this.video.removeAttribute('src'); this.video.load(); }
+    }
     destroy() {
       ++this.session;
-      ++this.subtitleSequence;
       clearInterval(this.interval); clearTimeout(this.hideTimer);
       if (typeof document !== 'undefined' && this.visibilityHandler) document.removeEventListener('visibilitychange', this.visibilityHandler);
       if (typeof window !== 'undefined' && this.pageHideHandler) window.removeEventListener('pagehide', this.pageHideHandler);
       this.visibilityHandler = null; this.pageHideHandler = null;
-      if (this.abort) this.abort.abort(); this.abort = null;
-      if (this.blobURL) URL.revokeObjectURL(this.blobURL); this.blobURL = null;
-      const oldVideo = this.video;
+      this.releaseMedia();
       this.overlay && this.overlay.remove();
       this.overlay = null; this.video = null; this.menu = null; this.externalTrack = null; this.trackElement = null;
-      if (oldVideo) { oldVideo.pause(); oldVideo.removeAttribute('src'); oldVideo.load(); }
+      this.failedState = null;
       if (typeof document !== 'undefined') document.documentElement.classList.remove('webos-playing');
       if (this.previousFocus && this.previousFocus.isConnected) this.previousFocus.focus();
     }

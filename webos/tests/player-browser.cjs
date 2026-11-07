@@ -55,8 +55,15 @@ const {chromium} = require('playwright');
     await page.keyboard.press('ArrowUp');
     await page.keyboard.press('Enter');
     assert.equal(await page.evaluate(() => player.subtitleChoice), 'off');
-    await page.evaluate(() => { player.handleKey({keyCode:415}); window.dispatchEvent(new Event('pagehide')); });
-    assert.equal(await page.evaluate(() => player.video.paused), true);
+    await page.evaluate(() => { window.releasedVideo = player.video; player.seekTo(5); window.dispatchEvent(new Event('pagehide')); });
+    assert.equal(await page.evaluate(() => player.active()), null);
+    assert.equal(await page.evaluate(() => releasedVideo.hasAttribute('src')), false);
+    await page.waitForFunction(() => releasedVideo.readyState === 0 && releasedVideo.networkState === HTMLMediaElement.NETWORK_EMPTY);
+    assert.equal(await page.evaluate(() => releasedVideo.paused), true);
+    assert.equal(await page.evaluate(() => closeEvents[0].timeMs), 5000);
+    assert.equal(await page.evaluate(() => closeEvents[0].reason), 'pagehide');
+    await page.evaluate(() => window.dispatchEvent(new Event('pagehide')));
+    assert.equal(await page.evaluate(() => closeEvents.length), 1, 'duplicate lifecycle events must not close twice');
     assert.ok(await page.evaluate(() => progressEvents.length >= 3));
     await page.evaluate(() => player.close());
     assert.equal(await page.evaluate(() => player.active()), null);
@@ -68,8 +75,78 @@ const {chromium} = require('playwright');
     await page.evaluate((origin) => player.play({url:origin+'/video.mp4',headers:{Referer:'https://example.test'}}), origin);
     assert.match(await page.locator('.webos-player-message').innerText(), /custom request headers/);
     await page.evaluate(() => player.close());
+    // App switching releases a live decoder, preserves position, and does not
+    // restart automatically when the app becomes visible again.
+    await page.evaluate((origin) => player.play({url:origin+'/video.mp4', startMs:6000}), origin);
+    await page.waitForFunction(() => player.video && player.video.currentTime >= 6 && !player.video.paused);
+    await page.evaluate(() => {
+      window.releasedVideo = player.video;
+      Object.defineProperty(document, 'hidden', {configurable:true, value:true});
+      document.dispatchEvent(new Event('visibilitychange'));
+      window.dispatchEvent(new Event('pagehide'));
+    });
+    assert.equal(await page.evaluate(() => player.active()), null);
+    assert.ok(await page.evaluate(() => closeEvents.at(-1).timeMs >= 6000));
+    assert.equal(await page.evaluate(() => closeEvents.at(-1).reason), 'hidden');
+    await page.waitForFunction(() => releasedVideo.readyState === 0 && releasedVideo.networkState === HTMLMediaElement.NETWORK_EMPTY);
+    assert.equal(await page.evaluate((origin) => {
+      try { player.play({url:origin+'/video.mp4'}); return false; } catch (_) { return true; }
+    }, origin), true, 'hidden startup must not allocate video');
+    await page.evaluate(() => { delete document.hidden; document.dispatchEvent(new Event('visibilitychange')); });
+    assert.equal(await page.evaluate(() => player.active()), null);
+
+    // A fatal media error frees resources while keeping the error and checkpoint.
+    await page.evaluate((origin) => player.play({url:origin+'/video.mp4', startMs:4000, subtitles:[{url:origin+'/slow.srt'}]}), origin);
+    await page.waitForFunction(() => player.video && player.video.currentTime >= 4 && !player.video.paused);
+    await page.evaluate(() => {
+      window.releasedVideo = player.video;
+      player.selectSubtitle('external:0');
+      window.errorPosition = player.position();
+      player.video.dispatchEvent(new Event('error'));
+      player.toggle();
+    });
+    await page.waitForFunction(() => releasedVideo.readyState === 0 && releasedVideo.networkState === HTMLMediaElement.NETWORK_EMPTY);
+    await page.waitForTimeout(700);
+    assert.match(await page.locator('.webos-player-message').innerText(), /could not play/);
+    assert.equal(await page.evaluate(() => player.position() === errorPosition), true);
+    assert.equal(await page.evaluate(() => player.video.querySelectorAll('track').length), 0);
+    await page.evaluate(() => player.close());
+    assert.equal(await page.evaluate(() => closeEvents.at(-1).timeMs === errorPosition), true);
+
+    // Autoplay denial remains recoverable and must not be treated as a decoder failure.
+    await page.evaluate((origin) => {
+      window.originalPlay = HTMLMediaElement.prototype.play;
+      HTMLMediaElement.prototype.play = () => Promise.reject(new DOMException('Autoplay blocked', 'NotAllowedError'));
+      player.play({url:origin+'/video.mp4'});
+    }, origin);
+    await page.waitForFunction(() => player.status.textContent === 'Press Play to start the stream.');
+    assert.equal(await page.evaluate(() => player.video.hasAttribute('src')), true);
+    await page.evaluate(() => { HTMLMediaElement.prototype.play = originalPlay; player.toggle(); });
+    await page.waitForFunction(() => player.video && !player.video.paused && player.video.currentTime > 0);
+    await page.evaluate(() => player.close());
+
+    // Closing during unresolved play/subtitle work cannot affect the next session.
+    await page.evaluate((origin) => {
+      player.play({url:origin+'/video.mp4'});
+      window.releasedVideo = player.video;
+      window.dispatchEvent(new Event('pagehide'));
+      player.play({url:origin+'/video.mp4'});
+    }, origin);
+    await page.waitForFunction(() => player.video && !player.video.paused && player.video.currentTime > 0);
+    assert.equal(await page.evaluate(() => player.pendingError), null);
+    assert.equal(await page.evaluate(() => releasedVideo.hasAttribute('src')), false);
+    // Callback failures happen only after the source has been released.
+    await page.evaluate(() => {
+      window.releasedVideo = player.video;
+      const callback = player.options.onClose;
+      player.options.onClose = () => { throw new Error('fixture callback'); };
+      try { player.close(); } catch (_) {}
+      player.options.onClose = callback;
+    });
+    await page.waitForFunction(() => releasedVideo.readyState === 0 && releasedVideo.networkState === HTMLMediaElement.NETWORK_EMPTY);
+    assert.equal(await page.evaluate(() => player.active()), null);
     assert.deepEqual(errors, [], 'browser runtime exceptions');
-    console.log('PASS: native H.264/AAC play, saved-position resume, SRT captions, pause/seek/remote, subtitles off, pagehide progress, close, stale-request cleanup, unsupported-header error.');
+    console.log('PASS: native H.264/AAC play, saved-position resume, SRT captions, pause/seek/remote, subtitles off, pagehide/visibility source release, checkpoint preservation, hidden startup rejection, fatal error cleanup, recoverable autoplay, idempotent close, callback failure cleanup, stale-request cleanup, unsupported-header error.');
   } finally {
     if (browser) await browser.close();
     if (server) await new Promise((resolve) => server.close(resolve));

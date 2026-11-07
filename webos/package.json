@@ -1,6 +1,6 @@
 {
   "name": "streamglass-webos",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "private": true,
   "description": "Unofficial webOS 25 port of the DX.BI TV experience",
   "license": "GPL-3.0-or-later",

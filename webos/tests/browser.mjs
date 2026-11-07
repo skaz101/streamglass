@@ -226,14 +226,63 @@ try {
   await page.locator('[data-stream="1"]').click();
   await page.getByRole('heading',{name:'A direct link is needed'}).waitFor();
   await page.getByRole('button',{name:'Close',exact:true}).click();
+  // A delayed core response cannot open a decoder after switching away from TV.
+  // Returning before the response arrives must not revive that stale request.
+  for(const lifecycle of ['visibilitychange','pagehide']){
+    await page.evaluate(()=>{
+      const dispatch=StreamGlassCore.dispatch.bind(StreamGlassCore);
+      window.pendingLoadEntered=false;window.cancelledPlayerUnloaded=false;
+      const gate=new Promise(resolve=>{window.releasePendingLoad=resolve;});
+      StreamGlassCore.dispatch=async(action,model)=>{
+        if(model==='player'&&action.action==='Load'){
+          window.pendingLoadEntered=true;await gate;
+        }
+        const result=await dispatch(action,model);
+        if(model==='player'&&action.action==='Unload')window.cancelledPlayerUnloaded=true;
+        return result;
+      };
+      window.restoreCoreDispatch=()=>{StreamGlassCore.dispatch=dispatch;};
+    });
+    await page.locator('[data-stream="0"]').click();
+    await page.waitForFunction(()=>window.pendingLoadEntered);
+    await page.evaluate(lifecycle=>{
+      if(lifecycle==='visibilitychange'){
+        Object.defineProperty(document,'hidden',{configurable:true,value:true});
+        document.dispatchEvent(new Event('visibilitychange'));
+        delete document.hidden;
+        document.dispatchEvent(new Event('visibilitychange'));
+      }else window.dispatchEvent(new Event('pagehide'));
+      window.releasePendingLoad();
+    },lifecycle);
+    await page.waitForFunction(()=>window.cancelledPlayerUnloaded);
+    assert.equal(await page.locator('video').count(),0,lifecycle+' cancels pending native playback');
+    assert.equal(await page.evaluate(()=>StreamGlassShell.state.playing),false);
+    assert.ok(await page.evaluate(()=>location.hash.startsWith('#/detail')),'Cancelled setup keeps the title available');
+    await page.evaluate(()=>window.restoreCoreDispatch());
+  }
   await page.locator('[data-stream="0"]').click();
   await page.waitForFunction(()=>document.querySelector('video')?.videoWidth===640&&!document.querySelector('video').paused,null,{timeout:30000});
   await page.waitForFunction(()=>document.querySelector('video').textTracks.length>0&&document.querySelector('video').textTracks[0].cues?.length>0);
   await page.screenshot({path:path.join(shots,'player.png')});
   await page.evaluate(()=>{const v=document.querySelector('video');v.currentTime=20;v.pause();});
   await page.waitForFunction(async()=>{const p=await StreamGlassCore.getState('player');return p.libraryItem?.state.timeOffset>=19000;});
-  await page.evaluate(()=>StreamGlassHost.closePlayer());
+  await page.evaluate(()=>{
+    const dispatch=StreamGlassCore.dispatch.bind(StreamGlassCore);
+    const gate=new Promise(resolve=>{window.releaseCloseSync=resolve;});
+    window.closeSyncEntered=false;
+    StreamGlassCore.dispatch=(action,model)=>{
+      if(model==='ctx'&&action.args?.action==='SyncLibraryWithAPI'){
+        window.closeSyncEntered=true;return gate.then(()=>dispatch(action,model));
+      }
+      return dispatch(action,model);
+    };
+    window.restoreCloseDispatch=()=>{StreamGlassCore.dispatch=dispatch;};
+    window.dispatchEvent(new Event('pagehide'));
+  });
   await page.waitForFunction(()=>!StreamGlassShell.state.playing&&location.hash.startsWith('#/detail'));
+  assert.ok(await page.evaluate(()=>window.closeSyncEntered),'Returning to the title does not wait for cloud synchronization');
+  assert.equal(await page.locator('video').count(),0,'Leaving the TV app releases its video element');
+  await page.evaluate(()=>{window.restoreCloseDispatch();window.releaseCloseSync();});
   await page.locator('[data-stream="0"]').click();
   await page.waitForFunction(()=>document.querySelector('video')?.currentTime>=19,null,{timeout:30000});
   await page.evaluate(()=>StreamGlassHost.closePlayer());
@@ -307,7 +356,7 @@ try {
   for(const secret of ['secret-fixture-token','private-stream-token','test@example.invalid','fake-password','fixtures.invalid'])assert.ok(!exported.includes(secret),'No private values in diagnostic export');
   assert.ok(libraryWrites>0);assert.ok(addonWrites>0);
   assert.deepEqual(errors,[],'No JavaScript runtime errors in packaged app');
-  const summary={passed:true,engine:await browser.version(),protocol:'file:',mockedAccountAndAddons:true,localVideoPlayback:true,subtitleRendering:true,resume:true,libraryWrites,addonWrites,remoteNavigation:true,liveSearch:true,inputAndCaretPreserved:true,staleSearchSuppressed:true,compositionSafe:true,liveQueryRestored:true,roundedNavigationFocus:true,navReturnsToContent:true,localStreamScrolling:true,continueWatchingInsertion:true,railBoundary:true,rowFocusMemory:true,backRestoresCardAndScroll:true,searchOriginRestored:true,homeTypeFilter:true,vectorSearchIcon:true,recommendationsFromRealCoreProgress:true,recommendationsFromRealCoreWatched:true,recommendationExclusions:true,recommendationMetadataEnrichment:true,recommendationFilters:true,recommendationBackFocus:true,recommendationFailureRetry:true,recommendationCancellation:true,recommendationColdStart:true,sensitiveDiagnosticsExcluded:true,runtimeErrors:errors};
+  const summary={passed:true,engine:await browser.version(),protocol:'file:',mockedAccountAndAddons:true,localVideoPlayback:true,subtitleRendering:true,resume:true,pendingPlaybackCancelledOnHide:true,pagehideReleasesPlayer:true,closeDoesNotWaitForCloudSync:true,libraryWrites,addonWrites,remoteNavigation:true,liveSearch:true,inputAndCaretPreserved:true,staleSearchSuppressed:true,compositionSafe:true,liveQueryRestored:true,roundedNavigationFocus:true,navReturnsToContent:true,localStreamScrolling:true,continueWatchingInsertion:true,railBoundary:true,rowFocusMemory:true,backRestoresCardAndScroll:true,searchOriginRestored:true,homeTypeFilter:true,vectorSearchIcon:true,recommendationsFromRealCoreProgress:true,recommendationsFromRealCoreWatched:true,recommendationExclusions:true,recommendationMetadataEnrichment:true,recommendationFilters:true,recommendationBackFocus:true,recommendationFailureRetry:true,recommendationCancellation:true,recommendationColdStart:true,sensitiveDiagnosticsExcluded:true,runtimeErrors:errors};
   await fs.writeFile(path.join(shots,'browser-results.json'),JSON.stringify(summary,null,2));
   console.log(JSON.stringify(summary,null,2));
 }finally{

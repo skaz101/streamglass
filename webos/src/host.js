@@ -1,7 +1,7 @@
 /* StreamGlass TV webOS adapter. Modified 2026-10-30. GPL-3.0-or-later. */
 (function () {
   'use strict';
-  const VERSION = '0.4.0';
+  const VERSION = '0.7.4';
   const APP_ID = 'com.streamglass.tv';
   const events = [];
   // Deliberately allow only numeric/boolean diagnostics. Never record account data,

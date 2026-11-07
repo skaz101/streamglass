@@ -67,7 +67,7 @@
   const doc = global.document;
   const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
   let core, root, view, profile = {}, epoch = 0, started = false, currentDetail = null;
-  let activePlayback = null, pendingPlayback = false, progressQueue = Promise.resolve(), lastProgress = null;
+  let activePlayback = null, pendingPlayback = false, playbackGeneration = 0, progressQueue = Promise.resolve(), lastProgress = null;
   let statusTimer, heroTimer, refreshTimer, refreshAddons=false, refreshLibrary=false, catalogMemory = [], activeCatalog = null;
   const cache = new Map(), cards = new Map(), screenMemory = new Map();
   let searchSession=null, recommendationController=null, recommendationSnapshot=null;
@@ -478,21 +478,24 @@
     const seen=new Set();return existing.filter(item=>{if(seen.has(item.url))return false;seen.add(item.url);return true;}).map(item=>({...item,label:item.label||item.lang||'Subtitle'})).slice(0,120);
   }
   async function play(index) {
-    if(pendingPlayback||activePlayback||!currentDetail)return;
+    if(pendingPlayback||activePlayback||!currentDetail||(!host().mobile&&doc.hidden))return;
     const detail=currentDetail,item=detail.streams[index];if(!item)return;
+    const generation=playbackGeneration;
+    const cancelled=()=>generation!==playbackGeneration||detail!==currentDetail||detail.token!==epoch||(!host().mobile&&doc.hidden);
     const stream=item.stream,url=safeURL(stream.url);
     if(!url){await showMessage('A direct link is needed',stream.infoHash?'This is a raw torrent. Select a Torrentio + TorBox cached direct stream. This webOS app does not download torrents.':'This addon returned an external-player link. Select a direct HTTP or HTTPS stream instead.');return;}
     pendingPlayback=true;notify('Opening stream…');
     try {
       const subtitlesPromise=collectSubtitles(detail.type,item.videoId,stream);
       await core.dispatch(loadAction('Player',{stream,streamRequest:{base:item.addon.transportUrl,path:path('stream',detail.type,item.videoId)},metaRequest:{base:detail.addon.transportUrl,path:path('meta',detail.type,detail.id)},subtitlesPath:path('subtitles',detail.type,item.videoId)}),'player');
+      if(cancelled()){await core.dispatch({action:'Unload'},'player');return;}
       // Core must load the library record before the first progress event, or resume could be overwritten.
       const state=await pollState('player',value=>value.metaItem&&value.metaItem.type==='Ready',20000);
-      if(detail!==currentDetail||detail.token!==epoch){await core.dispatch({action:'Unload'},'player');return;}
+      if(cancelled()){await core.dispatch({action:'Unload'},'player');return;}
       const lib=state.libraryItem&&state.libraryItem.state;
       const startMs=lib&&lib.video_id===item.videoId?Number(lib.timeOffset)||0:0;
       const subtitles=await Promise.race([subtitlesPromise,delay(3000).then(()=>mergeSubtitles(stream.subtitles,state.subtitles))]);
-      if(detail!==currentDetail||detail.token!==epoch){await core.dispatch({action:'Unload'},'player');return;}
+      if(cancelled()){await core.dispatch({action:'Unload'},'player');return;}
       const settings=profile.settings||{},video=(detail.meta.videos||[]).find(value=>value.id===item.videoId);
       activePlayback={returnHash:location.hash,videoId:item.videoId,id:detail.id,type:detail.type,ready:true};lastProgress=null;
       location.hash='#/player/'+encodeURIComponent(item.videoId);
@@ -505,7 +508,7 @@
         // Keep existing indices stable if a subtitle has already been selected.
         if(activePlayback===playback){payload.subtitles=mergeSubtitles(payload.subtitles,later);if(host().updateSubtitles)host().updateSubtitles(payload.subtitles);}
       }).catch(()=>{});
-    } catch(error) {activePlayback=null;notify('The stream could not open. Check your connection or try another stream.');diagnostic('playback_setup_failed',{});await core.dispatch({action:'Unload'},'player').catch(()=>{});}
+    } catch(error) {activePlayback=null;if(!cancelled()){notify('The stream could not open. Check your connection or try another stream.');diagnostic('playback_setup_failed',{});}await core.dispatch({action:'Unload'},'player').catch(()=>{});}
     finally {pendingPlayback=false;}
   }
   function onProgress(timeMs,durationMs,paused) {
@@ -519,13 +522,14 @@
     return progressQueue;
   }
   async function onClose(info={}) {
-    const playback=activePlayback;if(!playback)return;
+    const playback=activePlayback;if(!playback||playback.closing)return;playback.closing=true;
     await onProgress(info.timeMs||0,info.durationMs||0,true);await progressQueue;
     if(info.ended)await core.dispatch(playerAction('Ended'),'player').catch(()=>{});
     await core.dispatch({action:'Unload'},'player').catch(()=>{});
     activePlayback=null;lastProgress=null;
-    await core.dispatch(ctxAction('SyncLibraryWithAPI'),'ctx').catch(()=>{});
     location.replace(playback.returnHash||'#/board');
+    // Local progress and title navigation must not wait for an offline account API.
+    core.dispatch(ctxAction('SyncLibraryWithAPI'),'ctx').catch(()=>{});
   }
   async function addonPage() {
     const list=installed();
@@ -682,6 +686,11 @@
     doc.addEventListener('keydown',()=>{interaction++;},true);
     doc.addEventListener('pointerdown',()=>{interaction++;},true);
     global.addEventListener('hashchange',render);
+    // A pending core/subtitle response must not start playback after the TV has
+    // switched apps, including a quick hide/show before that response arrives.
+    const cancelPendingPlayback=()=>{if(!host().mobile)playbackGeneration++;};
+    doc.addEventListener('visibilitychange',()=>{if(doc.hidden)cancelPendingPlayback();});
+    global.addEventListener('pagehide',cancelPendingPlayback);
     await core.init({appVersion:'0.7.3',shellVersion:'webos25'});global.core=core;global.services={core};
     core.on('event', event => {
       if (!event) return;

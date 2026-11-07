@@ -1,9 +1,9 @@
-> Latest update: see [RELEASE-0.7.3.md](RELEASE-0.7.3.md) for the React interface, cinematic browsing, release calendar and verification. Older results below describe earlier releases.
+> Latest TV update: see [RELEASE-0.7.4.md](RELEASE-0.7.4.md) for playback lifecycle hardening. Older results below describe earlier releases.
 
 # StreamGlass TV for LG webOS 25
 
 An unofficial webOS port of the DX.BI experience for the LG 75UA7000PUB.
-Package ID: `com.streamglass.tv`. Version: `0.7.3`.
+Package ID: `com.streamglass.tv`. Version: `0.7.4`.
 
 This project targets Stremio email/password login, account addons, library
 and watch progress, direct Torrentio/TorBox HTTP/HTTPS results, native LG
@@ -74,7 +74,7 @@ npm run package
 ```
 
 The package command prints the output path for
-`com.streamglass.tv_0.7.3_all.ipk`. It uses LG's `ares-package`; the IPK is
+`com.streamglass.tv_0.7.4_all.ipk`. It uses LG's `ares-package`; the IPK is
 not a renamed ZIP file. The debug build preserves the port's scripts for
 Web Inspector. The upstream core is a production bundle, so it does not
 enable the core's sensitive debug logging.

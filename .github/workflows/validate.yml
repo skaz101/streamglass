@@ -46,7 +46,7 @@ jobs:
           npm run test:browser
           node ../android/scripts/sync-assets.mjs
           node ../android/tests/mobile-browser.mjs
-      - run: python3 webos/scripts/source-archive.py --version 0.7.3
+      - run: python3 webos/scripts/source-archive.py --version 0.7.4
       - uses: actions/upload-artifact@v4
         with:
           name: webos-and-source
