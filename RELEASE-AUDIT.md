@@ -1,6 +1,6 @@
 # StreamGlass release audit
 
-## Published installer build 0.7.3 — 2026-11-05 UTC
+## Installer verification for 0.7.3 — 2026-11-05 UTC
 
 Validated runtime source: `39e7cdb899d3bfcd439c09319123d2bdd12e6eaf`.
 [Run 41931755034](https://github.com/skaz101/streamglass/actions/runs/41931755034)
