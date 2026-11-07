@@ -9,6 +9,7 @@ import http from 'node:http';
 import {spawnSync} from 'node:child_process';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const appVersion=JSON.parse(await fs.readFile(path.join(root,'appinfo.json'),'utf8')).version;
 const temp=await fs.mkdtemp(path.join(os.tmpdir(),'streamglass-app-'));
 const shots=path.join(root,'test-results');
 await fs.mkdir(shots,{recursive:true});
@@ -351,7 +352,7 @@ try {
   await page.locator('#sg-search-input').click();await page.locator('#sg-search-input').fill('fixture');await page.locator('#sg-search-form button').click();
   await page.locator('.sg-card').first().waitFor();
   await page.reload();await ready();await page.waitForFunction(()=>StreamGlassShell.state.signedIn);
-  await page.keyboard.press('F2');await page.getByRole('heading',{name:'StreamGlass TV 0.4.0'}).waitFor();
+  await page.keyboard.press('F2');await page.getByRole('heading',{name:'StreamGlass TV '+appVersion}).waitFor();
   const exported=await page.evaluate(()=>StreamGlassDiagnostics.export());
   for(const secret of ['secret-fixture-token','private-stream-token','test@example.invalid','fake-password','fixtures.invalid'])assert.ok(!exported.includes(secret),'No private values in diagnostic export');
   assert.ok(libraryWrites>0);assert.ok(addonWrites>0);
