@@ -265,11 +265,13 @@
     return session===searchSession&&session.token===epoch&&session.revision===revision&&session.results.isConnected;
   }
   function searchHint(session) {
-    global.StreamGlassUI.clear(session.results);session.results.innerHTML=host().mobile?empty('What are you in the mood for?','A favorite movie, a new series, or something unexpected.'):empty('Find your next watch','Type at least 2 characters for live results, or press Search for a one-letter title.');
+    global.StreamGlassUI.clear(session.results);session.results.innerHTML='<p class="sg-search-empty">'+(session.query?'Press Search to find this title.':'Search for a movie, series or anime.')+'</p>';
     session.results.setAttribute('aria-busy','false');
+    session.results.inert=false;delete session.results.dataset.stale;
     session.status.textContent='';
   }
   function updateSearchQuery(session) {
+    const clear=doc.querySelector('[data-action="search-clear"]');if(clear)clear.hidden=!session.input.value;
     const query=session.input.value.trim();
     if(query===session.query)return false;
     session.query=query;
@@ -285,53 +287,89 @@
   function queueSearch() {
     const session=searchSession;if(!session)return;
     const changed=updateSearchQuery(session);
-    if(session.composing)return;
+    if(session.composing){if(changed)searchPending(session);return;}
     if(!changed&&session.requested===session.query)return;
     clearTimeout(session.timer);
     if(session.query.length<2){searchHint(session);return;}
-    session.status.textContent='Waiting for you to finish typing…';
-    global.StreamGlassUI.clear(session.results);session.results.innerHTML=pendingText('Searching your addons');
-    session.results.setAttribute('aria-busy','true');
+    searchPending(session);
     session.timer=setTimeout(()=>runSearch(session),450);
   }
-  async function runSearch(session) {
+  function searchPending(session) {
+    session.status.textContent='Searching…';session.results.setAttribute('aria-busy','true');
+    // Keep the previous artwork in place while typing, but never allow a stale
+    // result to be opened for the new query. Replace it when a fresh batch arrives.
+    session.results.inert=true;
+    if(session.results.querySelector('.sg-card'))session.results.dataset.stale='true';
+    else if(!session.results.querySelector('.sg-search-loading')){
+      global.StreamGlassUI.clear(session.results);
+      session.results.innerHTML='<div class="sg-search-loading" aria-hidden="true">'+Array.from({length:5},()=>'<span></span>').join('')+'</div>';
+    }
+  }
+  function runSearch(session) {
     if(session!==searchSession||session.token!==epoch||session.composing)return;
     clearTimeout(session.timer);updateSearchQuery(session);
     const query=session.query;
     if(!query){searchHint(session);return;}
-    if(session.requested===query)return;
+    if(session.requested===query)return session.pending;
     if(session.controller)session.controller.abort();
     session.controller=new AbortController();
     const signal=session.controller.signal,revision=++session.revision;
     session.requested=query;
     const list=catalogs(true),results=session.results;
-    results.setAttribute('aria-busy','true');session.status.textContent='Searching your addons…';
-    if(!list.length){results.innerHTML=empty('No search addons','Install an addon with a searchable catalog.','addons','Open Addons');results.setAttribute('aria-busy','false');session.status.textContent='No searchable catalogs installed.';return;}
-    global.StreamGlassUI.clear(results);results.innerHTML='';let count=0,failed=0,next=0;
-    const slots=list.map(()=>{const node=doc.createElement('div');results.append(node);return node;});
-    const loading=doc.createElement('div');loading.innerHTML=pendingText('Finding titles');results.append(loading);
+    searchPending(session);
+    if(!list.length){global.StreamGlassUI.clear(results);results.innerHTML=empty('Search needs a catalog','Add a searchable catalog to find movies and series.','addons','Open Addons');results.setAttribute('aria-busy','false');results.inert=false;delete results.dataset.stale;session.status.textContent='';return;}
+    let count=0,failed=0,next=0,started=false;
+    const groups=new Map(),items=new Map(),seen=new Set();
+    const labels={movie:'Movies',series:'Series',anime:'Anime',channel:'Channels',tv:'TV'};
+    const types=[...new Set(['movie','series','anime',...list.map(entry=>entry.catalog.type)])];
+    function showResults(batch){
+      const changed=new Set();
+      for(const meta of batch){
+        const key=meta.type+':'+meta.id;if(seen.has(key))continue;seen.add(key);
+        if(!items.has(meta.type))items.set(meta.type,[]);items.get(meta.type).push(meta);
+        changed.add(meta.type);
+      }
+      count=seen.size;if(!count)return;
+      // Later catalogs append within a type. If a new type appears above a card
+      // already being browsed, keep that same card at the same screen position.
+      const focused=doc.activeElement?.matches('.sg-card')&&results.contains(doc.activeElement)?doc.activeElement:null;
+      const before=focused?.getBoundingClientRect().top;
+      if(!started){
+        global.StreamGlassUI.clear(results);results.innerHTML='';started=true;
+        for(const type of types){const node=doc.createElement('div');groups.set(type,node);results.append(node);}
+      }
+      for(const type of changed){
+        if(!groups.has(type)){const node=doc.createElement('div');groups.set(type,node);results.append(node);}
+        global.StreamGlassUI.region(groups.get(type),{api:reactAPI,rows:[{title:labels[type]||'More titles',items:[...items.get(type)],priority:true}]});
+      }
+      results.inert=false;delete results.dataset.stale;
+      if(focused?.isConnected&&doc.activeElement===focused){const offset=focused.getBoundingClientRect().top-before;if(Math.abs(offset)>1)view.scrollTop+=offset;}
+    }
     // Four concurrent requests at most, cancelled immediately when text changes.
-    await Promise.all(Array.from({length:Math.min(4,list.length)},async()=>{
+    session.pending=(async()=>{await Promise.all(Array.from({length:Math.min(4,list.length)},async()=>{
       while(next<list.length&&currentSearch(session,revision)){
         const index=next++,entry=list[index];
         try {
           const data=await fetchJSON(resourceURL(entry.addon.transportUrl,'catalog',entry.catalog.type,entry.catalog.id,{search:query}),false,signal);
           if(!currentSearch(session,revision))return;
           const metas=(data.metas||[]).filter(item=>item&&item.id).slice(0,40).map(item=>({...item,type:item.type||entry.catalog.type}));
-          if(metas.length){count+=metas.length;global.StreamGlassUI.region(slots[index],{api:reactAPI,rows:[{title:(entry.catalog.name||entry.addon.manifest.name)+' · '+entry.catalog.type,items:metas}]});loading.hidden=true;}
+          if(metas.length)showResults(metas);
         }catch(_){if(!currentSearch(session,revision))return;failed++;}
       }
     }));
     if(!currentSearch(session,revision))return;
-    loading.remove();results.setAttribute('aria-busy','false');
-    session.status.textContent=count?count+' results'+(failed?' · Some addons could not be reached.':''):(failed?'Search could not finish. Press Search to retry.':'No matching titles.');
-    if(!count)results.innerHTML=empty(failed?'Search unavailable':'No results',failed?'Check your connection, then press Search to retry.':'Try another title or add another searchable catalog.');
+    results.setAttribute('aria-busy','false');results.inert=false;delete results.dataset.stale;
+    session.status.textContent=count?count+(count===1?' title':' titles')+(failed?' · Some results are unavailable.':''):'';
+    if(!count){global.StreamGlassUI.clear(results);results.innerHTML=empty(failed?'Search unavailable':'No results',failed?'Check your connection, then press Search to try again.':'Try another title or a different spelling.');}
     if(failed)session.requested=null; // Permit an explicit retry of failed requests.
+    })();
+    return session.pending;
   }
   async function search(token,query) {
     setScreen({route:'search',api:reactAPI,query},'search');
     const session={token,query:query.trim(),revision:0,requested:null,composing:false,input:doc.getElementById('sg-search-input'),results:doc.getElementById('sg-search-results'),status:doc.getElementById('sg-search-status')};
     searchSession=session;
+    const clear=doc.querySelector('[data-action="search-clear"]');if(clear)clear.hidden=!session.input.value;
     if(query.trim())await runSearch(session);else searchHint(session);
   }
   async function discover(token,params) {
@@ -649,6 +687,12 @@
     finally {restoreScreen(token,revision);}
   }
   async function action(name,node) {
+    if(name==='search-clear'&&searchSession){
+      searchSession.input.value='';queueSearch();
+      if(host().finishSearchEditing)host().finishSearchEditing();
+      searchSession.input.focus({preventScroll:true});
+      return;
+    }
     if(name==='refresh'){discardHome();return render();}
     if(name==='recommendations-refresh'){recommendationSnapshot=null;return render();}
     if(name==='account'||name==='addons'){location.hash='#/'+name;return;}
@@ -674,7 +718,7 @@
     if(started)return;started=true;core=global.StreamGlassCore;
     if(!core)throw new Error('Stremio core is not available.');
     root=doc.getElementById('app');if(!root){root=doc.createElement('div');root.id='app';doc.body.append(root);}
-    root.innerHTML='<div class="main-nav-bars-container sg-app"><nav class="horizontal-nav-bar sg-nav"><a class="logo-container sg-brand" href="#/board" aria-label="StreamGlass Home"></a><div class="sg-nav-links">'+[['board','Home'],['picks','For you'],['library','My List']].map(([route,label])=>'<a class="nav-tab-button" data-nav="'+route+'" href="#/'+route+'">'+label+'</a>').join('')+'</div><a class="sg-nav-search" href="#/search" aria-label="Search"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4.5 4.5"></path></svg></a><a class="sg-nav-settings" data-nav="settings" href="#/settings" aria-label="Settings"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="currentColor" stroke="none"/><circle cx="15" cy="17" r="3" fill="currentColor" stroke="none"/></svg></a><button id="sg-account" data-action="account" class="sg-account-button">Sign in</button></nav><main id="sg-view" tabindex="-1">'+pendingText('Starting StreamGlass TV')+'</main></div>';
+    root.innerHTML='<div class="main-nav-bars-container sg-app"><nav class="horizontal-nav-bar sg-nav"><a class="logo-container sg-brand" href="#/board" aria-label="StreamGlass Home"></a><div class="sg-nav-links">'+[['board','Home'],['picks','For you'],['library','My List']].map(([route,label])=>'<a class="nav-tab-button" data-nav="'+route+'" href="#/'+route+'">'+label+'</a>').join('')+'</div><a class="sg-nav-search" data-nav="search" href="#/search" aria-label="Search"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4.5 4.5"></path></svg></a><a class="sg-nav-settings" data-nav="settings" href="#/settings" aria-label="Settings"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="currentColor" stroke="none"/><circle cx="15" cy="17" r="3" fill="currentColor" stroke="none"/></svg></a><button id="sg-account" data-action="account" class="sg-account-button">Sign in</button></nav><main id="sg-view" tabindex="-1">'+pendingText('Starting StreamGlass TV')+'</main></div>';
     if(host().mount)host().mount(root);
     view=doc.getElementById('sg-view');
     root.addEventListener('click',event=>{
@@ -687,7 +731,16 @@
     });
     root.addEventListener('submit',event=>{
       event.preventDefault();const form=event.target;
-      if(form.id==='sg-search-form'&&searchSession)runSearch(searchSession).catch(()=>notify('Search could not finish. Try again.'));
+      if(form.id==='sg-search-form'&&searchSession){
+        const session=searchSession;if(session.composing)return;
+        // Finishing a search closes editing immediately. Results may already be
+        // loaded by live search, or still belong to the same in-flight request.
+        if(host().finishSearchEditing){if(host().finishSearchEditing()===false)return;}else session.input.blur();
+        const query=session.input.value.trim();
+        Promise.resolve(runSearch(session)).then(()=>{
+          if(searchSession===session&&session.query===query)host().focusSearchResults?.();
+        }).catch(()=>notify('Search could not finish. Try again.'));
+      }
       if(form.id==='sg-login-form')login(form);
       if(form.id==='sg-addon-form')installAddon(form);
       if(form.id==='sg-prefs-form'){const prefs={...profile.settings,audioLanguage:form.elements.audioLanguage.value||null,subtitlesLanguage:form.elements.subtitlesLanguage.value==='none'?null:form.elements.subtitlesLanguage.value,subtitlesSize:Number(form.elements.subtitlesSize.value)};core.dispatch(ctxAction('UpdateSettings',prefs),'ctx').then(refreshProfile).then(()=>notify('Playback settings saved.')).catch(()=>notify('Settings could not be saved.'));}
@@ -740,7 +793,7 @@
     const cancelPendingPlayback=()=>{if(!host().mobile)playbackGeneration++;};
     doc.addEventListener('visibilitychange',()=>{if(doc.hidden){cancelPendingPlayback();discardHome();}});
     global.addEventListener('pagehide',cancelPendingPlayback);
-    await core.init({appVersion:'0.8.1',shellVersion:'webos25'});global.core=core;global.services={core};
+    await core.init({appVersion:'0.8.2',shellVersion:'webos25'});global.core=core;global.services={core};
     core.on('event', event => {
       if (!event) return;
       const addonsChanged=/^(AddonsPulledFromAPI|AddonInstalled|AddonUninstalled|AddonUpgraded|UserLoggedOut)$/.test(event.event||'');

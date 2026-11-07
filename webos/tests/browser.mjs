@@ -35,7 +35,7 @@ try {
   const page=await browser.newPage({viewport:{width:1920,height:1080}});
   let acceptLogin=false,loginRequests=0,libraryWrites=0,addonWrites=0;
   let storedAddons=[addon];
-  const searchRequests=[];
+  const searchRequests=[];let releaseMovieSearch;
   let recommendationFailure=false, genrelessCatalog=false, slowRecommendations=false, metadataRequests=0;
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
   await page.route(/^https?:/,async route=>{
@@ -60,8 +60,12 @@ try {
       const query=match?decodeURIComponent(match[1]):'';
       if(query)searchRequests.push(query);
       if(query==='slowold')await new Promise(resolve=>setTimeout(resolve,1000));
+      if(query.startsWith('progressive')&&parts[1]==='movie')await new Promise(resolve=>{releaseMovieSearch=resolve;});
       if(query==='failsearch'){await route.fulfill({status:503,body:'Unavailable'});return;}
-      await reply({metas:query==='nothingfound'?[]:Array.from({length:9},(_,i)=>({...meta(parts[1],parts[1]==='series'?'sg-series-'+i:'sg-movie-'+i),...(genrelessCatalog?{genres:[]}:{}),name:(query?query+' ':'')+(parts[1]==='series'?'Test Series ':'Test Film ')+(i+1)}))});return;
+      const matches=query==='nothingfound'?[]:Array.from({length:9},(_,i)=>({...meta(parts[1],parts[1]==='series'?'sg-series-'+i:'sg-movie-'+i),...(genrelessCatalog?{genres:[]}:{}),name:(query?query+' ':'')+(parts[1]==='series'?'Test Series ':'Test Film ')+(i+1)}));
+      if(query==='progressive'&&parts[1]==='series')matches.push({...meta('anime','sg-anime'),name:'Progressive anime fixture'});
+      if(query==='duplicates')matches.push(matches[0],{...meta('movie','sg-movie-0'),name:'Duplicate from another catalog'});
+      await reply({metas:matches});return;
     }
     if(parts[0]==='meta'){metadataRequests++;await reply({meta:meta(parts[1],parts[2].replace(/\.json$/,''))});return;}
     if(parts[0]==='stream'){await reply({streams:[{name:'Torrentio\n[TB+] 1080p',title:'Direct test stream\nH.264 / AAC',url:origin+'/clip.mp4?token=private-stream-token',subtitles:[{id:'fixture-caption',lang:'eng',url:origin+'/subtitle.srt'}]},{name:'Raw torrent fixture',title:'Unsupported raw torrent',infoHash:'a'.repeat(40),fileIdx:0},...Array.from({length:16},(_,i)=>({name:'Direct choice '+(i+3),title:'1080p H.264 AAC',url:origin+'/clip.mp4'}))]});return;}
@@ -111,24 +115,65 @@ try {
   assert.ok(await searchInput.evaluate(el=>el.getBoundingClientRect().left>=60),'Search field has TV-safe side padding');
   assert.ok(await page.locator('#sg-search-results .sg-card').first().evaluate(el=>el.getBoundingClientRect().left>=60),'First result aligns with search heading');
   await page.screenshot({path:path.join(shots,'live-search.png')});
+  // Search/Done finishes editing and enters results without requiring Back.
+  await searchInput.press('Enter');
+  await page.waitForFunction(()=>document.activeElement.matches('#sg-search-results .sg-card'));
+  assert.equal(await searchInput.evaluate(el=>!!el.dataset.sgTyping),false);
+  await page.keyboard.press('ArrowUp');
+  assert.equal(await searchInput.evaluate(el=>el===document.activeElement&&el.readOnly),true);
+  await page.keyboard.press('ArrowUp');
+  assert.equal(await page.locator('.sg-search-home').evaluate(el=>el===document.activeElement),true,'Home is reachable directly from Search');
+  await page.keyboard.press('ArrowDown');
+  await searchInput.click();
   await searchInput.fill('slowold');
-  await page.waitForFunction(()=>document.querySelector('#sg-search-status').textContent==='Searching your addons…');
+  await page.waitForFunction(()=>document.querySelector('#sg-search-status').textContent==='Searching…');
+  assert.ok(await page.locator('#sg-search-results').evaluate(el=>el.inert&&el.querySelector('.sg-card')),'Previous artwork stays in place but cannot open stale results');
   await page.waitForTimeout(100);
   await searchInput.fill('newtitle');
   await page.waitForFunction(()=>document.querySelector('#sg-search-results')?.getAttribute('aria-busy')==='false'&&document.querySelector('#sg-search-results .sg-card')?.textContent.includes('newtitle'));
   await page.waitForTimeout(1100);
   assert.ok(!(await page.locator('#sg-search-results').innerText()).includes('slowold'),'Late responses cannot replace a newer query');
+  await searchInput.fill('slowold');
+  await page.waitForFunction(()=>document.querySelector('#sg-search-status').textContent==='Searching…');
+  await page.waitForTimeout(500);
+  const pendingCount=searchRequests.filter(query=>query==='slowold').length;
+  await searchInput.press('Enter');
+  await page.waitForFunction(()=>document.activeElement.matches('#sg-search-results .sg-card')&&document.activeElement.textContent.includes('slowold'));
+  assert.equal(searchRequests.filter(query=>query==='slowold').length,pendingCount,'Submitting an in-flight live query reuses its requests');
+  await searchInput.click();await searchInput.fill('duplicates');
+  await page.waitForFunction(()=>document.querySelector('#sg-search-results').getAttribute('aria-busy')==='false'&&document.querySelector('#sg-search-status').textContent==='18 titles');
+  assert.equal(await page.locator('#sg-search-results .sg-card').count(),18,'Duplicate identities across catalogs appear only once');
+  assert.deepEqual(await page.locator('#sg-search-results h2').allTextContents(),['Movies','Series']);
+  for(const query of ['progressive','progressive-short']){
+    await searchInput.click();await searchInput.fill(query);
+    await page.waitForFunction(value=>document.querySelector('#sg-search-results .sg-card')?.textContent.includes(value+' Test Series'),query);
+    const seriesCard=await page.locator('#sg-search-results .sg-card').first().elementHandle();
+    await seriesCard.focus();
+    const seriesTop=await seriesCard.evaluate(el=>el.getBoundingClientRect().top);
+    releaseMovieSearch();
+    await page.waitForFunction(()=>document.querySelector('#sg-search-results').getAttribute('aria-busy')==='false');
+    const position=await seriesCard.evaluate(el=>{const rect=el.getBoundingClientRect(),view=document.querySelector('#sg-view');return {active:el===document.activeElement&&el.isConnected,top:rect.top,bottom:rect.bottom,viewTop:view.getBoundingClientRect().top,viewBottom:view.getBoundingClientRect().bottom,scroll:view.scrollTop,maxScroll:view.scrollHeight-view.clientHeight};});
+    assert.ok(position.active,'Late rows retain the already-focused Series card');
+    if(query==='progressive')assert.ok(Math.abs(position.top-seriesTop)<2,'A late Movies row preserves the focused card position when scrolling permits');
+    else assert.ok(position.top>=position.viewTop&&position.bottom<=position.viewBottom&&Math.abs(position.scroll-position.maxScroll)<2,'Short result pages preserve the whole focused card within the available scroll range');
+    await page.keyboard.press('ArrowUp');await page.keyboard.press('ArrowUp');
+  }
+  await page.locator('[data-action="search-clear"]').click();
+  assert.equal(await searchInput.inputValue(),'');
+  assert.ok(await searchInput.evaluate(el=>el===document.activeElement&&el.readOnly),'Clear leaves a navigable field, without reopening the TV keyboard');
+  await searchInput.click();
   await searchInput.fill('');
   assert.equal(await page.locator('#sg-search-results .sg-card').count(),0,'Clearing removes results immediately');
   const beforeShort=searchRequests.length;
   await searchInput.fill('V');await page.waitForTimeout(550);
   assert.equal(searchRequests.length,beforeShort,'One character waits for an explicit Search');
-  await page.locator('#sg-search-form button').click();
+  await page.locator('#sg-search-form button[type="submit"]').click();
   await page.locator('#sg-search-results .sg-card').first().waitFor();
   assert.ok(searchRequests.includes('V'),'One-letter titles can still be submitted');
   await searchInput.click();
   const beforeComposition=searchRequests.length;
   await searchInput.dispatchEvent('compositionstart');await searchInput.fill('composed');
+  assert.ok(await page.locator('#sg-search-results').evaluate(el=>el.inert),'Composing a new query also makes previous results inactive');
   await page.waitForTimeout(550);
   assert.equal(searchRequests.length,beforeComposition,'No requests during IME composition');
   await searchInput.dispatchEvent('compositionend');
@@ -138,7 +183,7 @@ try {
   await searchInput.fill('failsearch');
   await page.getByRole('heading',{name:'Search unavailable',exact:true}).waitFor();
   const failedCount=searchRequests.filter(q=>q==='failsearch').length;
-  await page.locator('#sg-search-form button').click();
+  await page.locator('#sg-search-form button[type="submit"]').click();
   await page.getByRole('heading',{name:'Search unavailable',exact:true}).waitFor();
   assert.ok(searchRequests.filter(q=>q==='failsearch').length>failedCount,'Same-query retry is available after failures');
   await searchInput.click();await searchInput.fill('liveback');
@@ -203,7 +248,7 @@ try {
   assert.equal(await page.evaluate(()=>document.getElementById('sg-view')===retainedHome&&document.activeElement===retainedCard),true,'Unchanged account sync preserves the existing Home and card nodes for Back');
   // Search origin is restored, rather than always returning to Home.
   await page.locator('.sg-nav-search').click();
-  await page.locator('#sg-search-input').click();await page.locator('#sg-search-input').fill('return test');await page.locator('#sg-search-form button').click();
+  await page.locator('#sg-search-input').click();await page.locator('#sg-search-input').fill('return test');await page.locator('#sg-search-form button[type="submit"]').click();
   await page.locator('.sg-card').first().click();await page.locator('[data-action="focus-streams"]').waitFor();
   await page.keyboard.press('Escape');
   await page.waitForFunction(()=>location.hash.includes('search=return%20test')&&document.activeElement.classList.contains('sg-card'));
@@ -360,7 +405,7 @@ try {
   await page.locator('#sg-addon-form button').click();
   await page.waitForFunction(()=>StreamGlassShell.state.addonCount>=2);
   await page.locator('.sg-nav-search').click();
-  await page.locator('#sg-search-input').click();await page.locator('#sg-search-input').fill('fixture');await page.locator('#sg-search-form button').click();
+  await page.locator('#sg-search-input').click();await page.locator('#sg-search-input').fill('fixture');await page.locator('#sg-search-form button[type="submit"]').click();
   await page.locator('.sg-card').first().waitFor();
   await page.reload();await ready();await page.waitForFunction(()=>StreamGlassShell.state.signedIn);
   await page.keyboard.press('F2');await page.getByRole('heading',{name:'StreamGlass TV '+appVersion}).waitFor();
@@ -368,7 +413,7 @@ try {
   for(const secret of ['secret-fixture-token','private-stream-token','test@example.invalid','fake-password','fixtures.invalid'])assert.ok(!exported.includes(secret),'No private values in diagnostic export');
   assert.ok(libraryWrites>0);assert.ok(addonWrites>0);
   assert.deepEqual(errors,[],'No JavaScript runtime errors in packaged app');
-  const summary={passed:true,engine:await browser.version(),protocol:'file:',mockedAccountAndAddons:true,localVideoPlayback:true,subtitleRendering:true,resume:true,pendingPlaybackCancelledOnHide:true,pagehideReleasesPlayer:true,closeDoesNotWaitForCloudSync:true,libraryWrites,addonWrites,remoteNavigation:true,liveSearch:true,inputAndCaretPreserved:true,staleSearchSuppressed:true,compositionSafe:true,liveQueryRestored:true,roundedNavigationFocus:true,navReturnsToContent:true,localStreamScrolling:true,continueWatchingInsertion:true,railBoundary:true,rowFocusMemory:true,backRestoresCardAndScroll:true,searchOriginRestored:true,homeTypeFilter:true,vectorSearchIcon:true,recommendationsFromRealCoreProgress:true,recommendationsFromRealCoreWatched:true,recommendationExclusions:true,recommendationMetadataEnrichment:true,recommendationFilters:true,recommendationBackFocus:true,recommendationFailureRetry:true,recommendationCancellation:true,recommendationColdStart:true,sensitiveDiagnosticsExcluded:true,runtimeErrors:errors};
+  const summary={passed:true,engine:await browser.version(),protocol:'file:',mockedAccountAndAddons:true,localVideoPlayback:true,subtitleRendering:true,resume:true,pendingPlaybackCancelledOnHide:true,pagehideReleasesPlayer:true,closeDoesNotWaitForCloudSync:true,libraryWrites,addonWrites,remoteNavigation:true,liveSearch:true,searchSubmitEntersResults:true,searchHomeWithoutBack:true,searchSubmitReusesPendingRequests:true,searchResultsDeduplicated:true,searchResultFocusPreserved:true,staleResultsInactive:true,inputAndCaretPreserved:true,staleSearchSuppressed:true,compositionSafe:true,liveQueryRestored:true,roundedNavigationFocus:true,navReturnsToContent:true,localStreamScrolling:true,continueWatchingInsertion:true,railBoundary:true,rowFocusMemory:true,backRestoresCardAndScroll:true,searchOriginRestored:true,homeTypeFilter:true,vectorSearchIcon:true,recommendationsFromRealCoreProgress:true,recommendationsFromRealCoreWatched:true,recommendationExclusions:true,recommendationMetadataEnrichment:true,recommendationFilters:true,recommendationBackFocus:true,recommendationFailureRetry:true,recommendationCancellation:true,recommendationColdStart:true,sensitiveDiagnosticsExcluded:true,runtimeErrors:errors};
   await fs.writeFile(path.join(shots,'browser-results.json'),JSON.stringify(summary,null,2));
   console.log(JSON.stringify(summary,null,2));
 }finally{

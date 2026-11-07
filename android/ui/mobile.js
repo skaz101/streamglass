@@ -151,7 +151,7 @@
     const signedIn=window.StreamGlassShell.state.signedIn;
     const overlay=doc.createElement('div');overlay.className='sg-mobile-overlay';
     const links=[['account',signedIn?'Your account':'Sign in to Stremio','user'],['calendar','Release calendar','calendar'],['discover','Browse all titles','grid'],['addons','Manage addons','addon'],['settings','App settings','settings']];
-    overlay.innerHTML='<section class="sg-mobile-sheet sg-menu-sheet" role="dialog" aria-modal="true" aria-labelledby="sg-menu-title" tabindex="-1">'+closeButton+'<div class="sg-menu-profile">'+icon('user')+'</div><h2 id="sg-menu-title">Your StreamGlass</h2><p>Your stories. Your way.</p><nav aria-label="Account and app">'+links.map(([route,label,glyph])=>'<a href="#/'+route+'">'+icon(glyph)+'<span>'+label+'</span><span aria-hidden="true">›</span></a>').join('')+'</nav><small>StreamGlass 0.8.1</small></section>';
+    overlay.innerHTML='<section class="sg-mobile-sheet sg-menu-sheet" role="dialog" aria-modal="true" aria-labelledby="sg-menu-title" tabindex="-1">'+closeButton+'<div class="sg-menu-profile">'+icon('user')+'</div><h2 id="sg-menu-title">Your StreamGlass</h2><p>Your stories. Your way.</p><nav aria-label="Account and app">'+links.map(([route,label,glyph])=>'<a href="#/'+route+'">'+icon(glyph)+'<span>'+label+'</span><span aria-hidden="true">›</span></a>').join('')+'</nav><small>StreamGlass 0.8.2</small></section>';
     doc.querySelector('.sg-app').append(overlay);paintAccount();open(overlay,{remove:true});
   }
   function mount(root) {
@@ -290,7 +290,7 @@
       scrollTimer=setTimeout(()=>{if(scrollObserver)scrollObserver.disconnect();scrollObserver=null;},3000);
     }
     if(route==='library')requestAnimationFrame(()=>{if(view.isConnected&&doc.body.dataset.dxRoute==='library')libraryFilters(view);});
-    const heading=view.querySelector('.sg-page>h1');
+    const heading=view.querySelector('.sg-page>h1,.sg-search-header>h1');
     if(heading&&route==='library')heading.textContent='My List';
     if(heading&&route==='search'){
       heading.textContent='Search';

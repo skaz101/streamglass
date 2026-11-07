@@ -2,16 +2,16 @@
 
 An unofficial Stremio client for **LG webOS TVs and Android phones/tablets**, with a dedicated Android interface, a TV interface designed for remotes, live search, local recommendations, and watch-progress sync.
 
-Version **0.8.1** fixes the clipped featured area when returning from lower TV rows. Featured artwork transitions retain the outgoing picture while the next one fades in, and top controls use consistent focus motion. The landscape shelves and Home-position restoration from 0.8.0 remain, along with playback cleanup from 0.7.4.
+Version **0.8.2** groups Search results by title type and removes duplicates. TV Search adds visible Home and Clear controls and moves from keyboard editing to results after submission. Previous artwork stays visible but inactive while a new query loads.
 
-See [TV release notes](webos/RELEASE-0.8.1.md) and [Android release notes](android/RELEASE-0.8.1.md) for verification and limits. Both packages remain preview builds.
+See [TV release notes](webos/RELEASE-0.8.2.md) and [Android release notes](android/RELEASE-0.8.2.md) for verification and limits. Both packages remain preview builds.
 
 ## Downloads
 
-- [**Android 0.8.1 APK**](https://github.com/skaz101/streamglass/releases/download/v0.8.1/streamglass-android-0.8.1.apk) — updates the original preview installation.
-- [Android 0.8.1 release, source and checksums](https://github.com/skaz101/streamglass/releases/tag/v0.8.1)
-- [LG TV 0.8.1 installer (.ipk)](https://github.com/skaz101/streamglass/releases/download/v0.8.1/com.streamglass.tv_0.8.1_all.ipk)
-- [LG 0.8.1 release, source and checksums](https://github.com/skaz101/streamglass/releases/tag/v0.8.1)
+- [**Android 0.8.2 APK**](https://github.com/skaz101/streamglass/releases/download/v0.8.2/streamglass-android-0.8.2.apk) — updates the original preview installation.
+- [Android 0.8.2 release, source and checksums](https://github.com/skaz101/streamglass/releases/tag/v0.8.2)
+- [LG TV 0.8.2 installer (.ipk)](https://github.com/skaz101/streamglass/releases/download/v0.8.2/com.streamglass.tv_0.8.2_all.ipk)
+- [LG 0.8.2 release, source and checksums](https://github.com/skaz101/streamglass/releases/tag/v0.8.2)
 
 The Android update retains the original application ID and preview certificate.
 Install it over the existing app to preserve local account data.
@@ -64,7 +64,7 @@ StreamGlass is not endorsed by DX.BI, Stremio, LG, or any addon provider.
 
 ## Shared React interface
 
-Version 0.8.1 uses shared React screens for Android and webOS in `webos/src/react/`.
+Version 0.8.2 uses shared React screens for Android and webOS in `webos/src/react/`.
 The home screen includes an animated featured carousel and curated catalog rows;
 the release calendar follows dated movies and episodes from saved titles.
 Native playback and Stremio account integration retain their existing adapters.

@@ -64,5 +64,5 @@ async function visit(dir) {
   }
 }
 await visit(out);
-await fs.writeFile(path.join(out, 'build-manifest.json'), JSON.stringify({app: 'com.streamglass.tv', version: '0.8.1', upstreamDXBI: 'c78ca45dff30b23c22a38928445876def0d0d472', stremioCore: '0.66.0', files}, null, 2));
+await fs.writeFile(path.join(out, 'build-manifest.json'), JSON.stringify({app: 'com.streamglass.tv', version: '0.8.2', upstreamDXBI: 'c78ca45dff30b23c22a38928445876def0d0d472', stremioCore: '0.66.0', files}, null, 2));
 console.log('Built ' + files.length + ' files in ' + out);

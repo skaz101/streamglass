@@ -1,7 +1,7 @@
 /* StreamGlass TV webOS adapter. Modified 2026-10-30. GPL-3.0-or-later. */
 (function () {
   'use strict';
-  const VERSION = '0.8.1';
+  const VERSION = '0.8.2';
   const APP_ID = 'com.streamglass.tv';
   const events = [];
   // Deliberately allow only numeric/boolean diagnostics. Never record account data,
@@ -120,6 +120,29 @@
       showStreams();
     }
   }
+  const searchComposition=new WeakSet();
+  let keyboardVisibility=null;
+  function finishSearchEditing() {
+    const field=document.querySelector('#sg-view #sg-search-input');
+    if(!field||searchComposition.has(field))return false;
+    const wasFocused=document.activeElement===field;
+    // An explicit submit or navigation gesture ends editing. Blur first so the
+    // native keyboard closes, then restore an inert focus target for the remote.
+    field.blur();
+    delete field.dataset.sgTyping;
+    field.readOnly=true;field.dataset.sgLocked='1';
+    if(wasFocused)field.focus({preventScroll:true});
+    return true;
+  }
+  function focusSearchResults() {
+    const view=document.getElementById('sg-view'),field=view&&view.querySelector('#sg-search-input');
+    const form=field&&field.closest('#sg-search-form');
+    if(!field||!form||document.hidden||field.dataset.sgTyping||searchComposition.has(field)||modal||(player&&player.active()))return false;
+    // A slow response must not pull focus back after the user has left the form.
+    if(!form.contains(document.activeElement))return false;
+    const first=view.querySelector('#sg-search-results .sg-card');
+    return first&&visible(first)?focusTarget(first):false;
+  }
   window.StreamGlassHost = {
     play(payload) {
       if (!player) throw new Error('Player is not ready');
@@ -132,6 +155,8 @@
     screenChanged,
     detailReady,
     showStreams,
+    finishSearchEditing,
+    focusSearchResults,
     log,
   };
 
@@ -183,7 +208,7 @@
   document.addEventListener('visibilitychange',()=>{if(document.hidden)stopMotion();});
   if(window.matchMedia)window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change',event=>{if(event.matches)stopMotion();});
   function focusTarget(next) {
-    if (!next || !next.isConnected || next.disabled || next.hidden) return false;
+    if (!next || !next.isConnected || next.disabled || next.hidden || next.closest('[inert],[hidden]')) return false;
     const rail=next.closest('.sg-cards');
     const view=document.getElementById('sg-view');
     // The featured scene and its controls are one destination. Keeping only the
@@ -238,8 +263,24 @@
       if(key==='ArrowDown'){
         const view=document.getElementById('sg-view'),last=view&&view.sgLastFocus;
         if(last&&last.isConnected&&view.contains(last)&&visible(last))return focusTarget(last);
-        return focusTarget(view&&view.querySelector('.sg-hero .sg-primary,button:not(:disabled),a[href],input,select'));
+        return focusTarget(view&&(view.querySelector('#sg-search-input')||view.querySelector('.sg-hero .sg-primary,button:not(:disabled),a[href],input,select')));
       }
+    }
+    const searchForm=!dialog&&current&&current.closest('#sg-search-form');
+    if(searchForm){
+      if(key==='ArrowUp')focusTarget(document.querySelector('#sg-view .sg-search-header a[href="#/board"]')||document.querySelector('.sg-nav-search')||navTarget());
+      else if(key==='ArrowDown')focusTarget(document.querySelector('#sg-search-results .sg-card'));
+      else {
+        const controls=[...searchForm.querySelectorAll(focusableSelector)].filter(visible);
+        focusTarget(controls[controls.indexOf(current)+(key==='ArrowRight'?1:-1)]);
+      }
+      return true;
+    }
+    const searchHeader=!dialog&&current&&current.closest('.sg-search-header');
+    if(searchHeader){
+      if(key==='ArrowDown'||key==='ArrowRight')focusTarget(document.querySelector('#sg-view #sg-search-input'));
+      else if(key==='ArrowUp')focusTarget(document.querySelector('.sg-nav-search')||navTarget());
+      return true;
     }
     const filterStrip=!dialog&&current&&current.closest('.sg-home-filters');
     if(filterStrip){
@@ -284,7 +325,7 @@
       const adjacent=rails[rails.indexOf(rail)+(key==='ArrowDown'?1:-1)];
       if(adjacent)return focusTarget(rememberedCard(adjacent));
       if(key==='ArrowDown')return true;
-      return focusTarget(document.querySelector('.sg-hero .sg-primary')||navTarget());
+      return focusTarget((rail.closest('#sg-search-results')&&document.querySelector('#sg-view #sg-search-input'))||document.querySelector('.sg-hero .sg-primary')||navTarget());
     }
     const hero=!dialog&&current&&current.closest('.sg-hero');
     if(hero){
@@ -303,6 +344,7 @@
       rowFocus.set(grid,current);
       const items=[...grid.querySelectorAll('.sg-card')],index=items.indexOf(current);
       const columns=Math.max(1,getComputedStyle(grid).gridTemplateColumns.trim().split(/\s+/).length);
+      if(key==='ArrowUp'&&index<columns&&grid.closest('#sg-search-results'))return focusTarget(document.querySelector('#sg-view #sg-search-input'));
       const offset=key==='ArrowRight'?1:key==='ArrowLeft'?-1:key==='ArrowDown'?columns:-columns;
       if((key==='ArrowLeft'&&index%columns===0)||(key==='ArrowRight'&&index%columns===columns-1))return true;
       if(items[index+offset])return focusTarget(items[index+offset]);
@@ -345,9 +387,11 @@
     }
     if (player && player.active() && player.handleKey(e)) { consume(e); return; }
     const field = e.target && typeof e.target.matches === 'function' && e.target.matches('input:not([type="checkbox"]):not([type="radio"]), textarea');
+    if (field && e.target.id === 'sg-search-input' && (e.isComposing || e.keyCode === 229 || searchComposition.has(e.target))) return;
     if (key === 'Back' || key === 'Escape') {
       consume(e);
       if (field && e.target.dataset.sgTyping) {
+        if(e.target.id==='sg-search-input'){finishSearchEditing();return;}
         delete e.target.dataset.sgTyping;
         e.target.readOnly = true;
         e.target.blur();
@@ -359,7 +403,10 @@
       else location.hash = '#/board';
       return;
     }
-    if (field && e.target.dataset.sgTyping) return;
+    if (field && e.target.dataset.sgTyping) {
+      if(e.target.id==='sg-search-input'&&keyboardVisibility===false&&(key==='ArrowUp'||key==='ArrowDown'))finishSearchEditing();
+      else return;
+    }
     if (key === 'Enter') {
       if (e.target && e.target.tagName === 'SELECT') {
         consume(e);
@@ -367,6 +414,7 @@
         return;
       }
       if (field) {
+        if(e.target.id==='sg-search-input')keyboardVisibility=null;
         e.target.blur();
         e.target.readOnly = false;
         e.target.dataset.sgTyping = '1';
@@ -389,10 +437,18 @@
   window.addEventListener('pointerdown', (e) => {
     pointerAt = performance.now();
     if (e.target && typeof e.target.matches === 'function' && e.target.matches('input, textarea')) {
+      if(e.target.id==='sg-search-input')keyboardVisibility=null;
       e.target.readOnly = false;
       e.target.dataset.sgTyping = '1';
     }
   }, true);
+  // LG also emits visibility:false while switching to voice input. Never blur
+  // or change edit mode on this event alone; wait for submit or a remote gesture.
+  document.addEventListener('keyboardStateChange',event=>{
+    if(typeof event.detail?.visibility==='boolean')keyboardVisibility=event.detail.visibility;
+  });
+  document.addEventListener('compositionstart',event=>{if(event.target.id==='sg-search-input')searchComposition.add(event.target);});
+  document.addEventListener('compositionend',event=>{if(event.target.id==='sg-search-input')searchComposition.delete(event.target);});
   window.addEventListener('focusin', (e) => {
     if (!e.target || typeof e.target.matches !== 'function' || !e.target.matches('input[type="text"], input[type="email"], input[type="password"], input[type="url"], input[type="search"], textarea')) return;
     if (!e.target.dataset.sgTyping && performance.now() - pointerAt > 700) {
