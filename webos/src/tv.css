@@ -1,0 +1,97 @@
+/* Own the TV cascade: the legacy DX.BI stylesheet remains attributed in the
+ * package/source, but is not applied over these independent React surfaces. */
+@font-face{font-family:Inter;src:url("fonts/Inter.ttf");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Bebas Neue";src:url("fonts/BebasNeue-Regular.ttf");font-display:swap}
+html,body{font-family:Inter,Arial,sans-serif;background:#080808}
+/* StreamGlass TV: artwork first, quiet chrome, immediate remote feedback.
+ * Black #080808, raised #202020, focus #f5f5f5, secondary #b8b8b8,
+ * accent #e50914. Inter for navigation and reading; title logos retain identity.
+ * One featured scene + a complete landscape rail in the first viewport.
+ * No animated blur, background video, per-card entrance cascade or permanent layers.
+ * GPL-3.0-or-later. */
+:root:not([data-sg-platform=mobile]){--dx-gutter:4vw;--dx-nav-h:96px;--sg-tv-card-width:calc((100vw - 8vw - 80px)/5)}
+:root:not([data-sg-platform=mobile]) #app .sg-nav.horizontal-nav-bar{height:var(--dx-nav-h);gap:22px;background:#080808;border:0;padding-inline:var(--dx-gutter)}
+:root:not([data-sg-platform=mobile]) #app .sg-nav .sg-brand{width:190px;min-width:190px;height:60px;margin-right:38px;justify-content:flex-start}
+:root:not([data-sg-platform=mobile]) #app .sg-nav .sg-brand::before{font-size:36px;letter-spacing:.02em}
+:root:not([data-sg-platform=mobile]) #app .sg-nav-links{gap:14px}
+:root:not([data-sg-platform=mobile]) #app .sg-nav-links a{height:54px;padding:10px 24px;border-radius:28px;font-size:24px;font-weight:600;color:#b8b8b8}
+:root:not([data-sg-platform=mobile]) #app .sg-nav-links a.selected:not(:focus){background:#ffffff12;color:#fff}
+:root:not([data-sg-platform=mobile]) #app .sg-nav-links a:focus,:root:not([data-sg-platform=mobile]) #app .sg-nav-search:focus,:root:not([data-sg-platform=mobile]) #app .sg-nav-settings:focus,:root:not([data-sg-platform=mobile]) #app .sg-account-button:focus{outline:none!important;background:#f5f5f5;color:#111;box-shadow:none}
+:root:not([data-sg-platform=mobile]) #app .sg-nav-search,:root:not([data-sg-platform=mobile]) #app .sg-nav-settings{display:flex;align-items:center;justify-content:center;width:54px;height:54px;border-radius:50%;flex-shrink:0}
+:root:not([data-sg-platform=mobile]) #app .sg-nav-settings{color:#b8b8b8}
+:root:not([data-sg-platform=mobile]) #app .sg-account-button{border:1px solid #ffffff30;background:transparent;border-radius:28px;min-height:52px;padding:10px 20px;font-size:20px}
+:root:not([data-sg-platform=mobile]) #app #sg-view{scrollbar-width:none;scroll-padding:30px;overscroll-behavior:contain}
+:root:not([data-sg-platform=mobile]) #app #sg-view::-webkit-scrollbar{display:none}
+:root:not([data-sg-platform=mobile]) #app .sg-home-filters{top:12px;left:var(--dx-gutter);gap:10px;padding-top:12px;padding-bottom:12px}
+:root:not([data-sg-platform=mobile]) #app .sg-filter{min-height:44px;padding:9px 22px;border:1px solid #ffffff30;background:#08080850;backdrop-filter:none;border-radius:26px;font-size:19px}
+:root:not([data-sg-platform=mobile]) #app .sg-filter.selected{background:#ffffff15;color:#fff;border-color:#ffffff75}
+:root:not([data-sg-platform=mobile]) #app .sg-filter:focus{background:white;color:#111;border-color:white;outline:none!important;box-shadow:0 0 0 3px #080808,0 0 0 5px #fff}
+:root:not([data-sg-platform=mobile]) #app .sg-home-filters .sg-calendar-link{margin-left:18px;color:#ddd}
+:root:not([data-sg-platform=mobile]) #app .sg-home-rows{padding-top:8px}
+:root:not([data-sg-platform=mobile]) #app .sg-row{margin-bottom:28px;content-visibility:visible}
+:root:not([data-sg-platform=mobile]) #app .sg-row-heading{min-height:42px;margin-bottom:10px;align-items:center}
+:root:not([data-sg-platform=mobile]) #app .sg-row-heading h2{font-size:29px;line-height:1.2;letter-spacing:-.025em;font-weight:700}
+:root:not([data-sg-platform=mobile]) #app .sg-cards{gap:20px;padding-block:12px 8px;scroll-snap-type:none;overscroll-behavior-x:contain}
+:root:not([data-sg-platform=mobile]) #app .sg-card.meta-item-container.sg-card-tv{width:var(--sg-tv-card-width);flex:0 0 var(--sg-tv-card-width);padding:0;border:0;border-radius:8px;transform-origin:center;transition:transform 150ms cubic-bezier(.2,.8,.2,1);animation:none}
+:root:not([data-sg-platform=mobile]) #app .sg-card.sg-card-tv .sg-poster{aspect-ratio:16/9;border-radius:8px;background:#202020;box-shadow:none}
+:root:not([data-sg-platform=mobile]) #app .sg-card.sg-card-tv .sg-card-title{font-size:20px;font-weight:650;padding:14px 2px 2px;line-height:1.25}
+:root:not([data-sg-platform=mobile]) #app .sg-card.sg-card-tv .sg-card-caption{font-size:16px;line-height:1.4;padding-inline:2px;color:#aaa}
+:root:not([data-sg-platform=mobile]) #app .sg-card.sg-card-tv .sg-rating{opacity:0;transition:opacity 120ms;top:auto;left:auto;bottom:10px;right:10px;font-size:16px;padding:5px 7px;background:#080808df}
+:root:not([data-sg-platform=mobile]) #app .sg-card.sg-card-tv .sg-rating b{font-size:12px}
+:root:not([data-sg-platform=mobile]) #app .sg-card.meta-item-container:focus{transform:scale(1.035);outline:none!important;background:transparent;z-index:2;box-shadow:none}
+:root:not([data-sg-platform=mobile]) #app .sg-card:focus .sg-poster.poster-container{outline:3px solid #f5f5f5!important;outline-offset:3px;box-shadow:none}
+:root:not([data-sg-platform=mobile]) #app .sg-card:focus .sg-rating{opacity:1}
+:root:not([data-sg-platform=mobile]) #app .sg-card.sg-card-tv .sg-card-rank{display:block;z-index:2;left:12px;top:10px;bottom:auto;font-family:Inter,Arial,sans-serif;font-size:26px;font-weight:800;letter-spacing:-.04em;line-height:1;background:#080808ca;color:#fff;-webkit-text-stroke:0;text-shadow:none;padding:7px 10px;border-radius:5px}
+:root:not([data-sg-platform=mobile]) #app .sg-card.sg-card-tv:focus .sg-card-rank{background:#f5f5f5;color:#111}
+:root:not([data-sg-platform=mobile]) #app .sg-row:focus-within .sg-row-heading h2{color:#fff}
+:root:not([data-sg-platform=mobile]) #app .sg-see-all{font-size:18px}
+:root:not([data-sg-platform=mobile]) #app .sg-react-loading.sg-hero-loading{height:54vh;min-height:390px;max-height:650px;padding-top:150px;background:linear-gradient(105deg,#111 15%,#202020 55%,#101010);border:0}
+:root:not([data-sg-platform=mobile]) #app .sg-hero-loading>p{font-size:30px;color:#b8b8b8}
+:root:not([data-sg-platform=mobile]) #app .sg-skeleton-row span{background:#202020;animation:none}
+:root:not([data-sg-platform=mobile]) #app .sg-catalog-loading{animation:none}
+:root:not([data-sg-platform=mobile]) #app .sg-home-toolbar{margin-top:24px}
+:root:not([data-sg-platform=mobile]) #app .sg-curated-attribution{font-size:15px;color:#909090}
+:root:not([data-sg-platform=mobile]) #app .sg-title-loading{position:relative;min-height:70vh;isolation:isolate;padding:12vh var(--dx-gutter);overflow:hidden;background:#080808}
+:root:not([data-sg-platform=mobile]) #app .sg-title-loading>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.45;z-index:-2}
+:root:not([data-sg-platform=mobile]) #app .sg-title-loading::before{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#080808 10%,#08080860 75%),linear-gradient(0deg,#080808,transparent)}
+:root:not([data-sg-platform=mobile]) #app .sg-title-loading h1{font-size:60px;max-width:16ch;margin:0 0 36px;line-height:1.08}
+:root:not([data-sg-platform=mobile]) #app .sg-title-skeleton{display:block;width:34vw;height:20px;margin:16px 0;border-radius:4px;background:#ffffff18}
+:root:not([data-sg-platform=mobile]) #app .sg-title-skeleton:last-child{width:25vw}
+:root:not([data-sg-platform=mobile]) #app .sg-page{padding-top:44px}
+:root:not([data-sg-platform=mobile]) #app .sg-page>h1,:root:not([data-sg-platform=mobile]) #app .sg-picks-header h1{font-size:46px}
+:root:not([data-sg-platform=mobile]) #app .sg-page-intro,:root:not([data-sg-platform=mobile]) #app .sg-picks-header p{font-size:22px;max-width:50ch;line-height:1.5}
+:root:not([data-sg-platform=mobile]) #app .sg-detail-background{height:78vh}
+:root:not([data-sg-platform=mobile]) #app .sg-detail-content{background:linear-gradient(90deg,#080808e6,#08080840 90%);padding-top:28px}
+:root:not([data-sg-platform=mobile]) #app .sg-detail-top{gap:6vw;grid-template-columns:minmax(0,1.2fr) minmax(380px,.8fr)}
+:root:not([data-sg-platform=mobile]) #app .sg-detail-logo{max-height:160px;max-width:500px;object-fit:contain;object-position:left}
+:root:not([data-sg-platform=mobile]) #app .sg-detail-description{max-width:45ch;font-size:24px;line-height:1.55;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden}
+:root:not([data-sg-platform=mobile]) #app .sg-detail-meta{font-size:21px;gap:20px}
+:root:not([data-sg-platform=mobile]) #app .sg-detail-actions{margin:30px 0}
+:root:not([data-sg-platform=mobile]) #app .sg-button{min-height:54px;font-size:22px;border-radius:6px;background:#ffffff18;border:1px solid #ffffff20;box-shadow:none}
+:root:not([data-sg-platform=mobile]) #app .sg-button.sg-primary{background:#f5f5f5;color:#111;border-color:#f5f5f5}
+:root:not([data-sg-platform=mobile]) #app .sg-button:focus,:root:not([data-sg-platform=mobile]) #app .sg-back:focus{background:#fff;color:#111;outline:3px solid #fff!important;outline-offset:5px;box-shadow:none}
+:root:not([data-sg-platform=mobile]) #app .sg-stream-panel{padding:26px;background:#141414ed;border:1px solid #ffffff1a;backdrop-filter:none}
+:root:not([data-sg-platform=mobile]) #app .sg-stream-panel h2{font-size:25px}
+:root:not([data-sg-platform=mobile]) #app .sg-stream,:root:not([data-sg-platform=mobile]) #app .sg-episode{border-radius:8px;background:#ffffff05;padding:20px}
+:root:not([data-sg-platform=mobile]) #app .sg-stream:focus,:root:not([data-sg-platform=mobile]) #app .sg-episode:focus,:root:not([data-sg-platform=mobile]) #app .sg-settings-row:focus{outline:3px solid #fff!important;outline-offset:2px;background:#303030;box-shadow:none;border-color:transparent}
+:root:not([data-sg-platform=mobile]) #app .sg-stream-name{font-size:22px}
+:root:not([data-sg-platform=mobile]) #app .sg-stream-description{font-size:17px;line-height:1.5}
+:root:not([data-sg-platform=mobile]) #app .sg-settings-row{font-size:24px;min-height:86px}
+:root:not([data-sg-platform=mobile]) #app .sg-settings-row small{font-size:19px;line-height:1.5}
+:root:not([data-sg-platform=mobile]) #app .sg-settings-shortcuts{margin-bottom:36px}
+:root:not([data-sg-platform=mobile]) #app input:focus,:root:not([data-sg-platform=mobile]) #app select:focus{outline:3px solid #fff!important;outline-offset:3px;border-color:#fff;box-shadow:none}
+:root:not([data-sg-platform=mobile]) #app .sg-search-form{margin-top:30px;max-width:1100px}
+:root:not([data-sg-platform=mobile]) #app .search-content .sg-search-form input{font-size:26px;padding:18px}
+:root:not([data-sg-platform=mobile]) #app .sg-search-form:focus-within{box-shadow:none}
+@media(max-height:800px){
+ :root:not([data-sg-platform=mobile]){--dx-nav-h:76px;--sg-tv-card-width:calc((100vw - 8vw - 56px)/5)}
+ :root:not([data-sg-platform=mobile]) #app .sg-nav .sg-brand{width:150px;min-width:150px;margin-right:12px}:root:not([data-sg-platform=mobile]) #app .sg-nav .sg-brand::before{font-size:29px}
+ :root:not([data-sg-platform=mobile]) #app .sg-nav-links a{font-size:20px;padding:10px 18px}:root:not([data-sg-platform=mobile]) #app .sg-nav.horizontal-nav-bar{gap:14px}
+ :root:not([data-sg-platform=mobile]) #app .sg-home-filters{top:0}:root:not([data-sg-platform=mobile]) #app .sg-filter{font-size:16px;min-height:38px;padding:7px 18px}
+ :root:not([data-sg-platform=mobile]) #app .sg-row-heading h2{font-size:24px}:root:not([data-sg-platform=mobile]) #app .sg-cards{gap:14px}:root:not([data-sg-platform=mobile]) #app .sg-card.sg-card-tv .sg-card-title{font-size:17px}
+ :root:not([data-sg-platform=mobile]) #app .sg-card.sg-card-tv .sg-card-caption{font-size:14px}:root:not([data-sg-platform=mobile]) #app .sg-row{margin-bottom:22px}
+}
+@media(prefers-reduced-motion:reduce){:root:not([data-sg-platform=mobile]) #app .sg-card.meta-item-container,:root:not([data-sg-platform=mobile]) #app .sg-card .sg-rating{transition:none}:root:not([data-sg-platform=mobile]) #app .sg-card.meta-item-container:focus{transform:none}}
+/* Frame the backdrop to the right so a shallow TV billboard keeps faces in view. */
+:root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-react-hero-art{left:18%;width:82%;object-position:center 20%}
+:root:not([data-sg-platform=mobile]) #app .sg-nav-settings.selected{color:#fff;background:#ffffff12}

@@ -28,3 +28,40 @@
  #app .sg-hero-premium .sg-hero-scene,#app .sg-hero-premium .sg-react-hero-art,#app .sg-hero-premium .sg-react-hero-copy{animation:none;transition:none}
  #app .sg-hero-premium .sg-hero-art-leaving{display:none}
 }
+/* A single stable action row; only the title story and decoded artwork dissolve. */
+#app .sg-hero-premium .sg-react-hero-copy{animation:none}
+#app .sg-hero-premium .sg-hero-story{animation:sg-premium-copy-in .36s cubic-bezier(.22,1,.36,1) both}
+#app .sg-hero-premium .sg-hero-art-entering{animation-duration:.48s}
+#app .sg-hero-premium .sg-hero-art-leaving{animation-duration:.48s}
+#app .sg-hero-premium .sg-hero-meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;color:#d3d3d3;font-size:17px;font-weight:500;line-height:1.4}
+#app .sg-hero-premium .sg-hero-score{color:#f1f1f1}
+:root:not([data-sg-platform=mobile]) #app .sg-hero-premium{height:54vh;min-height:390px;max-height:650px;margin-bottom:0;background:var(--cinema-bg,#080808)}
+:root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-react-hero-art{transform:none;object-position:72% 35%}
+:root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-hero-shade{background:linear-gradient(90deg,var(--cinema-bg,#080808) 0%,#080808e8 18%,#0808088c 41%,transparent 76%),linear-gradient(0deg,var(--cinema-bg,#080808) 0%,#080808a6 13%,transparent 42%)}
+:root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-react-hero-copy{left:var(--dx-gutter,5vw);bottom:82px;width:43vw;max-width:760px;padding:0}
+:root:not([data-sg-platform=mobile]) #app .sg-hero-premium h1{font-family:Inter,Arial,sans-serif;font-size:clamp(38px,4.2vw,76px);font-weight:800;line-height:1.04;letter-spacing:-.045em;margin:0 0 20px;max-width:13ch;text-shadow:0 2px 22px #0005;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+:root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-react-hero-logo{display:block;width:auto;max-width:min(31vw,520px);height:120px;max-height:14vh;object-fit:contain;object-position:left bottom;margin:0 0 20px}
+:root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-hero-meta{font-size:clamp(15px,1.12vw,21px);gap:7px 18px}
+:root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-hero-synopsis{font-size:clamp(16px,1.27vw,24px);font-weight:400;line-height:1.45;color:#ddd;margin:14px 0 0;max-width:42ch;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+:root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-react-hero-actions{margin-top:24px;gap:14px}
+:root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-react-hero-actions .sg-button{min-width:150px;min-height:54px;padding:12px 24px;border-radius:6px;font-size:clamp(17px,1.25vw,24px);gap:12px;background:#ffffff24;border:1px solid #ffffff14;box-shadow:none}
+:root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-react-hero-actions .sg-primary{background:#f5f5f5;border-color:#f5f5f5;color:#111;min-width:142px}
+:root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-react-hero-actions .sg-button:focus-visible{outline:3px solid #fff;outline-offset:5px}
+:root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-hero-timeline{bottom:32px;left:var(--dx-gutter,5vw);width:190px;height:3px;gap:7px}
+:root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-carousel-controls{bottom:16px;right:var(--dx-gutter,5vw);padding:4px;gap:4px;border:0;background:#08080840;backdrop-filter:none;-webkit-backdrop-filter:none}
+:root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-carousel-controls>span{color:#b7b7b7;font-size:14px;min-width:44px}
+:root[data-sg-platform=mobile] #app .sg-hero-premium .sg-hero-meta{justify-content:center;font-size:12px;gap:6px 10px}
+:root[data-sg-platform=mobile] #app .sg-hero-premium .sg-hero-meta>span:first-child{display:none}
+@media(max-height:800px){
+ :root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-react-hero-copy{bottom:70px}
+ :root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-react-hero-actions{margin-top:18px}
+ :root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-react-hero-actions .sg-button{min-height:48px;padding:10px 20px}
+}
+@media(prefers-reduced-motion:reduce){#app .sg-hero-premium .sg-hero-story{animation:none}}
+#app .sg-hero-premium .sg-hero-title{position:relative}
+#app .sg-hero-premium .sg-hero-title-ready h1{opacity:0}
+#app .sg-hero-premium .sg-hero-title-ready .sg-react-hero-logo{position:absolute;inset:0;max-width:100%;max-height:100%;height:100%;margin:0;object-fit:contain;object-position:left center}
+:root[data-sg-platform=mobile] #app .sg-hero-premium .sg-hero-title-ready .sg-react-hero-logo{left:50%;transform:translateX(-50%);width:85%;object-position:center}
+/* Reserve the same readable phone title area before and after logo decoding. */
+:root[data-sg-platform=mobile] #app .sg-hero-premium .sg-hero-title{min-height:80px;display:flex;align-items:center;justify-content:center}
+:root[data-sg-platform=mobile] #app .sg-hero-premium .sg-hero-title h1{margin:10px auto}

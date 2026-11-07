@@ -155,9 +155,9 @@ try {
   await page.locator('[data-nav="board"]').focus();
   await page.keyboard.press('ArrowRight');
   assert.equal(await page.evaluate(()=>document.activeElement.dataset.nav),'picks');
-  await page.waitForFunction(()=>getComputedStyle(document.activeElement).backgroundColor==='rgb(243, 244, 247)');
+  await page.waitForFunction(()=>getComputedStyle(document.activeElement).backgroundColor==='rgb(245, 245, 245)');
   const navFocus=await page.locator('[data-nav="picks"]').evaluate(el=>{const s=getComputedStyle(el);return {outline:s.outlineStyle,background:s.backgroundColor,color:s.color,radius:parseFloat(s.borderRadius)};});
-  assert.equal(navFocus.outline,'none');assert.equal(navFocus.background,'rgb(243, 244, 247)');
+  assert.equal(navFocus.outline,'none');assert.equal(navFocus.background,'rgb(245, 245, 245)');
   assert.ok(navFocus.radius>20,'Navigation highlight stays rounded');
   assert.equal(await page.locator('[data-nav="board"]').getAttribute('aria-current'),'page','Focused and current navigation are different states');
   await page.screenshot({path:path.join(shots,'nav-focus.png')});
@@ -166,6 +166,7 @@ try {
   await page.locator('[data-nav="board"]').focus();await page.keyboard.press('ArrowDown');
   assert.equal(await page.evaluate(()=>document.activeElement.dataset.card),rememberedCard,'Down from header restores content focus');
   assert.equal(await page.locator('.sg-card').nth(2).evaluate(el=>getComputedStyle(el).outlineStyle),'none','No rectangle wraps card captions');
+  assert.equal(await page.locator('.sg-card').nth(2).locator('.sg-poster').evaluate(el=>getComputedStyle(el).outlineStyle),'solid','The selected artwork has an unmistakable focus ring');
 
   // 0.4.0: filter mapping, rail boundaries and returning to an off-screen card.
   await page.locator('.sg-filter').filter({hasText:'Series'}).click();
@@ -185,12 +186,14 @@ try {
   await page.keyboard.press('ArrowUp');
   assert.equal(await page.evaluate(()=>document.activeElement.dataset.card),'movie:sg-movie-7','Returning to a row restores its last card');
   await page.waitForTimeout(450);
-  const scrollBefore=await firstRail.evaluate(el=>el.scrollLeft);
+  const scrollBefore=await firstRail.evaluate(el=>new Promise(resolve=>{let previous=el.scrollLeft,stable=0;function frame(){const current=el.scrollLeft;stable=Math.abs(current-previous)<.5?stable+1:0;previous=current;if(stable>=4)resolve(current);else requestAnimationFrame(frame);}requestAnimationFrame(frame);}));
   assert.ok(scrollBefore>0,'Remote scrolls off-screen cards into view');
+  await page.evaluate(()=>{window.retainedHome=document.getElementById('sg-view');window.retainedCard=document.activeElement;});
   await page.keyboard.press('Enter');await page.locator('[data-action="focus-streams"]').waitFor();
   await page.keyboard.press('Escape');
   await page.waitForFunction(()=>document.activeElement.dataset.card==='movie:sg-movie-7');
   assert.equal(await page.locator('.sg-cards').first().evaluate(el=>el.scrollLeft),scrollBefore,'Back restores horizontal scroll');
+  assert.equal(await page.evaluate(()=>document.getElementById('sg-view')===retainedHome&&document.activeElement===retainedCard),true,'Back restores the existing Home and card nodes without repainting every poster');
   // Search origin is restored, rather than always returning to Home.
   await page.locator('.sg-nav-search').click();
   await page.locator('#sg-search-input').click();await page.locator('#sg-search-input').fill('return test');await page.locator('#sg-search-form button').click();
@@ -341,6 +344,7 @@ try {
   await page.waitForTimeout(1200);
   assert.equal(await page.locator('#sg-picks-results').count(),0,'Late recommendation requests cannot overwrite another page');
   genrelessCatalog=false;slowRecommendations=false;
+  await page.locator('[data-nav="settings"]').click();
   await page.locator('[data-nav="addons"]').click();
   await page.locator('#sg-addon-url').click();await page.locator('#sg-addon-url').fill('https://additional.invalid/manifest.json');
   await page.evaluate(()=>StreamGlassCore.dispatch({action:'Ctx',args:{action:'PullAddonsFromAPI'}},'ctx'));

@@ -28,6 +28,6 @@ const path=require('node:path');
   await page.evaluate(()=>{document.getElementById('sg-view').scrollTop=0;document.getElementById('card0').focus({preventScroll:true});});
   const instant=await page.evaluate(()=>{document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true,cancelable:true}));return document.getElementById('sg-view').scrollTop;});
   assert.ok(instant>100,'Reduced motion skips the animation');
-  console.log(JSON.stringify({passed:true,durationMs:180,intermediateFrames:true,reverseDuringAnimation:true,routeCancellation:true,reducedMotion:true}));
+  console.log(JSON.stringify({passed:true,nativeSmoothScroll:true,intermediateFrames:true,reverseDuringAnimation:true,routeCancellation:true,reducedMotion:true}));
  }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

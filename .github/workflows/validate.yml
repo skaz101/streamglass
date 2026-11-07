@@ -39,6 +39,8 @@ jobs:
           node tests/core-browser.mjs
           node tests/player-browser.cjs
           node tests/review-host-browser.cjs
+          node tests/tv-navigation-browser.cjs
+          node tests/browse-performance-browser.cjs
           node tests/motion-browser.cjs
           node tests/react-browser.cjs
           node tests/hero-browser.cjs
@@ -46,7 +48,7 @@ jobs:
           npm run test:browser
           node ../android/scripts/sync-assets.mjs
           node ../android/tests/mobile-browser.mjs
-      - run: python3 webos/scripts/source-archive.py --version 0.7.4
+      - run: python3 webos/scripts/source-archive.py --version 0.8.0
       - uses: actions/upload-artifact@v4
         with:
           name: webos-and-source

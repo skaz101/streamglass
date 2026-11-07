@@ -10,7 +10,7 @@ mkdirSync(path.join(root, 'dist'), {recursive: true});
 for (const [command, args] of [
   ['ares-config.js', ['--profile', 'tv']],
   ['ares-package.js', ['--no-minify', '--outdir', path.join(root, 'dist'), path.join(root, 'build')]],
-  ['ares-package.js', ['--info-detail', path.join(root, 'dist/com.streamglass.tv_0.7.4_all.ipk')]],
+  ['ares-package.js', ['--info-detail', path.join(root, 'dist/com.streamglass.tv_0.8.0_all.ipk')]],
 ]) {
   const result = spawnSync(process.execPath, [path.join(cli, command), ...args], {cwd: root, stdio: 'inherit'});
   if (result.status !== 0) process.exit(result.status || 1);

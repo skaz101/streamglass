@@ -13,14 +13,14 @@
     StreamGlassNative.postMessage(JSON.stringify({action,session:active&&active.session,payload}));
   }
   const showMessage=(title,message)=>StreamGlassMobile.showMessage(title,message);
-  window.StreamGlassDiagnostics={export:()=>JSON.stringify({platform:{app:'com.streamglass.mobile',version:'0.7.3'},events},null,2),log};
+  window.StreamGlassDiagnostics={export:()=>JSON.stringify({platform:{app:'com.streamglass.mobile',version:'0.8.0'},events},null,2),log};
   window.StreamGlassHost={
     ...StreamGlassMobile,
     play(payload){active={...payload,session:++sequence};try{post('play',payload);StreamGlassMobile.dismiss(false);}catch(error){active=null;throw error;}},
     closePlayer(){if(active)post('close');},activePlayback:()=>active,
     updateSubtitles(subtitles){if(active)post('subtitles',subtitles);},
     showMessage,log,
-    showSettings:()=>showMessage('StreamGlass 0.7.3','Made for your next great watch. Your library, addons and progress sync with Stremio. Playback pauses when you leave the app.')
+    showSettings:()=>showMessage('StreamGlass 0.8.0','Made for your next great watch. Your library, addons and progress sync with Stremio. Playback pauses when you leave the app.')
   };
   window.StreamGlassAndroid={
     receive(event){

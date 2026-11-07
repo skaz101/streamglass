@@ -72,6 +72,11 @@
   const cache = new Map(), cards = new Map(), screenMemory = new Map();
   let searchSession=null, recommendationController=null, recommendationSnapshot=null;
   let screenHash='', detailOrigin='#/board', previewTimer, previewSequence=0, interaction=0;
+  // Keep only the most recent TV Home while inspecting a title. Returning with
+  // Back restores the very same rails/images/focus instead of rebuilding them.
+  let cachedHome=null,homeCacheTimer;
+  function homeModeKey(){try{return localStorage.getItem('streamglass-home-v1');}catch(_){return null;}}
+  function discardHome(){clearTimeout(homeCacheTimer);if(cachedHome){global.StreamGlassUI.unmount(cachedHome.node);cachedHome=null;}}
   function rememberScreen() {
     if(!screenHash||!view)return;
     const focused=doc.activeElement;
@@ -83,11 +88,21 @@
   function restoreScreen(token,revision) {
     const saved=screenMemory.get(location.hash);
     if(!saved||token!==epoch||revision!==interaction)return;
+    if(saved.restored===token){
+      const target=doc.activeElement;
+      if(target?.classList.contains('sg-card')&&view.contains(target)){
+        const box=target.getBoundingClientRect(),area=view.getBoundingClientRect();
+        if(box.bottom>area.bottom-20)view.scrollTop+=box.bottom-area.bottom+20;
+        else if(box.top<area.top+20)view.scrollTop+=box.top-area.top-20;
+      }
+      return;
+    }
     view.querySelectorAll('.sg-cards').forEach(row=>row.scrollLeft=saved.rows[row.closest('.sg-row').dataset.rowKey]||0);
     const matches=saved.key?[...view.querySelectorAll('a[href]')].filter(node=>node.getAttribute('href')===saved.key):[];
     const target=matches.find(node=>node.closest('.sg-row')?.dataset.rowKey===saved.rowKey)||matches[0];
     if(target)target.focus({preventScroll:true});
     view.scrollTop=saved.top;
+    if(target||!saved.key)saved.restored=token;
     // A new Continue Watching row can move the saved card. Keep that card visible
     // without selecting its duplicate in another row or resetting horizontal scroll.
     if(target){const box=target.getBoundingClientRect(),area=view.getBoundingClientRect();if(box.bottom>area.bottom-20)view.scrollTop+=box.bottom-area.bottom+20;else if(box.top<area.top+20)view.scrollTop+=box.top-area.top-20;}
@@ -98,8 +113,9 @@
     const sequence=++previewSequence,token=epoch;
     const meta=cards.get(node.dataset.card),slot=doc.getElementById('sg-hero-slot');
     // Avoid network work while browsing lower rows and never move a focused hero button.
-    if(!meta||!slot||view.scrollTop>120)return;
+    if(!meta||!slot)return;
     previewTimer=setTimeout(async()=>{
+      if(!node.isConnected||view.scrollTop>120)return;
       let full=meta;
       try {full=(await resolveMeta(meta.type||'movie',meta.id||meta._id,meta)).meta;}catch(_){}
       if(sequence!==previewSequence||token!==epoch||doc.activeElement!==node||view.scrollTop>120)return;
@@ -125,11 +141,22 @@
     if(recommendationController){recommendationController.abort();recommendationController=null;}
     clearInterval(heroTimer);heroTimer=null;clearTimeout(previewTimer);++previewSequence;
     if(host().beforeScreenChanged)host().beforeScreenChanged(route);
-    global.StreamGlassUI.unmount(view);
-    if(typeof html==='object'){const token=epoch,revision=interaction;global.StreamGlassUI.mount(view,{...html,onReady:()=>restoreScreen(token,revision)});}else view.innerHTML=html;
+    if(!host().mobile&&route==='detail'&&view.dataset.sgRoute==='board'){
+      discardHome();
+      cachedHome={node:view,hash:view.dataset.sgHash,at:Date.now(),mode:homeModeKey()};
+      homeCacheTimer=setTimeout(discardHome,120000);
+      const next=doc.createElement('main');next.id='sg-view';next.tabIndex=-1;
+      view.replaceWith(next);view.hidden=true;view=next;
+    }else global.StreamGlassUI.unmount(view);
+    if(typeof html==='object'){
+      const node=view;node.sgRestoreContext={token:epoch,revision:interaction};
+      global.StreamGlassUI.mount(node,{...html,onReady:()=>{if(view===node){const context=node.sgRestoreContext;restoreScreen(context.token,context.revision);}}});
+    }else view.innerHTML=html;
+    view.dataset.sgRoute=route;view.dataset.sgHash=location.hash;
     view.scrollTop=0;doc.body.dataset.dxRoute=route;
     root.querySelectorAll('[data-nav]').forEach(node=>{const selected=node.dataset.nav===route;node.classList.toggle('selected',selected);if(selected)node.setAttribute('aria-current','page');else node.removeAttribute('aria-current');});
     if(host().screenChanged)host().screenChanged(route);
+    global.dispatchEvent(new Event('streamglass:screenchange'));
   }
   function setAccount() {
     const node=doc.getElementById('sg-account');
@@ -207,7 +234,22 @@
       return item;
     }
   };
-  async function home(token) {setScreen({route:'board',api:reactAPI,params:parseHash(location.hash).query},'board');}
+  async function home(token,revision) {
+    if(cachedHome&&!host().mobile&&cachedHome.hash===location.hash&&Date.now()-cachedHome.at<120000&&cachedHome.mode===homeModeKey()){
+      const saved=cachedHome;cachedHome=null;clearTimeout(homeCacheTimer);
+      cancelSearch();
+      if(recommendationController){recommendationController.abort();recommendationController=null;}
+      clearTimeout(previewTimer);++previewSequence;
+      global.StreamGlassUI.unmount(view);view.replaceWith(saved.node);view=saved.node;view.hidden=false;
+      view.sgRestoreContext={token,revision};
+      doc.body.dataset.dxRoute='board';
+      root.querySelectorAll('[data-nav]').forEach(node=>{const selected=node.dataset.nav==='board';node.classList.toggle('selected',selected);if(selected)node.setAttribute('aria-current','page');else node.removeAttribute('aria-current');});
+      if(host().screenChanged)host().screenChanged('board');
+      global.dispatchEvent(new Event('streamglass:screenchange'));
+      return;
+    }
+    discardHome();setScreen({route:'board',api:reactAPI,params:parseHash(location.hash).query},'board');
+  }
   function calendar(){setScreen({route:'calendar',api:reactAPI},'calendar');}
   function cancelSearch() {
     if(!searchSession)return;
@@ -422,7 +464,8 @@
     }).join('');
   }
   async function details(token,type,id,videoId) {
-    currentDetail=null;setScreen(pendingText('Loading title'),'detail');
+    currentDetail=null;const preview=cards.get(type+':'+id);
+    setScreen(!host().mobile&&preview?'<section class="sg-title-loading" role="status" aria-label="Loading title">'+(safeURL(preview.background||preview.poster)?'<img src="'+e(safeURL(preview.background||preview.poster))+'" alt="">':'')+'<div><h1>'+e(preview.name||'Loading title')+'</h1><span class="sg-title-skeleton"></span><span class="sg-title-skeleton"></span></div></section>':pendingText('Loading title'),'detail');
     const result=await resolveMeta(type,id,cards.get(type+':'+id));if(token!==epoch)return;
     const meta=result.meta;
     // Loading this model lets the core manage watched flags consistently with other Stremio clients.
@@ -523,6 +566,7 @@
   }
   async function onClose(info={}) {
     const playback=activePlayback;if(!playback||playback.closing)return;playback.closing=true;
+    discardHome();
     await onProgress(info.timeMs||0,info.durationMs||0,true);await progressQueue;
     if(info.ended)await core.dispatch(playerAction('Ended'),'player').catch(()=>{});
     await core.dispatch({action:'Unload'},'player').catch(()=>{});
@@ -587,7 +631,7 @@
     currentDetail=null;
     try {
       await refreshProfile();if(token!==epoch)return;
-      if(parsed.route==='board'||parsed.route==='')return await home(token);
+      if(parsed.route==='board'||parsed.route==='')return await home(token,revision);
       if(parsed.route==='calendar')return calendar();
       if(parsed.route==='search')return await search(token,parsed.query.get('search')||'');
       if(parsed.route==='discover')return await discover(token,parsed.query);
@@ -602,7 +646,7 @@
     finally {restoreScreen(token,revision);}
   }
   async function action(name,node) {
-    if(name==='refresh')return render();
+    if(name==='refresh'){discardHome();return render();}
     if(name==='recommendations-refresh'){recommendationSnapshot=null;return render();}
     if(name==='account'||name==='addons'){location.hash='#/'+name;return;}
     if(name==='appearance'){if(host().showSettings)host().showSettings();return;}
@@ -613,7 +657,7 @@
     if(name==='streams-retry'&&currentDetail)return streams(currentDetail,currentDetail.videoId);
     if(name==='focus-streams'){if(host().showStreams){host().showStreams();return;}const target=doc.querySelector('#sg-streams button');if(target){target.focus();target.scrollIntoView({block:'nearest'});}return;}
     if(name==='show-episodes'){const target=doc.querySelector('.sg-episodes h2');if(target){target.tabIndex=-1;target.focus({preventScroll:true});target.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});}return;}
-    if(name==='library-toggle'&&currentDetail){const detail=currentDetail;node.disabled=true;try{await core.dispatch(ctxAction(detail.inLibrary?'RemoveFromLibrary':'AddToLibrary',detail.inLibrary?detail.id:detail.meta),'ctx');detail.inLibrary=!detail.inLibrary;recommendationSnapshot=null;node.textContent=detail.inLibrary?'✓ In Library':'+ Add to Library';if(host().libraryChanged)host().libraryChanged(detail.inLibrary);notify(host().mobile?(detail.inLibrary?'Added to My List.':'Removed from My List.'):(detail.inLibrary?'Added to your library.':'Removed from your library.'));}finally{node.disabled=false;}return;}
+    if(name==='library-toggle'&&currentDetail){const detail=currentDetail;node.disabled=true;try{await core.dispatch(ctxAction(detail.inLibrary?'RemoveFromLibrary':'AddToLibrary',detail.inLibrary?detail.id:detail.meta),'ctx');detail.inLibrary=!detail.inLibrary;recommendationSnapshot=null;discardHome();node.textContent=detail.inLibrary?'✓ In Library':'+ Add to Library';if(host().libraryChanged)host().libraryChanged(detail.inLibrary);notify(host().mobile?(detail.inLibrary?'Added to My List.':'Removed from My List.'):(detail.inLibrary?'Added to your library.':'Removed from your library.'));}finally{node.disabled=false;}return;}
   }
   function back() {
     if(pendingPlayback){++epoch;location.hash='#/board';return true;}
@@ -627,7 +671,7 @@
     if(started)return;started=true;core=global.StreamGlassCore;
     if(!core)throw new Error('Stremio core is not available.');
     root=doc.getElementById('app');if(!root){root=doc.createElement('div');root.id='app';doc.body.append(root);}
-    root.innerHTML='<div class="main-nav-bars-container sg-app"><nav class="horizontal-nav-bar sg-nav"><a class="logo-container sg-brand" href="#/board" aria-label="StreamGlass Home"></a><div class="sg-nav-links">'+[['board','Home'],['picks','For you'],['discover','Discover'],['library','Library'],['calendar','Calendar'],['addons','Addons'],['settings','Settings']].map(([route,label])=>'<a class="nav-tab-button" data-nav="'+route+'" href="#/'+route+'">'+label+'</a>').join('')+'</div><a class="sg-nav-search" href="#/search" aria-label="Search"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4.5 4.5"></path></svg></a><button id="sg-account" data-action="account" class="sg-account-button">Sign in</button></nav><main id="sg-view" tabindex="-1">'+pendingText('Starting StreamGlass TV')+'</main></div>';
+    root.innerHTML='<div class="main-nav-bars-container sg-app"><nav class="horizontal-nav-bar sg-nav"><a class="logo-container sg-brand" href="#/board" aria-label="StreamGlass Home"></a><div class="sg-nav-links">'+[['board','Home'],['picks','For you'],['library','My List']].map(([route,label])=>'<a class="nav-tab-button" data-nav="'+route+'" href="#/'+route+'">'+label+'</a>').join('')+'</div><a class="sg-nav-search" href="#/search" aria-label="Search"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="m16 16 4.5 4.5"></path></svg></a><a class="sg-nav-settings" data-nav="settings" href="#/settings" aria-label="Settings"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="currentColor" stroke="none"/><circle cx="15" cy="17" r="3" fill="currentColor" stroke="none"/></svg></a><button id="sg-account" data-action="account" class="sg-account-button">Sign in</button></nav><main id="sg-view" tabindex="-1">'+pendingText('Starting StreamGlass TV')+'</main></div>';
     if(host().mount)host().mount(root);
     view=doc.getElementById('sg-view');
     root.addEventListener('click',event=>{
@@ -678,9 +722,11 @@
       if(view.contains(event.target))view.sgLastFocus=event.target;
       const cardNode=event.target.closest('.sg-card');
       if(cardNode){
+        // Read scroll position before updating the row counter, avoiding a
+        // forced layout between the focus event and remote scroll calculation.
+        previewCard(cardNode);
         const rowNode=cardNode.closest('.sg-row');
         if(rowNode){const items=[...rowNode.querySelectorAll('.sg-card')];const counter=rowNode.querySelector('.sg-row-count');if(counter)counter.textContent=(items.indexOf(cardNode)+1)+' / '+items.length;}
-        previewCard(cardNode);
       }else{clearTimeout(previewTimer);++previewSequence;}
     });
     doc.addEventListener('keydown',()=>{interaction++;},true);
@@ -689,13 +735,14 @@
     // A pending core/subtitle response must not start playback after the TV has
     // switched apps, including a quick hide/show before that response arrives.
     const cancelPendingPlayback=()=>{if(!host().mobile)playbackGeneration++;};
-    doc.addEventListener('visibilitychange',()=>{if(doc.hidden)cancelPendingPlayback();});
+    doc.addEventListener('visibilitychange',()=>{if(doc.hidden){cancelPendingPlayback();discardHome();}});
     global.addEventListener('pagehide',cancelPendingPlayback);
-    await core.init({appVersion:'0.7.3',shellVersion:'webos25'});global.core=core;global.services={core};
+    await core.init({appVersion:'0.8.0',shellVersion:'webos25'});global.core=core;global.services={core};
     core.on('event', event => {
       if (!event) return;
       const addonsChanged=/^(AddonsPulledFromAPI|AddonInstalled|AddonUninstalled|AddonUpgraded|UserLoggedOut)$/.test(event.event||'');
       const libraryChanged=/^(LibraryItemsPulledFromAPI|UserLoggedOut)$/.test(event.event||'');
+      if(addonsChanged||libraryChanged)discardHome();
       if(!addonsChanged&&!libraryChanged&&event.event!=='UserPulledFromAPI')return;
       refreshAddons=refreshAddons||addonsChanged;refreshLibrary=refreshLibrary||libraryChanged;
       clearTimeout(refreshTimer);
