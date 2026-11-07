@@ -198,6 +198,8 @@
       this.status.hidden = !text;
     }
     playRejected(error) {
+      // Pausing/seeking during startup can abort play() without a media failure.
+      if (error && error.name === 'AbortError') return;
       // Autoplay denial is recoverable with OK; decoder/network failures are not.
       if (error && error.name === 'NotAllowedError') {
         this.message('Press Play to start the stream.');

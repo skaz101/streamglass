@@ -125,6 +125,20 @@ const {chromium} = require('playwright');
     await page.waitForFunction(() => player.video && !player.video.paused && player.video.currentTime > 0);
     await page.evaluate(() => player.close());
 
+    // An interrupted play promise is normal when Pause wins the startup race.
+    await page.evaluate((origin) => {
+      HTMLMediaElement.prototype.play = () => new Promise((resolve,reject) => { window.rejectPendingPlay = reject; });
+      player.play({url:origin+'/video.mp4'});
+      player.video.pause();
+      rejectPendingPlay(new DOMException('Interrupted by pause', 'AbortError'));
+    }, origin);
+    await page.evaluate(() => { HTMLMediaElement.prototype.play = originalPlay; });
+    assert.equal(await page.evaluate(() => player.failedState), null);
+    assert.equal(await page.evaluate(() => player.video.hasAttribute('src')), true);
+    await page.evaluate(() => player.toggle());
+    await page.waitForFunction(() => player.video && !player.video.paused && player.video.currentTime > 0);
+    await page.evaluate(() => player.close());
+
     // Closing during unresolved play/subtitle work cannot affect the next session.
     await page.evaluate((origin) => {
       player.play({url:origin+'/video.mp4'});
