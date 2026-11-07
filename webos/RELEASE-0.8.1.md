@@ -8,6 +8,8 @@ TV navigation and filters use the same short transform-based focus response, wit
 
 Regression coverage exercises a real TV-style layout at 1280×720 and 1920×1080, returning from series to the full featured area, top-menu/filter entry, interrupted scrolling, hero image identity and handoff, delayed or failed images, and shared Android behavior. Release CI and on-device results are linked from the GitHub release.
 
+Unchanged background addon sync no longer rebuilds Home or discards its cached TV screen. Full addon descriptors are compared, so changed manifests and catalog order still refresh correctly. Regression tests delay an unchanged response until Play is visible and check node identity, then change a manifest at the same URL to verify real updates are applied.
+
 Playback behavior and the 0.7.4 media-cleanup protections are unchanged. This update addresses the reported defects; preference over Netflix still depends on normal household use.
 
 ## On-TV check
@@ -15,3 +17,5 @@ Playback behavior and the 0.7.4 media-cleanup protections are unchanged. This up
 The reproduced series → movies → Play sequence originally left Home at scroll position 319px, with the top of the featured scene offscreen. It now ends at 0px with the full scene, filters and header visible; rapid reversals and remote-only filter/calendar access also passed.
 
 On the same LG 75UA7000PUB / Chromium 120, an eight-title diagnostic cycle sampled the whole manual activation through transition completion plus 80ms. The initial 0.8.1 transition candidate recorded 9 frames over 50ms in 200 samples. Artwork-layer promotion recorded 4/215; the final next-image preparation recorded 2/250. The final run still included 100ms and 66.6ms outliers. These short sequential runs demonstrate a useful improvement, not a controlled Netflix comparison or a guarantee of sustained 60 FPS. Decoding, caching and other device activity affect results. The release includes the raw diagnostic summaries.
+
+The motion measurements preceded the follow-up account-sync correction; that correction does not change the transition code.

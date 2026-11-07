@@ -25,6 +25,7 @@ try {
   };
   let acceptLogin=false,loginRequests=0,libraryWrites=0,addonWrites=0;
   let storedAddons=[addon];
+  let addonSyncGate=null,observeAddonSync=null;
   const searchRequests=[];
   let recommendationFailure=false, genrelessCatalog=false, slowRecommendations=false, metadataRequests=0;
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
@@ -43,7 +44,7 @@ try {
     if(url.host==='api.strem.io'){
       if(url.pathname.endsWith('/getUser')){await reply({result:{_id:'fixture-user',email:'test@example.invalid',lastModified:'2026-01-01T00:00:00Z',dateRegistered:'2020-01-01T00:00:00Z',premium_expire:null,gdpr_consent:{tos:true,privacy:true,marketing:false,from:'tests'}}});return;}
       if(url.pathname.endsWith('/login')){loginRequests++;await reply(acceptLogin?{result:{authKey:'secret-fixture-token',user:{_id:'fixture-user',email:'test@example.invalid',lastModified:'2026-01-01T00:00:00Z',dateRegistered:'2020-01-01T00:00:00Z',premium_expire:null,gdpr_consent:{tos:true,privacy:true,marketing:false,from:'tests'}}}}:{error:{code:1,message:'Invalid fixture credentials'}});return;}
-      if(url.pathname.endsWith('/addonCollectionGet')){await reply({result:{addons:storedAddons,lastModified:'2026-01-01T00:00:00Z'}});return;}
+      if(url.pathname.endsWith('/addonCollectionGet')){if(addonSyncGate){observeAddonSync?.();await addonSyncGate;}await reply({result:{addons:storedAddons,lastModified:'2026-01-01T00:00:00Z'}});return;}
       if(url.pathname.endsWith('/addonCollectionSet')){addonWrites++;const body=route.request().postDataJSON();if(Array.isArray(body.addons))storedAddons=body.addons;await reply({result:{success:true}});return;}
       if(url.pathname.endsWith('/datastoreGet')){await reply({result:[]});return;}
       if(url.pathname.endsWith('/datastorePut')){libraryWrites++;await reply({result:{success:true}});return;}
@@ -273,6 +274,11 @@ try {
   await screenshot('phone-theme-purple.png');
   await page.locator('[data-theme-choice="oled"]').tap();
   await page.waitForFunction(()=>getComputedStyle(document.querySelector('.sg-app')).backgroundColor==='rgb(0, 0, 0)');
+  // Release startup sync only after Home is visible. An unchanged account
+  // response must not tear down the featured Play button behind the user.
+  let releaseAddonSync;
+  addonSyncGate=new Promise(resolve=>{releaseAddonSync=resolve;});
+  const addonSyncRequested=new Promise(resolve=>{observeAddonSync=resolve;});
   await page.reload();await ready();await page.locator('#sg-prefs-form').waitFor();
   assert.equal(await page.evaluate(()=>document.documentElement.dataset.theme),'oled','Theme survives restart');
   await page.locator('[data-theme-choice="classic"]').tap();
@@ -280,6 +286,19 @@ try {
   await page.setViewportSize({width:844,height:390});
   await page.locator('[data-nav="board"]').tap();await page.locator('.sg-card').first().waitFor();
   assert.ok(await page.evaluate(()=>document.getElementById('app').scrollWidth<=innerWidth),'Landscape has no horizontal page overflow');
+  await page.locator('.sg-mobile-hero-actions .sg-primary').waitFor({state:'visible'});
+  await addonSyncRequested;
+  const retainedPlay=await page.locator('.sg-mobile-hero-actions .sg-primary').elementHandle();
+  await page.evaluate(()=>{window.landscapeAddonEvents=0;StreamGlassCore.on('event',event=>{if(event.event==='AddonsPulledFromAPI')window.landscapeAddonEvents++;});});
+  addonSyncGate=null;observeAddonSync=null;releaseAddonSync();
+  await page.waitForFunction(()=>window.landscapeAddonEvents===1);
+  await page.waitForTimeout(650); // Includes the shell's 300 ms sync debounce.
+  assert.equal(await retainedPlay.evaluate(node=>node.isConnected),true,'Unchanged account sync preserves the mounted featured Play button');
+  // The same transport URL with a changed manifest must still update Home.
+  storedAddons=storedAddons.map((source,index)=>index?source:{...source,manifest:{...source.manifest,version:'2.0.0'}});
+  await page.evaluate(()=>StreamGlassCore.dispatch(StreamGlassShell.helpers.ctxAction('PullAddonsFromAPI'),'ctx'));
+  await page.waitForFunction(()=>window.landscapeAddonEvents===2);
+  await page.waitForFunction(node=>!node.isConnected,retainedPlay);
   await page.locator('.sg-mobile-hero-actions .sg-primary').waitFor({state:'visible'});
   await screenshot('landscape.png');
   const heroPlay=await page.locator('.sg-mobile-hero-actions .sg-primary').boundingBox();

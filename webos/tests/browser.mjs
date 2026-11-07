@@ -190,10 +190,17 @@ try {
   assert.ok(scrollBefore>0,'Remote scrolls off-screen cards into view');
   await page.evaluate(()=>{window.retainedHome=document.getElementById('sg-view');window.retainedCard=document.activeElement;});
   await page.keyboard.press('Enter');await page.locator('[data-action="focus-streams"]').waitFor();
+  await page.evaluate(async()=>{
+    window.cachedHomeSyncComplete=false;
+    StreamGlassCore.on('event',event=>{if(event.event==='AddonsPulledFromAPI')window.cachedHomeSyncComplete=true;});
+    await StreamGlassCore.dispatch(StreamGlassShell.helpers.ctxAction('PullAddonsFromAPI'),'ctx');
+  });
+  await page.waitForFunction(()=>window.cachedHomeSyncComplete);
+  await page.waitForTimeout(650); // Let the background sync debounce complete.
   await page.keyboard.press('Escape');
   await page.waitForFunction(()=>document.activeElement.dataset.card==='movie:sg-movie-7');
   assert.equal(await page.locator('.sg-cards').first().evaluate(el=>el.scrollLeft),scrollBefore,'Back restores horizontal scroll');
-  assert.equal(await page.evaluate(()=>document.getElementById('sg-view')===retainedHome&&document.activeElement===retainedCard),true,'Back restores the existing Home and card nodes without repainting every poster');
+  assert.equal(await page.evaluate(()=>document.getElementById('sg-view')===retainedHome&&document.activeElement===retainedCard),true,'Unchanged account sync preserves the existing Home and card nodes for Back');
   // Search origin is restored, rather than always returning to Home.
   await page.locator('.sg-nav-search').click();
   await page.locator('#sg-search-input').click();await page.locator('#sg-search-input').fill('return test');await page.locator('#sg-search-form button').click();

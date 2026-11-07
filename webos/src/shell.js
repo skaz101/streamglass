@@ -76,6 +76,9 @@
   // Back restores the very same rails/images/focus instead of rebuilding them.
   let cachedHome=null,homeCacheTimer;
   function homeModeKey(){try{return localStorage.getItem('streamglass-home-v1');}catch(_){return null;}}
+  // Sync completion is also emitted for unchanged addons. Compare all
+  // descriptors, including manifest changes and order, with the rendered view.
+  function addonSnapshot(){return JSON.stringify(profile.addons||[]);}
   function discardHome(){clearTimeout(homeCacheTimer);if(cachedHome){global.StreamGlassUI.unmount(cachedHome.node);cachedHome=null;}}
   function rememberScreen() {
     if(!screenHash||!view)return;
@@ -152,7 +155,7 @@
       const node=view;node.sgRestoreContext={token:epoch,revision:interaction};
       global.StreamGlassUI.mount(node,{...html,onReady:()=>{if(view===node){const context=node.sgRestoreContext;restoreScreen(context.token,context.revision);}}});
     }else view.innerHTML=html;
-    view.dataset.sgRoute=route;view.dataset.sgHash=location.hash;
+    view.dataset.sgRoute=route;view.dataset.sgHash=location.hash;view.sgAddonSnapshot=addonSnapshot();
     view.scrollTop=0;doc.body.dataset.dxRoute=route;
     root.querySelectorAll('[data-nav]').forEach(node=>{const selected=node.dataset.nav===route;node.classList.toggle('selected',selected);if(selected)node.setAttribute('aria-current','page');else node.removeAttribute('aria-current');});
     if(host().screenChanged)host().screenChanged(route);
@@ -235,7 +238,7 @@
     }
   };
   async function home(token,revision) {
-    if(cachedHome&&!host().mobile&&cachedHome.hash===location.hash&&Date.now()-cachedHome.at<120000&&cachedHome.mode===homeModeKey()){
+    if(cachedHome&&!host().mobile&&cachedHome.hash===location.hash&&Date.now()-cachedHome.at<120000&&cachedHome.mode===homeModeKey()&&cachedHome.node.sgAddonSnapshot===addonSnapshot()){
       const saved=cachedHome;cachedHome=null;clearTimeout(homeCacheTimer);
       cancelSearch();
       if(recommendationController){recommendationController.abort();recommendationController=null;}
@@ -742,7 +745,7 @@
       if (!event) return;
       const addonsChanged=/^(AddonsPulledFromAPI|AddonInstalled|AddonUninstalled|AddonUpgraded|UserLoggedOut)$/.test(event.event||'');
       const libraryChanged=/^(LibraryItemsPulledFromAPI|UserLoggedOut)$/.test(event.event||'');
-      if(addonsChanged||libraryChanged)discardHome();
+      if(libraryChanged)discardHome();
       if(!addonsChanged&&!libraryChanged&&event.event!=='UserPulledFromAPI')return;
       refreshAddons=refreshAddons||addonsChanged;refreshLibrary=refreshLibrary||libraryChanged;
       clearTimeout(refreshTimer);
@@ -751,8 +754,11 @@
         refreshAddons=false;refreshLibrary=false;
         try {
           await refreshProfile();
+          const syncedAddons=addonSnapshot();
+          const changedAddons=updateAddons&&view.sgAddonSnapshot!==syncedAddons;
+          if(updateAddons&&cachedHome&&cachedHome.node.sgAddonSnapshot!==syncedAddons)discardHome();
           const route=parseHash(location.hash).route;
-          const affectsScreen=(updateAddons&&/^(board|calendar|picks|addons|discover|search)$/.test(route))||(updateLibrary&&/^(board|calendar|picks|library)$/.test(route));
+          const affectsScreen=(changedAddons&&/^(board|calendar|picks|addons|discover|search)$/.test(route))||(updateLibrary&&/^(board|calendar|picks|library)$/.test(route));
           const active=doc.activeElement;
           const editing=active&&active.matches('input,textarea,select');
           // An API completion must never clear a typed search, addon URL or settings form.
