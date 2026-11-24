@@ -29,6 +29,8 @@ const path = require('node:path');
     await page.locator('#language').focus();
     await page.keyboard.press('Enter');
     await page.keyboard.press('ArrowDown');
+    assert.deepEqual(errors, [], 'A modal arrow must not enter the Search navigation branch');
+    assert.equal(await page.evaluate(() => document.activeElement.textContent), 'Spanish', 'Down focuses the next option before activation');
     await page.keyboard.press('Enter');
     assert.equal(await page.locator('#language').inputValue(), 'spa');
     assert.equal(await page.evaluate(() => window.changes), 1);

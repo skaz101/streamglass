@@ -297,7 +297,7 @@
       }
     }
     const searchForm=!dialog&&current&&current.closest('#sg-search-form');
-    if(searchForm?.classList.contains('sg-search-keyboard')){
+    if(searchForm&&searchForm.classList.contains('sg-search-keyboard')){
       const keys=[...searchForm.querySelectorAll('.sg-search-keys button')],tools=[...searchForm.querySelectorAll('.sg-search-tools button')];
       const index=keys.indexOf(current),toolIndex=tools.indexOf(current),query=searchForm.querySelector('#sg-search-query'),submit=searchForm.querySelector('[type="submit"]');
       const results=()=>focusTarget(entryCard(document.querySelector('#sg-search-results'))||document.querySelector('#sg-search-results .sg-search-recent-list button'));
