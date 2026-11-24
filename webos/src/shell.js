@@ -86,18 +86,19 @@
     const focused=doc.activeElement;
     const active=view.contains(focused)?focused:view.sgLastFocus;
     const key=active&&active.isConnected&&view.contains(active)?active.getAttribute('href'):null;
-    screenMemory.set(screenHash,{top:view.scrollTop,key,rowKey:active&&active.closest('.sg-row')&&active.closest('.sg-row').dataset.rowKey,rows:Object.fromEntries([...view.querySelectorAll('.sg-cards')].map(row=>[row.closest('.sg-row').dataset.rowKey,row.scrollLeft]))});
+    screenMemory.set(screenHash,{top:view.scrollTop,searchTop:view.querySelector('.sg-search-results-pane')?.scrollTop||0,key,rowKey:active&&active.closest('.sg-row')&&active.closest('.sg-row').dataset.rowKey,rows:Object.fromEntries([...view.querySelectorAll('.sg-cards')].map(row=>[row.closest('.sg-row').dataset.rowKey,row.scrollLeft]))});
     if(screenMemory.size>20)screenMemory.delete(screenMemory.keys().next().value);
   }
   function restoreScreen(token,revision) {
     const saved=screenMemory.get(location.hash);
     if(!saved||token!==epoch||revision!==interaction)return;
+    const scrollView=view.querySelector('.sg-search-results-pane')||view;
     if(saved.restored===token){
       const target=doc.activeElement;
       if(target?.classList.contains('sg-card')&&view.contains(target)){
-        const box=target.getBoundingClientRect(),area=view.getBoundingClientRect();
-        if(box.bottom>area.bottom-20)view.scrollTop+=box.bottom-area.bottom+20;
-        else if(box.top<area.top+20)view.scrollTop+=box.top-area.top-20;
+        const box=target.getBoundingClientRect(),area=scrollView.getBoundingClientRect();
+        if(box.bottom>area.bottom-20)scrollView.scrollTop+=box.bottom-area.bottom+20;
+        else if(box.top<area.top+20)scrollView.scrollTop+=box.top-area.top-20;
       }
       return;
     }
@@ -106,10 +107,11 @@
     const target=matches.find(node=>node.closest('.sg-row')?.dataset.rowKey===saved.rowKey)||matches[0];
     if(target)target.focus({preventScroll:true});
     view.scrollTop=saved.top;
+    if(scrollView!==view)scrollView.scrollTop=saved.searchTop||0;
     if(target||!saved.key)saved.restored=token;
     // A new Continue Watching row can move the saved card. Keep that card visible
     // without selecting its duplicate in another row or resetting horizontal scroll.
-    if(target){const box=target.getBoundingClientRect(),area=view.getBoundingClientRect();if(box.bottom>area.bottom-20)view.scrollTop+=box.bottom-area.bottom+20;else if(box.top<area.top+20)view.scrollTop+=box.top-area.top-20;}
+    if(target){const box=target.getBoundingClientRect(),area=scrollView.getBoundingClientRect();if(box.bottom>area.bottom-20)scrollView.scrollTop+=box.bottom-area.bottom+20;else if(box.top<area.top+20)scrollView.scrollTop+=box.top-area.top-20;}
   }
   function previewCard(node) {
     if(host().mobile)return;
@@ -295,6 +297,7 @@
     session.status.textContent='';
   }
   function updateSearchQuery(session) {
+    paintSearchQuery(session);
     const clear=doc.querySelector('[data-action="search-clear"]');if(clear)clear.hidden=!session.input.value;
     const query=session.input.value.trim();
     if(query===session.query)return false;
@@ -303,10 +306,55 @@
     clearTimeout(session.timer);session.revision++;
     if(session.controller)session.controller.abort();
     session.requested=null;
-    // Changing only the fragment preserves the input node, native keyboard and
-    // caret, and does not add a browser-history entry for every keystroke.
+    // Changing only the fragment preserves the search surface and caret, and
+    // does not add a browser-history entry for every keystroke.
     const hash='#/search'+(query?'?search='+encodeURIComponent(query):'');
     try {global.history.replaceState(null,'',hash);screenHash=hash;}catch(_){/* Some hosts restrict history; detailOrigin still retains the query. */}
+    return true;
+  }
+  function paintSearchQuery(session) {
+    const display=session.display;if(!display)return;
+    const value=session.input.value,selection=session.selection||{start:value.length,end:value.length};
+    const start=Math.min(selection.start,selection.end),end=Math.max(selection.start,selection.end);
+    display.querySelector('[data-query-before]').textContent=value.slice(0,start);
+    display.querySelector('[data-query-selection]').textContent=value.slice(start,end);
+    display.querySelector('[data-query-after]').textContent=value.slice(end);
+    display.querySelector('[data-query-caret="start"]').hidden=selection.end>=selection.start;
+    display.querySelector('[data-query-caret="end"]').hidden=selection.end<selection.start;
+    display.querySelector('.sg-search-placeholder').hidden=!!value;
+    display.setAttribute('aria-label',value?'Search titles: '+value:'Search titles');
+    const text=display.querySelector('.sg-search-query-text'),caret=display.querySelector('.sg-search-caret:not([hidden])');
+    // Keep the insertion point visible without scrolling the keyboard or page.
+    const offset=caret.offsetLeft,edge=text.scrollLeft+text.clientWidth;
+    if(offset>edge-12)text.scrollLeft=offset-text.clientWidth+12;
+    else if(offset<text.scrollLeft+4)text.scrollLeft=Math.max(0,offset-4);
+  }
+  function editSearch(key,{shift=false,text=false}={}) {
+    const session=searchSession;if(!session?.display||session.composing)return false;
+    const value=session.input.value,selection=session.selection||{start:value.length,end:value.length};
+    let start=Math.min(selection.start,selection.end),end=Math.max(selection.start,selection.end),next=value,caret=end;
+    // Offsets are UTF-16, like DOM selection offsets. Delete complete code
+    // points so a physical keyboard's emoji or non-Latin text stays valid.
+    const previous=offset=>offset-([...value.slice(0,offset)].pop()?.length||0);
+    const following=offset=>offset+([...value.slice(offset)][0]?.length||0);
+    if(!text&&['left','right','home','end','select-all'].includes(key)){
+      let position=key==='home'?0:key==='end'?value.length:key==='left'?(start!==end&&!shift?start:previous(selection.end)):following(selection.end);
+      if(key==='right'&&start!==end&&!shift)position=end;
+      session.selection=key==='select-all'?{start:0,end:value.length}:{start:shift?selection.start:position,end:position};
+      paintSearchQuery(session);return true;
+    }
+    if(!text&&key==='clear'){next='';caret=0;}
+    else if(!text&&(key==='backspace'||key==='delete')){
+      if(start===end){if(key==='backspace')start=previous(start);else end=following(end);}
+      next=value.slice(0,start)+value.slice(end);caret=start;
+    }else {
+      const inserted=!text&&key==='space'?' ':key;
+      next=(value.slice(0,start)+inserted+value.slice(end)).slice(0,160);
+      if(/[\uD800-\uDBFF]$/.test(next))next=next.slice(0,-1);
+      caret=Math.min(start+inserted.length,next.length);
+    }
+    session.input.value=next;session.selection={start:caret,end:caret};
+    session.input.dispatchEvent(new Event('input',{bubbles:true}));
     return true;
   }
   function queueSearch() {
@@ -334,13 +382,13 @@
     if(session!==searchSession||session.focusQuery!==session.query||session.results.inert||!session.results.querySelector('.sg-card'))return;
     // Consume the explicit submission once. A later addon must never pull focus
     // back after the user has moved elsewhere or started another edit.
-    session.focusQuery=null;host().focusSearchResults?.();
+    session.focusQuery=null;host().focusSearchResults?.(session.focusTarget);
   }
   function submitSearch(session) {
     if(session!==searchSession||session.composing)return;
     if(host().finishSearchEditing){if(host().finishSearchEditing()===false)return;}else session.input.blur();
     updateSearchQuery(session);
-    session.focusQuery=session.query||null;rememberSearch(session.query);
+    session.focusQuery=session.query||null;session.focusTarget=doc.activeElement;rememberSearch(session.query);
     const pending=runSearch(session);
     handoffSearch(session); // A completed or progressive live query is ready now.
     Promise.resolve(pending).catch(()=>notify('Search could not finish. Try again.'));
@@ -383,7 +431,7 @@
         global.StreamGlassUI.region(groups.get(type),{api:reactAPI,rows:[{title:labels[type]||'More titles',items:[...items.get(type)],priority:true}]});
       }
       results.inert=false;delete results.dataset.stale;
-      if(focused?.isConnected&&doc.activeElement===focused){const offset=focused.getBoundingClientRect().top-before;if(Math.abs(offset)>1)view.scrollTop+=offset;}
+      if(focused?.isConnected&&doc.activeElement===focused){const offset=focused.getBoundingClientRect().top-before;if(Math.abs(offset)>1)(results.closest('.sg-search-results-pane')||view).scrollTop+=offset;}
       handoffSearch(session);
     }
     // Four concurrent requests at most, cancelled immediately when text changes.
@@ -408,9 +456,10 @@
   }
   async function search(token,query) {
     setScreen({route:'search',api:reactAPI,query},'search');
-    const session={token,query:query.trim(),revision:0,requested:null,composing:false,input:doc.getElementById('sg-search-input'),results:doc.getElementById('sg-search-results'),status:doc.getElementById('sg-search-status')};
+    const session={token,query:query.trim(),revision:0,requested:null,composing:false,input:doc.getElementById('sg-search-input'),display:doc.getElementById('sg-search-query'),selection:{start:query.length,end:query.length},results:doc.getElementById('sg-search-results'),status:doc.getElementById('sg-search-status')};
     searchSession=session;
     const clear=doc.querySelector('[data-action="search-clear"]');if(clear)clear.hidden=!session.input.value;
+    host().searchReady?.();
     if(query.trim())await runSearch(session);else searchHint(session);
   }
   async function discover(token,params) {
@@ -728,14 +777,17 @@
     finally {restoreScreen(token,revision);}
   }
   async function action(name,node) {
+    if(name==='search-key'&&searchSession){editSearch(node.dataset.key||'');return;}
+    if(name==='search-keyboard'&&searchSession){host().focusSearchKeyboard?.();return;}
     if(name==='search-recent'&&searchSession){
       searchSession.input.value=node.dataset.query||'';
-      searchSession.input.focus({preventScroll:true});
+      searchSession.selection={start:searchSession.input.value.length,end:searchSession.input.value.length};
+      (searchSession.display?doc.querySelector('#sg-search-form button[type="submit"]'):searchSession.input).focus({preventScroll:true});
       submitSearch(searchSession);return;
     }
     if(name==='search-history-clear'&&searchSession){
       try {localStorage.removeItem(SEARCH_HISTORY_KEY);}catch(_){}
-      searchHint(searchSession);host().finishSearchEditing?.();searchSession.input.focus({preventScroll:true});return;
+      searchHint(searchSession);host().finishSearchEditing?.();if(searchSession.display)host().focusSearchKeyboard?.();else searchSession.input.focus({preventScroll:true});return;
     }
     if(name==='search-clear'&&searchSession){
       searchSession.input.value='';queueSearch();
@@ -837,7 +889,7 @@
     const cancelPendingPlayback=()=>{if(!host().mobile)playbackGeneration++;};
     doc.addEventListener('visibilitychange',()=>{if(doc.hidden){cancelPendingPlayback();discardHome();}});
     global.addEventListener('pagehide',cancelPendingPlayback);
-    await core.init({appVersion:'0.8.3',shellVersion:'webos25'});global.core=core;global.services={core};
+    await core.init({appVersion:'0.8.4',shellVersion:'webos25'});global.core=core;global.services={core};
     core.on('event', event => {
       if (!event) return;
       const addonsChanged=/^(AddonsPulledFromAPI|AddonInstalled|AddonUninstalled|AddonUpgraded|UserLoggedOut)$/.test(event.event||'');
@@ -868,5 +920,5 @@
     if(profile.auth){core.dispatch(ctxAction('PullUserFromAPI',{}),'ctx').catch(()=>{});core.dispatch(ctxAction('PullAddonsFromAPI'),'ctx').catch(()=>{});core.dispatch(ctxAction('SyncLibraryWithAPI'),'ctx').catch(()=>{});}
     await render();diagnostic('shell_ready',{signedIn:!!profile.auth});
   }
-  global.StreamGlassShell={start,render,back,onProgress,onClose,helpers,get state(){return {route:parseHash(location.hash).route,signedIn:!!profile.auth,addonCount:installed().length,playing:!!activePlayback};}};
+  global.StreamGlassShell={start,render,back,onProgress,onClose,editSearch,helpers,get state(){return {route:parseHash(location.hash).route,signedIn:!!profile.auth,addonCount:installed().length,playing:!!activePlayback};}};
 })(typeof window==='object'?window:null);

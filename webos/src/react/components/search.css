@@ -61,6 +61,59 @@
  :root:not([data-sg-platform=mobile]) #app .sg-search-recent h2,:root:not([data-sg-platform=mobile]) #app .sg-search-welcome h2{font-size:25px;margin-bottom:16px}
  :root:not([data-sg-platform=mobile]) #app .sg-search-recent-list button{min-height:56px;font-size:20px;padding:12px 18px}
 }
+/* TV: the keyboard is always available. Only the results scroll vertically,
+ * leaving the query and every key in reach at both 720p and 1080p. */
+:root:not([data-sg-platform=mobile]) #app .sg-search-tv{height:100%;display:flex;flex-direction:column;padding-bottom:24px;box-sizing:border-box;overflow:hidden}
+:root:not([data-sg-platform=mobile]) #app .sg-search-tv .sg-search-header{max-width:none;flex:none;margin-bottom:24px}
+:root:not([data-sg-platform=mobile]) #app .sg-search-layout{display:grid;grid-template-columns:minmax(330px,25%) minmax(0,1fr);gap:58px;flex:1;min-height:0}
+:root:not([data-sg-platform=mobile]) #app .sg-search-tv #sg-search-form{display:flex;flex-direction:column;align-items:stretch;align-self:start;gap:14px;max-width:none;padding:0;border:0;background:transparent;border-radius:0}
+:root:not([data-sg-platform=mobile]) #app .sg-search-query{display:flex;align-items:center;gap:12px;min-height:66px;padding:12px 16px;border:1px solid #454545;border-radius:6px;background:#202020;box-sizing:border-box;color:#f5f5f5;font-size:24px;line-height:1.35;cursor:text}
+:root:not([data-sg-platform=mobile]) #app .sg-search-query:focus{outline:3px solid #f5f5f5!important;outline-offset:3px;border-color:transparent}
+:root:not([data-sg-platform=mobile]) #app .sg-search-query-text{position:relative;display:block;flex:1;min-width:0;overflow:hidden;white-space:pre;text-overflow:clip}
+:root:not([data-sg-platform=mobile]) #app .sg-search-placeholder{color:#aaa;font-size:20px}
+:root:not([data-sg-platform=mobile]) #app .sg-search-placeholder[hidden]{display:none}
+:root:not([data-sg-platform=mobile]) #app .sg-search-caret{display:inline-block;vertical-align:-.15em;height:1.1em;border-left:2px solid #eee;margin-inline:1px;opacity:0}
+:root:not([data-sg-platform=mobile]) #app .sg-search-caret[hidden]{display:none}
+:root:not([data-sg-platform=mobile]) #app .sg-search-keyboard:focus-within .sg-search-caret{opacity:1}
+:root:not([data-sg-platform=mobile]) #app [data-query-selection]{background:#e8e8e8;color:#111}
+:root:not([data-sg-platform=mobile]) #app .sg-search-keys{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+:root:not([data-sg-platform=mobile]) #app .sg-search-tools{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:8px}
+:root:not([data-sg-platform=mobile]) #app .sg-search-tv #sg-search-form button{min-width:0;min-height:56px;padding:10px 4px;border:0;border-radius:5px;background:#252525;color:#eee;font:550 24px/1.2 Inter,Arial,sans-serif;transform:none;transition:none}
+:root:not([data-sg-platform=mobile]) #app .sg-search-tv #sg-search-form .sg-search-tools button{gap:7px;min-height:52px;font-size:17px}
+:root:not([data-sg-platform=mobile]) #app .sg-search-tv #sg-search-form button svg{width:22px;height:22px;flex:none}
+:root:not([data-sg-platform=mobile]) #app .sg-search-tv #sg-search-form .sg-search-submit{gap:14px;min-height:56px;margin-top:0;background:#303030;font-size:21px}
+:root:not([data-sg-platform=mobile]) #app .sg-search-tv #sg-search-form button:focus{background:#f5f5f5;color:#111;outline:2px solid #f5f5f5!important;outline-offset:2px;transform:scale(1.035)}
+:root:not([data-sg-platform=mobile]) #app .sg-search-tv #sg-search-form button:active{transform:scale(.97)}
+:root:not([data-sg-platform=mobile]) #app .sg-search-results-pane{min-width:0;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;overscroll-behavior:contain;padding:0 12px 28px;margin-inline:-12px;scroll-padding:12px}
+:root:not([data-sg-platform=mobile]) #app .sg-search-results-pane::-webkit-scrollbar{display:none}
+:root:not([data-sg-platform=mobile]) #app .sg-search-tv #sg-search-status{min-height:25px;margin:0 0 18px;font-size:19px}
+:root:not([data-sg-platform=mobile]) #app .sg-search-tv #sg-search-status:empty{min-height:0;margin:0}
+:root:not([data-sg-platform=mobile]) #app .sg-search-tv #sg-search-results{--sg-tv-card-width:calc((100% - 40px)/3)}
+:root:not([data-sg-platform=mobile]) #app .sg-search-tv #sg-search-results .sg-cards{margin-inline:-10px;padding-inline:10px}
+:root:not([data-sg-platform=mobile]) #app .sg-search-tv #sg-search-results .sg-search-loading{grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+:root:not([data-sg-platform=mobile]) #app .sg-search-tv .sg-search-welcome{padding-top:12px}
+@media(prefers-reduced-motion:no-preference){
+ :root:not([data-sg-platform=mobile]) #app .sg-search-tv #sg-search-form button{transition:transform 110ms ease-out}
+}
+@media(max-height:800px){
+ :root:not([data-sg-platform=mobile]) #app .sg-search-tv{padding-bottom:18px}
+ :root:not([data-sg-platform=mobile]) #app .sg-search-tv .sg-search-header{margin-bottom:18px}
+ :root:not([data-sg-platform=mobile]) #app .sg-search-layout{grid-template-columns:304px minmax(0,1fr);gap:38px}
+ :root:not([data-sg-platform=mobile]) #app .sg-search-tv #sg-search-form{gap:10px}
+ :root:not([data-sg-platform=mobile]) #app .sg-search-query{min-height:54px;padding:10px 12px;font-size:21px;gap:10px}
+ :root:not([data-sg-platform=mobile]) #app .sg-search-placeholder{font-size:17px}
+ :root:not([data-sg-platform=mobile]) #app .sg-search-glyph svg{width:24px;height:24px}
+ :root:not([data-sg-platform=mobile]) #app .sg-search-keys,:root:not([data-sg-platform=mobile]) #app .sg-search-tools{gap:7px}
+ :root:not([data-sg-platform=mobile]) #app .sg-search-tv #sg-search-form button{min-height:42px;padding:8px 3px;font-size:21px}
+ :root:not([data-sg-platform=mobile]) #app .sg-search-tv #sg-search-form .sg-search-tools button{min-height:44px;font-size:15px;gap:4px}
+ :root:not([data-sg-platform=mobile]) #app .sg-search-tv #sg-search-form .sg-search-submit{min-height:46px;font-size:19px}
+ :root:not([data-sg-platform=mobile]) #app .sg-search-tv #sg-search-status{font-size:17px;margin-bottom:12px}
+ :root:not([data-sg-platform=mobile]) #app .sg-search-tv #sg-search-results{--sg-tv-card-width:calc((100% - 28px)/3)}
+ :root:not([data-sg-platform=mobile]) #app .sg-search-tv #sg-search-results .sg-card-title{font-size:17px}
+}
+@media(prefers-reduced-motion:reduce){
+ :root:not([data-sg-platform=mobile]) #app .sg-search-tv #sg-search-form button:focus,:root:not([data-sg-platform=mobile]) #app .sg-search-tv #sg-search-form button:active{transform:none}
+}
 /* Phone chrome already supplies Search and Clear icons. Keep the same form
  * semantics and leave enough input width even on a 320 px device. */
 :root[data-sg-platform=mobile] #app .sg-search-page .sg-search-header{gap:16px;margin:0 0 18px}

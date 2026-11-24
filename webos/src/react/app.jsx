@@ -11,6 +11,8 @@ import PullRefresh from './components/PullRefresh';
 import useRefresh from './hooks/useRefresh';
 import {readHomeMode} from './preferences.mjs';
 import {getCuratedRows,loadCuratedRows,resolveCuratedMeta,CURATED_SOURCE_NOTE} from './curated.mjs';
+import {prepareCatalogRows,refreshedRow,retainCatalogItems} from './catalogSnapshot.mjs';
+import {tvRailArtwork} from './artwork.mjs';
 
 const roots=new Map();
 const regions=new Map();
@@ -20,25 +22,33 @@ function Loading({title='Loading your titles',hero=false,mobile=false}){
   if(hero)return <div className="sg-react-loading sg-hero-loading" role="status"><span className="sg-loading-light" aria-hidden="true"/><p>{title}</p></div>;
   return <section className={`sg-row sg-react-loading sg-row-loading${mobile?'':' sg-row-tv'}`} aria-label={title} aria-busy="true"><div className="sg-row-heading"><h2>{title}</h2></div><div className="sg-cards meta-items-container sg-loading-rail" aria-hidden="true">{Array.from({length:6},(_,index)=><span className="sg-skeleton-tile" key={index}><i/><b/><small/></span>)}</div></section>;
 }
-function Artwork({src,className='',alt='',fallback=null,eager=false}) {
-  const [state,setState]=useState({source:src,ready:false,failed:false});
-  const image=useRef(null),current=state.source===src?state:{ready:false,failed:false};
+function Artwork({src,fallbackSrc='',className='',alt='',fallback=null,eager=false}) {
+  const initial={source:src,fallbackSource:fallbackSrc,url:src,ready:false,failed:false};
+  const [state,setState]=useState(initial);
+  const image=useRef(null),request=useRef(null),current=state.source===src&&state.fallbackSource===fallbackSrc?state:initial,url=current.url;
+  useLayoutEffect(()=>{request.current={src,fallbackSrc,url};return()=>{request.current=null;};},[src,fallbackSrc,url]);
   const reveal=async node=>{
+    const pending=request.current;
     try{await node.decode?.();}catch(_){}
-    if(image.current===node&&node.getAttribute('src')===src&&node.naturalWidth)setState({source:src,ready:true,failed:false});
+    if(pending&&request.current===pending&&pending.src===src&&pending.fallbackSrc===fallbackSrc&&pending.url===url&&image.current===node&&node.getAttribute('src')===url&&node.naturalWidth)setState({...initial,url,ready:true});
   };
   // Cached images can complete before React attaches the load handler.
-  useEffect(()=>{const node=image.current;if(node?.complete&&node.naturalWidth)reveal(node);},[src]);
-  return src&&!current.failed?<img ref={image} data-react-art="true" data-art-ready={current.ready?'true':'false'} className={`sg-decoded-art ${className}`} src={src} alt={alt} loading={eager?'eager':'lazy'} decoding="async" referrerPolicy="no-referrer" onLoad={event=>reveal(event.currentTarget)} onError={event=>{event.stopPropagation();setState({source:src,ready:false,failed:true});}}/>:fallback;
+  useEffect(()=>{const node=image.current;if(node?.complete&&node.naturalWidth)reveal(node);},[src,fallbackSrc,url]);
+  return src&&!current.failed?<img ref={image} data-react-art="true" data-art-ready={current.ready?'true':'false'} className={`sg-decoded-art ${className}`} src={url} alt={alt} loading={eager?'eager':'lazy'} decoding="async" referrerPolicy="no-referrer" onLoad={event=>reveal(event.currentTarget)} onError={event=>{
+    event.stopPropagation();
+    if(image.current!==event.currentTarget||event.currentTarget.getAttribute('src')!==url)return;
+    setState({...initial,url:fallbackSrc&&url!==fallbackSrc?fallbackSrc:url,failed:!fallbackSrc||url===fallbackSrc});
+  }}/>:fallback;
 }
 const Card=memo(function Card({meta,api,wide=false,tvRail=false,recommendations=false,rank,eager=false}){
   const id=meta.id||meta._id,type=meta.type||'movie',landscape=wide||tvRail;
+  const original=api.safeURL(landscape?(meta.background||meta.poster):meta.poster),art=tvRail?tvRailArtwork(original):original;
   const progress=api.progressFraction(meta.progress);
   useEffect(()=>{api.registerCard(meta);},[api,meta]);
   const caption=recommendations?meta.recommendationReason:meta.releaseInfo||meta.year||(type==='series'?'Series':'Movie');
   const label=[meta.name||id,caption,progress>0?'Continue watching':meta.watched?'Watched':null].filter(Boolean).join(', ');
   return <a className={`sg-card meta-item-container${wide?' sg-card-wide':''}${tvRail?' sg-card-tv':''}${recommendations?' sg-recommendation':''}${rank?' sg-card-ranked':''}`} href={api.detailHash(type,id,meta.state?.videoId)} data-card={`${type}:${id}`} aria-label={label}>
-    {rank?<span className="sg-card-rank" aria-hidden="true">{rank}</span>:null}<div className="sg-poster poster-container"><Artwork src={api.safeURL(landscape?(meta.background||meta.poster):meta.poster)} eager={eager} fallback={<span className="sg-poster-placeholder">{meta.name}</span>}/>
+    {rank?<span className="sg-card-rank" aria-hidden="true">{rank}</span>:null}<div className="sg-poster poster-container"><Artwork src={art} fallbackSrc={art===original?'':original} eager={eager} fallback={<span className="sg-poster-placeholder">{meta.name}</span>}/>
       {meta.imdbRating?<span className="sg-rating"><b>IMDb</b> {meta.imdbRating}</span>:null}{meta.watched?<span className="sg-watched" aria-hidden="true">✓</span>:null}{progress>0?<span className="sg-progress"><i style={{width:Math.round(progress*100)+'%'}}/></span>:null}</div>
     <span className="sg-card-title title-label">{meta.name||id}</span><span className="sg-card-caption">{caption}</span>
   </a>;
@@ -54,10 +64,6 @@ const CatalogSlot=memo(function CatalogSlot({row,mode,api,priority}){
   const {entry,items,loading,error,stale}=row,title=mode==='curated'?entry.title:catalogTitle(entry);
   return <div className="sg-catalog-slot">{loading?<Loading title={title} mobile={api.mobile}/>:items.length?<Row ranked={mode==='curated'&&entry.key.startsWith('top-')} title={title} description={mode==='curated'&&entry.key.startsWith('season-')?entry.description:null} items={items} index={mode==='addons'?entry.index:undefined} api={api} priority={priority} stale={stale}/>:<section className="sg-row sg-curated-empty"><h2>{title}</h2><p>{error?'This collection is temporarily unavailable.':"No titles are available in this collection yet."}</p></section>}</div>;
 });
-function refreshedRow(previous,next){
-  // A failed refresh must not remove usable titles or the remote's focused card.
-  return next.error&&previous?.items.length?{...previous,loading:false,stale:true,error:next.error}:next;
-}
 function Home({api,params,onReady}){
   const filter=params.get('type')||'',mode=readHomeMode();
   const {revision,refresh,finish}=useRefresh();
@@ -65,14 +71,14 @@ function Home({api,params,onReady}){
   useEffect(()=>{
     let alive=true;const controller=new AbortController();
     const descriptors=mode==='curated'?getCuratedRows({type:filter}):api.catalogs().map((entry,index)=>({...entry,index})).filter(entry=>!filter||entry.catalog.type===filter).sort((a,b)=>catalogRank(a)-catalogRank(b));
-    setState(value=>({...value,loading:true,rows:revision?value.rows:descriptors.map(entry=>({entry,loading:true,items:[]}))}));
-    const continuing=api.continueWatching().then(items=>{if(alive)setState(value=>({...value,continuing:items.filter(item=>!filter||item.type===filter)}));}).catch(()=>{});
+    setState(value=>({...value,loading:true,rows:prepareCatalogRows(revision?value.rows:[],descriptors)}));
+    const continuing=api.continueWatching().then(items=>{if(alive)setState(value=>({...value,continuing:retainCatalogItems(value.continuing,items.filter(item=>!filter||item.type===filter))}));}).catch(()=>{});
     let work,successfulRows=0;
     if(mode==='curated'){
       work=loadCuratedRows({type:filter,signal:controller.signal,refresh:revision>0,onRow:(row,index)=>{
         if(!alive)return;
         if(!row.error)successfulRows++;
-        setState(value=>{const rows=[...value.rows];rows[index]=refreshedRow(rows[index],{entry:descriptors[index],items:row.items,loading:false,error:row.error});return {...value,rows};});
+        setState(value=>{const nextRow=refreshedRow(value.rows[index],{entry:descriptors[index],items:row.items,loading:false,error:row.error});if(nextRow===value.rows[index])return value;const rows=[...value.rows];rows[index]=nextRow;return {...value,rows};});
       }});
     }else{
       let next=0;
@@ -82,7 +88,7 @@ function Home({api,params,onReady}){
           try{const data=await api.catalog(entry,{},controller.signal,revision>0);row={entry,items:(data.metas||[]).filter(meta=>meta?.id).slice(0,24).map(meta=>({...meta,type:meta.type||entry.catalog.type}))};}
           catch(_){row={entry,items:[],error:'This catalog could not load.'};}
           if(!row.error)successfulRows++;
-          if(alive)setState(value=>{const rows=[...value.rows];rows[position]=refreshedRow(rows[position],row);return {...value,rows};});
+          if(alive)setState(value=>{const nextRow=refreshedRow(value.rows[position],row);if(nextRow===value.rows[position])return value;const rows=[...value.rows];rows[position]=nextRow;return {...value,rows};});
         }
       }));
     }

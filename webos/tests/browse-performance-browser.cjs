@@ -14,7 +14,7 @@ const {chromium}=require('playwright');
   browser=await chromium.launch({executablePath:process.env.CHROME_BIN||process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE,headless:true,args:['--no-sandbox']});
   const page=await browser.newPage({viewport:{width:1920,height:1080}}),errors=[];
   page.on('pageerror',error=>errors.push(error.message));
-  let releaseRows,fail=false;
+  let releaseRows,fail=false,changed=false;
   const rowsGate=new Promise(resolve=>{releaseRows=resolve;});
   let releaseSeries;
   const seriesGate=new Promise(resolve=>{releaseSeries=resolve;});
@@ -27,7 +27,7 @@ const {chromium}=require('playwright');
    if(fail){await route.fulfill({status:503,headers:{'access-control-allow-origin':'*'},body:'Unavailable'});return;}
    const suffix=id?.replace('.json','')||'';
    const meta={id:resource==='meta'?suffix:type==='movie'?'tt1000001':'tt2000001',type,name:resource==='meta'?'A saved story':`${suffix} ${type} story`,background:'https://browse.fixtures.invalid/landscape.svg',poster:'https://browse.fixtures.invalid/portrait.svg',description:'An isolated catalog fixture.',releaseInfo:'2026'};
-   const body=resource==='meta'?{meta}:{metas:Array.from({length:10},(_,index)=>({...meta,id:(type==='movie'?'tt10000':'tt20000')+String(index).padStart(2,'0'),name:meta.name+' '+index}))};
+   const body=resource==='meta'?{meta}:{metas:Array.from({length:10},(_,index)=>({...meta,id:(type==='movie'?'tt10000':'tt20000')+String(index).padStart(2,'0'),name:changed&&suffix==='top'&&type==='movie'&&index===0?'Updated movie title':meta.name+' '+index}))};
    await route.fulfill({contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(body)});
   });
   await page.goto('https://browse.fixtures.invalid/');
@@ -58,6 +58,24 @@ const {chromium}=require('playwright');
   const computations=await page.evaluate(()=>progressComputations);
   assert.ok(computations<count*2,`${computations} progress calculations for ${count} cards: unrelated rows must not rerender loaded cards`);
   assert.ok(await page.evaluate(()=>metadataReads)<=2,'Later catalog arrivals do not restart the billboard repeatedly');
+  // An unchanged server response should leave memoized cards and focus intact.
+  const beforeRefresh=await page.evaluate(()=>progressComputations);
+  await page.getByRole('button',{name:'Refresh',exact:true}).click();
+  await page.evaluate(()=>firstCard.focus());
+  await page.waitForFunction(()=>!document.querySelector('.sg-home-toolbar button')?.disabled);
+  const unchangedRefreshCalculations=await page.evaluate(()=>progressComputations)-beforeRefresh;
+  assert.equal(unchangedRefreshCalculations,0,'An unchanged refresh does not recalculate already rendered cards');
+  assert.equal(await page.evaluate(()=>document.activeElement===firstCard&&firstCard.querySelector('img')===firstPoster),true,'An unchanged refresh retains focus and decoded artwork');
+  // A real metadata change must still update immediately and only render its card.
+  changed=true;
+  const beforeChangedRefresh=await page.evaluate(()=>progressComputations);
+  await page.getByRole('button',{name:'Refresh',exact:true}).click();
+  await page.evaluate(()=>firstCard.focus());
+  await page.waitForFunction(()=>!document.querySelector('.sg-home-toolbar button')?.disabled);
+  const changedRefreshCalculations=await page.evaluate(()=>progressComputations)-beforeChangedRefresh;
+  assert.equal(changedRefreshCalculations,1,'Only the changed title recalculates its card');
+  assert.equal(await page.locator('.sg-row[data-row-key="Top movies"] .sg-card-title').first().textContent(),'Updated movie title');
+  assert.equal(await page.evaluate(()=>document.activeElement===firstCard&&firstCard.querySelector('img')===firstPoster),true,'A changed title leaves unaffected focus and artwork intact');
   // Refresh failure must not delete the focused title or replace it with a dead end.
   fail=true;
   await page.getByRole('button',{name:'Refresh',exact:true}).click();
@@ -71,6 +89,6 @@ const {chromium}=require('playwright');
   assert.equal(await page.locator('.sg-row[data-row-key="Top movies"] img').first().evaluate(node=>getComputedStyle(node).transitionDuration),'0s');
   await page.evaluate(()=>StreamGlassUI.unmount(document.getElementById('sg-view')));
   assert.deepEqual(errors,[]);
-  console.log(JSON.stringify({passed:true,firstCatalogUsableBeforeOthers:true,stableFocusDuringProgressiveLoad:true,failedRefreshRetainsTitles:true,cards:count,cardCalculations:computations,decodedArtwork:true,reducedMotion:true}));
+  console.log(JSON.stringify({passed:true,firstCatalogUsableBeforeOthers:true,stableFocusDuringProgressiveLoad:true,failedRefreshRetainsTitles:true,cards:count,cardCalculations:computations,unchangedRefreshCalculations,changedRefreshCalculations,decodedArtwork:true,reducedMotion:true}));
  }finally{if(browser)await browser.close();await fs.rm(temp,{recursive:true,force:true});}
 })().catch(error=>{console.error(error);process.exitCode=1;});

@@ -1,5 +1,15 @@
 # StreamGlass release audit
 
+## TV Search and refresh update — 0.8.4, 2026-11-23
+
+The TV update adds a custom remote keyboard, stable Search result navigation,
+unchanged-catalog reconciliation, and smaller TV rail artwork with fallback.
+All 63 unit tests, focused navigation/Search/artwork/Home checks, the packaged
+browser/video suite and the shared Android browser suite passed. Installed TV
+version 0.8.4 matches all 1,379 files in the build manifest. The independent
+CleanYourTV startup repair remains unchanged. Android's published installer
+remains 0.8.2. See [release details and limits](webos/RELEASE-0.8.4.md).
+
 ## Installer verification for 0.7.3 — 2026-11-05 UTC
 
 Validated runtime source: `39e7cdb899d3bfcd439c09319123d2bdd12e6eaf`.

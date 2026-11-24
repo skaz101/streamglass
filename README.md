@@ -2,16 +2,16 @@
 
 An unofficial Stremio client for **LG webOS TVs and Android phones/tablets**, with a dedicated Android interface, a TV interface designed for remotes, live search, local recommendations, and watch-progress sync.
 
-TV **0.8.3** preserves Home while visiting other tabs, skips loading rows during remote navigation, and remembers your selected Search result. Search enters the first available results and offers recent searches. Featured logos and the first row fit cleanly at 720p and 1080p. Android remains on **0.8.2**.
+TV **0.8.4** adds a remote-controlled Search keyboard with live results, remembered focus, and a fixed keyboard beside scrolling results. Home avoids rebuilding unchanged cards on refresh, and TV rails use lighter artwork with automatic fallback. Android remains on **0.8.2**.
 
-See [TV release notes](webos/RELEASE-0.8.3.md) and [Android release notes](android/RELEASE-0.8.2.md) for verification and limits. Both packages remain preview builds.
+See [TV release notes](webos/RELEASE-0.8.4.md) and [Android release notes](android/RELEASE-0.8.2.md) for verification and limits. Both packages remain preview builds.
 
 ## Downloads
 
 - [**Android 0.8.2 APK**](https://github.com/skaz101/streamglass/releases/download/v0.8.2/streamglass-android-0.8.2.apk) — updates the original preview installation.
 - [Android 0.8.2 release, source and checksums](https://github.com/skaz101/streamglass/releases/tag/v0.8.2)
-- [LG TV 0.8.3 installer (.ipk)](https://github.com/skaz101/streamglass/releases/download/v0.8.3/com.streamglass.tv_0.8.3_all.ipk)
-- [LG 0.8.3 release, source and checksums](https://github.com/skaz101/streamglass/releases/tag/v0.8.3)
+- [LG TV 0.8.4 installer (.ipk)](https://github.com/skaz101/streamglass/releases/download/v0.8.4/com.streamglass.tv_0.8.4_all.ipk)
+- [LG 0.8.4 release, source and checksums](https://github.com/skaz101/streamglass/releases/tag/v0.8.4)
 
 The Android update retains the original application ID and preview certificate.
 Install it over the existing app to preserve local account data.

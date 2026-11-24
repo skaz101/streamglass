@@ -100,98 +100,106 @@ try {
   await page.getByRole('heading',{name:'Make it yours'}).waitFor();
   assert.equal(await page.locator('.sg-recommendation').count(),0,'Empty history never invents personal picks');
   await page.locator('.sg-nav-search').focus();await page.keyboard.press('Enter');
-  await page.locator('#sg-search-input').waitFor();
-  // 0.4.0: live search must not replace the input, caret or editing state.
+  await page.locator('#sg-search-query').waitFor();
+  // The app-owned TV keyboard preserves its query, caret and focus while loading.
   await page.locator('.sg-nav-search').click();
-  const searchInput=page.locator('#sg-search-input');
-  await searchInput.click();
+  const searchInput=page.locator('#sg-search-input'),searchDisplay=page.locator('#sg-search-query');
+  const setSearchQuery=async value=>{await searchDisplay.focus();await page.keyboard.press('Control+a');if(!value){await page.keyboard.press('Backspace');return;}await searchDisplay.evaluate((el,value)=>{const data=new DataTransfer();data.setData('text/plain',value);el.dispatchEvent(new ClipboardEvent('paste',{clipboardData:data,bubbles:true,cancelable:true}));},value);};
+  await searchDisplay.focus();
   await page.evaluate(()=>window.liveInputNode=document.querySelector('#sg-search-input'));
   const beforeSearch=searchRequests.length;
-  await searchInput.pressSequentially('matrix',{delay:65});
+  await searchDisplay.pressSequentially('matrix',{delay:65});
   await page.waitForFunction(()=>document.querySelector('#sg-search-results')?.getAttribute('aria-busy')==='false'&&document.querySelector('#sg-search-results .sg-card'));
   assert.deepEqual(searchRequests.slice(beforeSearch),['matrix','matrix'],'Typing a burst sends one query per catalog');
-  assert.ok(await page.evaluate(()=>document.activeElement===window.liveInputNode&&document.querySelector('#sg-search-input')===window.liveInputNode&&!window.liveInputNode.readOnly),'Live results preserve editable focus and the same input node');
-  assert.equal(await searchInput.evaluate(el=>el.selectionStart),6,'Caret remains at the end of the typed query');
+  assert.ok(await page.evaluate(()=>document.activeElement.id==='sg-search-query'&&document.querySelector('#sg-search-input')===window.liveInputNode&&window.liveInputNode.type==='hidden'),'Live results preserve the query display and hidden value node without a native input');
+  assert.equal(await searchDisplay.locator('[data-query-before]').textContent(),'matrix','Caret remains at the end of the typed query');
   assert.equal(await page.evaluate(()=>localStorage.getItem('streamglass-search-v1')),null,'Live typing alone does not record search history');
-  assert.ok(await searchInput.evaluate(el=>el.getBoundingClientRect().left>=60),'Search field has TV-safe side padding');
+  assert.ok(await searchDisplay.evaluate(el=>el.getBoundingClientRect().left>=60),'Search field has TV-safe side padding');
   assert.ok(await page.locator('#sg-search-results .sg-card').first().evaluate(el=>el.getBoundingClientRect().left>=60),'First result aligns with search heading');
   await page.screenshot({path:path.join(shots,'live-search.png')});
-  // Search/Done finishes editing and enters results without requiring Back.
-  await searchInput.press('Enter');
+  // Physical Enter submits directly; TV Results uses the same handoff.
+  await searchDisplay.press('Enter');
   await page.waitForFunction(()=>document.activeElement.matches('#sg-search-results .sg-card'));
   assert.equal(await searchInput.evaluate(el=>!!el.dataset.sgTyping),false);
   await page.keyboard.press('ArrowUp');
-  assert.equal(await searchInput.evaluate(el=>el===document.activeElement&&el.readOnly),true);
-  await page.keyboard.press('ArrowUp');
-  assert.equal(await page.locator('.sg-search-home').evaluate(el=>el===document.activeElement),true,'Home is reachable directly from Search');
+  assert.ok(await page.evaluate(()=>document.activeElement.matches('.sg-search-keys button')));
+  await page.keyboard.press('ArrowUp');await page.keyboard.press('ArrowUp');
+  assert.equal(await page.locator('.sg-nav-search').evaluate(el=>el===document.activeElement),true,'Top navigation is reachable directly from Search');
   await page.keyboard.press('ArrowDown');
-  await searchInput.click();
-  await searchInput.fill('slowold');
+  await searchDisplay.focus();
+  await setSearchQuery('slowold');
   await page.waitForFunction(()=>document.querySelector('#sg-search-status').textContent==='Searching…');
   assert.ok(await page.locator('#sg-search-results').evaluate(el=>el.inert&&el.querySelector('.sg-card')),'Previous artwork stays in place but cannot open stale results');
   await page.waitForTimeout(100);
-  await searchInput.fill('newtitle');
+  await setSearchQuery('newtitle');
   await page.waitForFunction(()=>document.querySelector('#sg-search-results')?.getAttribute('aria-busy')==='false'&&document.querySelector('#sg-search-results .sg-card')?.textContent.includes('newtitle'));
   await page.waitForTimeout(1100);
   assert.ok(!(await page.locator('#sg-search-results').innerText()).includes('slowold'),'Late responses cannot replace a newer query');
-  await searchInput.fill('slowold');
+  await setSearchQuery('slowold');
   await page.waitForFunction(()=>document.querySelector('#sg-search-status').textContent==='Searching…');
   await page.waitForTimeout(500);
   const pendingCount=searchRequests.filter(query=>query==='slowold').length;
-  await searchInput.press('Enter');
+  await searchDisplay.press('Enter');
   await page.waitForFunction(()=>document.activeElement.matches('#sg-search-results .sg-card')&&document.activeElement.textContent.includes('slowold'));
   assert.equal(searchRequests.filter(query=>query==='slowold').length,pendingCount,'Submitting an in-flight live query reuses its requests');
-  await searchInput.click();await searchInput.fill('duplicates');
+  await setSearchQuery('duplicates');
   await page.waitForFunction(()=>document.querySelector('#sg-search-results').getAttribute('aria-busy')==='false'&&document.querySelector('#sg-search-status').textContent==='18 titles');
   assert.equal(await page.locator('#sg-search-results .sg-card').count(),18,'Duplicate identities across catalogs appear only once');
   assert.deepEqual(await page.locator('#sg-search-results h2').allTextContents(),['Movies','Series']);
   for(const query of ['progressive','progressive-short']){
-    await searchInput.click();await searchInput.fill(query);
+    await setSearchQuery(query);
     await page.waitForFunction(value=>document.querySelector('#sg-search-results .sg-card')?.textContent.includes(value+' Test Series'),query);
-    await searchInput.press('Enter');
+    await searchDisplay.press('Enter');
     await page.waitForFunction(()=>document.activeElement.matches('#sg-search-results .sg-card'));
     assert.equal(await page.locator('#sg-search-results').getAttribute('aria-busy'),'true','Submit enters the first usable batch without waiting for the gated movie catalog');
     const seriesCard=await page.locator('#sg-search-results .sg-card').first().elementHandle();
     await seriesCard.focus();
+    // Focus scales the card for 150 ms. Measure after that visual transition;
+    // otherwise its continuing scale looks like a late-catalog position jump.
+    await seriesCard.evaluate(el=>Promise.all(el.getAnimations().map(animation=>animation.finished.catch(()=>{}))));
     const seriesTop=await seriesCard.evaluate(el=>el.getBoundingClientRect().top);
+    const seriesRowTop=await seriesCard.evaluate(el=>el.closest('.sg-row').getBoundingClientRect().top);
     releaseMovieSearch();
     await page.waitForFunction(()=>document.querySelector('#sg-search-results').getAttribute('aria-busy')==='false');
-    const position=await seriesCard.evaluate(el=>{const rect=el.getBoundingClientRect(),view=document.querySelector('#sg-view');return {active:el===document.activeElement&&el.isConnected,top:rect.top,bottom:rect.bottom,viewTop:view.getBoundingClientRect().top,viewBottom:view.getBoundingClientRect().bottom,scroll:view.scrollTop,maxScroll:view.scrollHeight-view.clientHeight};});
+    const position=await seriesCard.evaluate(el=>{const rect=el.getBoundingClientRect(),view=document.querySelector('.sg-search-results-pane');return {active:el===document.activeElement&&el.isConnected,top:rect.top,bottom:rect.bottom,rowTop:el.closest('.sg-row').getBoundingClientRect().top,viewTop:view.getBoundingClientRect().top,viewBottom:view.getBoundingClientRect().bottom,scroll:view.scrollTop,maxScroll:view.scrollHeight-view.clientHeight};});
     assert.ok(position.active,'Late rows retain the already-focused Series card');
-    if(query==='progressive')assert.ok(Math.abs(position.top-seriesTop)<2,'A late Movies row preserves the focused card position when scrolling permits');
+    if(query==='progressive'){
+      assert.ok(Math.abs(position.top-seriesTop)<2,'A late Movies row preserves the focused card position when scrolling permits');
+      assert.ok(Math.abs(position.rowTop-seriesRowTop)<2,'A late Movies row also preserves the untransformed row position');
+    }
     else assert.ok(position.top>=position.viewTop&&position.bottom<=position.viewBottom&&Math.abs(position.scroll-position.maxScroll)<2,'Short result pages preserve the whole focused card within the available scroll range');
     await page.keyboard.press('ArrowUp');await page.keyboard.press('ArrowUp');
   }
-  await searchInput.click();await searchInput.fill('progressive-focus');await searchInput.press('Enter');
+  await setSearchQuery('progressive-focus');await searchDisplay.press('Enter');
   await page.waitForFunction(()=>document.activeElement.matches('#sg-search-results .sg-card')&&document.activeElement.textContent.includes('progressive-focus Test Series'));
   assert.equal(await page.locator('#sg-search-results').getAttribute('aria-busy'),'true');
   await page.keyboard.press('ArrowUp');
   releaseMovieSearch();
   await page.waitForFunction(()=>document.querySelector('#sg-search-results').getAttribute('aria-busy')==='false');
-  assert.ok(await searchInput.evaluate(el=>el===document.activeElement),'A late catalog never steals focus back after the submitted first batch');
-  await page.locator('[data-action="search-clear"]').click();
+  assert.ok(await page.evaluate(()=>document.activeElement.matches('.sg-search-keys button')),'A late catalog never steals focus back after the submitted first batch');
+  await page.locator('[data-action="search-key"][data-key="clear"]').click();
   assert.equal(await searchInput.inputValue(),'');
-  assert.ok(await searchInput.evaluate(el=>el===document.activeElement&&el.readOnly),'Clear leaves a navigable field, without reopening the TV keyboard');
+  assert.ok(await page.evaluate(()=>document.activeElement.dataset.key==='clear'),'Clear keeps the custom control focused without opening the native keyboard');
   assert.ok(await page.locator('[data-action="search-recent"]').count()>0,'Submitted searches are available on the empty TV screen');
   assert.ok(await page.evaluate(()=>document.querySelector('#sg-search-input')===window.liveInputNode),'Recent searches do not replace the Search field');
   await page.locator('[data-action="search-recent"][data-query="matrix"]').click();
   await page.waitForFunction(()=>document.activeElement.matches('#sg-search-results .sg-card')&&document.activeElement.textContent.includes('matrix'));
   assert.equal(await searchInput.inputValue(),'matrix','A recent search repeats the actual query');
-  await searchInput.click();await searchInput.fill('MATRIX');await searchInput.press('Enter');
+  await setSearchQuery('MATRIX');await searchDisplay.press('Enter');
   await page.waitForFunction(()=>document.activeElement.matches('#sg-search-results .sg-card'));
   assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('streamglass-search-v1')).filter(query=>query.toLowerCase()==='matrix').length),1,'History deduplicates case changes');
   for(const query of ['Dune','Andor']){
-    await searchInput.click();await searchInput.fill(query);await searchInput.press('Enter');
+    await setSearchQuery(query);await searchDisplay.press('Enter');
     await page.waitForFunction(query=>document.querySelector('#sg-search-results').getAttribute('aria-busy')==='false'&&document.querySelector('#sg-search-results .sg-card')?.textContent.includes(query),query);
   }
   assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('streamglass-search-v1')).length),6,'Search history retains at most six submitted queries');
   const tvHistory=await page.evaluate(()=>localStorage.getItem('streamglass-search-v1'));
   await page.evaluate(()=>{StreamGlassHost.mobile=true;});
-  await searchInput.click();await searchInput.fill('phone-only');await searchInput.press('Enter');
+  await setSearchQuery('phone-only');await searchDisplay.press('Enter');
   await page.waitForFunction(()=>document.querySelector('#sg-search-results').getAttribute('aria-busy')==='false'&&document.querySelector('#sg-search-results .sg-card')?.textContent.includes('phone-only'));
   assert.equal(await page.evaluate(()=>localStorage.getItem('streamglass-search-v1')),tvHistory,'Mobile searches do not write TV history');
   await page.evaluate(()=>{delete StreamGlassHost.mobile;});
-  await page.locator('[data-action="search-clear"]').click();
+  await page.locator('[data-action="search-key"][data-key="clear"]').click();
   await page.waitForFunction(()=>{const recent=document.querySelector('.sg-search-recent');return recent&&Number(getComputedStyle(recent).opacity)===1;});
   await page.screenshot({path:path.join(shots,'recent-searches.png')});
   await page.setViewportSize({width:1280,height:720});
@@ -201,33 +209,29 @@ try {
   await page.locator('[data-action="search-history-clear"]').click();
   assert.equal(await page.evaluate(()=>localStorage.getItem('streamglass-search-v1')),null,'Clear history removes the saved queries');
   assert.equal(await page.locator('[data-action="search-recent"]').count(),0);
-  assert.ok(await searchInput.evaluate(el=>el===document.activeElement&&el.readOnly),'Clearing history returns navigable focus to the field');
-  await searchInput.click();
-  await searchInput.fill('');
+  assert.ok(await page.evaluate(()=>document.activeElement.matches('.sg-search-keys button')),'Clearing history returns focus to the custom keyboard');
+  await searchDisplay.focus();
+  await setSearchQuery('');
   assert.equal(await page.locator('#sg-search-results .sg-card').count(),0,'Clearing removes results immediately');
   const beforeShort=searchRequests.length;
-  await searchInput.fill('V');await page.waitForTimeout(550);
+  await setSearchQuery('V');await page.waitForTimeout(550);
   assert.equal(searchRequests.length,beforeShort,'One character waits for an explicit Search');
   await page.locator('#sg-search-form button[type="submit"]').click();
   await page.locator('#sg-search-results .sg-card').first().waitFor();
   assert.ok(searchRequests.includes('V'),'One-letter titles can still be submitted');
-  await searchInput.click();
-  const beforeComposition=searchRequests.length;
-  await searchInput.dispatchEvent('compositionstart');await searchInput.fill('composed');
-  assert.ok(await page.locator('#sg-search-results').evaluate(el=>el.inert),'Composing a new query also makes previous results inactive');
-  await page.waitForTimeout(550);
-  assert.equal(searchRequests.length,beforeComposition,'No requests during IME composition');
-  await searchInput.dispatchEvent('compositionend');
-  await page.waitForFunction(()=>document.querySelector('#sg-search-results .sg-card')?.textContent.includes('composed'));
-  await searchInput.fill('nothingfound');
+  await searchDisplay.focus();
+  await setSearchQuery('ac');await searchDisplay.press('Home');await searchDisplay.press('ArrowRight');await page.keyboard.type('b');
+  assert.equal(await searchInput.inputValue(),'abc','Physical keyboard inserts at the displayed caret');
+  await searchDisplay.press('Delete');assert.equal(await searchInput.inputValue(),'ab','Delete removes the next character');
+  await setSearchQuery('nothingfound');
   await page.getByRole('heading',{name:'No results',exact:true}).waitFor();
-  await searchInput.fill('failsearch');
+  await setSearchQuery('failsearch');
   await page.getByRole('heading',{name:'Search unavailable',exact:true}).waitFor();
   const failedCount=searchRequests.filter(q=>q==='failsearch').length;
   await page.locator('#sg-search-form button[type="submit"]').click();
   await page.getByRole('heading',{name:'Search unavailable',exact:true}).waitFor();
   assert.ok(searchRequests.filter(q=>q==='failsearch').length>failedCount,'Same-query retry is available after failures');
-  await searchInput.click();await searchInput.fill('liveback');
+  await setSearchQuery('liveback');
   await page.locator('#sg-search-results .sg-card').first().waitFor();
   await page.locator('#sg-search-results .sg-card').first().click();
   await page.locator('[data-action="focus-streams"]').waitFor();await page.keyboard.press('Escape');
@@ -235,7 +239,7 @@ try {
   assert.equal(await page.locator('#sg-search-input').inputValue(),'liveback','Back restores a live query without prior submit');
   assert.ok(await page.evaluate(()=>JSON.parse(localStorage.getItem('streamglass-search-v1')).includes('liveback')),'Opening a live result records its query');
   // Leaving during the debounce must not send a search from the next page.
-  await page.locator('#sg-search-input').click();await page.locator('#sg-search-input').fill('dontsend');
+  await setSearchQuery('dontsend');
   await page.locator('[data-nav="board"]').click();await page.locator('.sg-card').first().waitFor();
   await page.waitForTimeout(550);assert.ok(!searchRequests.includes('dontsend'));
   // 0.4.0: no duplicate rectangle over nav pills; preserve keyboard visibility.
@@ -290,7 +294,7 @@ try {
   assert.equal(await page.evaluate(()=>document.getElementById('sg-view')===retainedHome&&document.activeElement===retainedCard),true,'Unchanged account sync preserves the existing Home and card nodes for Back');
   // Search origin is restored, rather than always returning to Home.
   await page.locator('.sg-nav-search').click();
-  await page.locator('#sg-search-input').click();await page.locator('#sg-search-input').fill('return test');await page.locator('#sg-search-form button[type="submit"]').click();
+  await setSearchQuery('return test');await page.locator('#sg-search-form button[type="submit"]').click();
   await page.locator('.sg-card').first().click();await page.locator('[data-action="focus-streams"]').waitFor();
   await page.keyboard.press('Escape');
   await page.waitForFunction(()=>location.hash.includes('search=return%20test')&&document.activeElement.classList.contains('sg-card'));
@@ -434,7 +438,7 @@ try {
   await page.locator('.sg-recommendation').first().waitFor();
   slowRecommendations=true;
   await page.locator('[data-action="recommendations-refresh"]').first().click();
-  await page.locator('.sg-nav-search').click();await page.locator('#sg-search-input').waitFor();
+  await page.locator('.sg-nav-search').click();await page.locator('#sg-search-query').waitFor();
   await page.waitForTimeout(1200);
   assert.equal(await page.locator('#sg-picks-results').count(),0,'Late recommendation requests cannot overwrite another page');
   genrelessCatalog=false;slowRecommendations=false;
@@ -447,7 +451,7 @@ try {
   await page.locator('#sg-addon-form button').click();
   await page.waitForFunction(()=>StreamGlassShell.state.addonCount>=2);
   await page.locator('.sg-nav-search').click();
-  await page.locator('#sg-search-input').click();await page.locator('#sg-search-input').fill('fixture');await page.locator('#sg-search-form button[type="submit"]').click();
+  await setSearchQuery('fixture');await page.locator('#sg-search-form button[type="submit"]').click();
   await page.locator('.sg-card').first().waitFor();
   await page.reload();await ready();await page.waitForFunction(()=>StreamGlassShell.state.signedIn);
   await page.keyboard.press('F2');await page.getByRole('heading',{name:'StreamGlass TV '+appVersion}).waitFor();
@@ -455,7 +459,7 @@ try {
   for(const secret of ['secret-fixture-token','private-stream-token','test@example.invalid','fake-password','fixtures.invalid'])assert.ok(!exported.includes(secret),'No private values in diagnostic export');
   assert.ok(libraryWrites>0);assert.ok(addonWrites>0);
   assert.deepEqual(errors,[],'No JavaScript runtime errors in packaged app');
-  const summary={passed:true,engine:await browser.version(),protocol:'file:',mockedAccountAndAddons:true,localVideoPlayback:true,subtitleRendering:true,resume:true,pendingPlaybackCancelledOnHide:true,pagehideReleasesPlayer:true,closeDoesNotWaitForCloudSync:true,libraryWrites,addonWrites,remoteNavigation:true,liveSearch:true,searchSubmitEntersResults:true,searchFirstBatchHandoff:true,searchHistoryBounded:true,searchHistoryClear:true,mobileSearchHistoryUnchanged:true,searchHomeWithoutBack:true,searchSubmitReusesPendingRequests:true,searchResultsDeduplicated:true,searchResultFocusPreserved:true,staleResultsInactive:true,inputAndCaretPreserved:true,staleSearchSuppressed:true,compositionSafe:true,liveQueryRestored:true,roundedNavigationFocus:true,navReturnsToContent:true,localStreamScrolling:true,continueWatchingInsertion:true,railBoundary:true,rowFocusMemory:true,backRestoresCardAndScroll:true,searchOriginRestored:true,homeTypeFilter:true,vectorSearchIcon:true,recommendationsFromRealCoreProgress:true,recommendationsFromRealCoreWatched:true,recommendationExclusions:true,recommendationMetadataEnrichment:true,recommendationFilters:true,recommendationBackFocus:true,recommendationFailureRetry:true,recommendationCancellation:true,recommendationColdStart:true,sensitiveDiagnosticsExcluded:true,runtimeErrors:errors};
+  const summary={passed:true,engine:await browser.version(),protocol:'file:',mockedAccountAndAddons:true,localVideoPlayback:true,subtitleRendering:true,resume:true,pendingPlaybackCancelledOnHide:true,pagehideReleasesPlayer:true,closeDoesNotWaitForCloudSync:true,libraryWrites,addonWrites,remoteNavigation:true,liveSearch:true,searchSubmitEntersResults:true,searchFirstBatchHandoff:true,searchHistoryBounded:true,searchHistoryClear:true,mobileSearchHistoryUnchanged:true,searchHomeWithoutBack:true,searchSubmitReusesPendingRequests:true,searchResultsDeduplicated:true,searchResultFocusPreserved:true,staleResultsInactive:true,customQueryAndCaretPreserved:true,staleSearchSuppressed:true,physicalKeyboardEditing:true,liveQueryRestored:true,roundedNavigationFocus:true,navReturnsToContent:true,localStreamScrolling:true,continueWatchingInsertion:true,railBoundary:true,rowFocusMemory:true,backRestoresCardAndScroll:true,searchOriginRestored:true,homeTypeFilter:true,vectorSearchIcon:true,recommendationsFromRealCoreProgress:true,recommendationsFromRealCoreWatched:true,recommendationExclusions:true,recommendationMetadataEnrichment:true,recommendationFilters:true,recommendationBackFocus:true,recommendationFailureRetry:true,recommendationCancellation:true,recommendationColdStart:true,sensitiveDiagnosticsExcluded:true,runtimeErrors:errors};
   await fs.writeFile(path.join(shots,'browser-results.json'),JSON.stringify(summary,null,2));
   console.log(JSON.stringify(summary,null,2));
 }finally{

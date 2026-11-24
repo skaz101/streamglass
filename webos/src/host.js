@@ -1,7 +1,7 @@
 /* StreamGlass TV webOS adapter. Modified 2026-10-30. GPL-3.0-or-later. */
 (function () {
   'use strict';
-  const VERSION = '0.8.3';
+  const VERSION = '0.8.4';
   const APP_ID = 'com.streamglass.tv';
   const events = [];
   // Deliberately allow only numeric/boolean diagnostics. Never record account data,
@@ -122,9 +122,18 @@
   }
   const searchComposition=new WeakSet();
   let keyboardVisibility=null;
+  const customSearch=()=>document.querySelector('#sg-view .sg-search-keyboard');
+  let searchKey=null,searchKeyValue='a';
+  function focusSearchKeyboard() {
+    const keyboard=customSearch();if(!keyboard)return false;
+    const key=searchKey?.isConnected&&keyboard.contains(searchKey)?searchKey:keyboard.querySelector('.sg-search-keys [data-key="'+searchKeyValue+'"]');
+    return focusTarget(key);
+  }
+  function searchReady() { if(customSearch())focusSearchKeyboard(); }
   function finishSearchEditing() {
     const field=document.querySelector('#sg-view #sg-search-input');
     if(!field||searchComposition.has(field))return false;
+    if(customSearch())return true;
     const wasFocused=document.activeElement===field;
     // An explicit submit or navigation gesture ends editing. Blur first so the
     // native keyboard closes, then restore an inert focus target for the remote.
@@ -134,10 +143,11 @@
     if(wasFocused)field.focus({preventScroll:true});
     return true;
   }
-  function focusSearchResults() {
+  function focusSearchResults(expectedFocus) {
     const view=document.getElementById('sg-view'),field=view&&view.querySelector('#sg-search-input');
     const form=field&&field.closest('#sg-search-form');
     if(!field||!form||document.hidden||field.dataset.sgTyping||searchComposition.has(field)||modal||(player&&player.active()))return false;
+    if(expectedFocus&&document.activeElement!==expectedFocus)return false;
     // A slow response must not pull focus back after the user has left the form.
     if(!form.contains(document.activeElement))return false;
     const first=view.querySelector('#sg-search-results .sg-card');
@@ -157,6 +167,8 @@
     showStreams,
     finishSearchEditing,
     focusSearchResults,
+    focusSearchKeyboard,
+    searchReady,
     log,
   };
 
@@ -211,6 +223,7 @@
     if (!next || !next.isConnected || next.disabled || next.hidden || next.closest('[inert],[hidden]')) return false;
     const rail=next.closest('.sg-cards');
     const view=document.getElementById('sg-view');
+    const scrollView=next.closest('.sg-search-results-pane')||view;
     // The featured scene and its controls are one destination. Keeping only the
     // Play button visible leaves the title/artwork clipped after row browsing.
     const returnToTop=!!view&&!!next.closest('.sg-hero,.sg-home-filters,.sg-nav');
@@ -219,16 +232,16 @@
     // Insets also reserve room for the card's focused outline and scale.
     const box=next.getBoundingClientRect();
     const bounds=rail&&rail.getBoundingClientRect();
-    const area=view&&view.contains(next)&&!next.closest('#sg-streams')?view.getBoundingClientRect():null;
+    const area=scrollView&&scrollView.contains(next)&&!next.closest('#sg-streams')?scrollView.getBoundingClientRect():null;
     const row=rail&&area&&rail.closest('.sg-row');
     // A collection's heading belongs to the card destination. Aligning only
     // the poster's top clips the category name when browsing upward.
     const rowTop=row?row.getBoundingClientRect().top:box.top;
-    const left=rail?rail.scrollLeft:0,top=(area||returnToTop)?view.scrollTop:0;
+    const left=rail?rail.scrollLeft:0,top=(area||returnToTop)?scrollView.scrollTop:0;
     const dx=bounds?(box.right>bounds.right-18?box.right-bounds.right+18:box.left<bounds.left+18?box.left-bounds.left-18:0):0;
     const topEdge=area?Math.max(rowTop,box.bottom-area.height+48):box.top;
     const dy=returnToTop?-top:area?(box.bottom>area.bottom-24?box.bottom-area.bottom+24:topEdge<area.top+24?topEdge-area.top-24:0):0;
-    const moveRail=rail&&(dx||scrolling.has(rail)),moveView=(area||returnToTop)&&(Math.abs(dy)>1||scrolling.has(view));
+    const moveRail=rail&&(dx||scrolling.has(rail)),moveView=(area||returnToTop)&&(Math.abs(dy)>1||scrolling.has(scrollView));
     next.focus({preventScroll:true});
     if(rail){
       rowFocus.set(rail,next);
@@ -236,7 +249,7 @@
       // otherwise reversing can carry the final selection out of the viewport.
       if(moveRail)scrollTo(rail,{left:left+dx});
     }
-    if(moveView)scrollTo(view,{top:top+dy});
+    if(moveView)scrollTo(scrollView,{top:top+dy});
     else if(!area&&!rail&&!returnToTop)next.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});
     return true;
   }
@@ -279,10 +292,37 @@
       if(key==='ArrowDown'){
         const view=document.getElementById('sg-view'),last=view&&view.sgLastFocus;
         if(last&&last.isConnected&&view.contains(last)&&visible(last))return focusTarget(last);
+        if(customSearch())return focusSearchKeyboard();
         return focusTarget(view&&(view.querySelector('#sg-search-input')||view.querySelector('.sg-hero .sg-primary,button:not(:disabled),a[href],input,select')));
       }
     }
     const searchForm=!dialog&&current&&current.closest('#sg-search-form');
+    if(searchForm?.classList.contains('sg-search-keyboard')){
+      const keys=[...searchForm.querySelectorAll('.sg-search-keys button')],tools=[...searchForm.querySelectorAll('.sg-search-tools button')];
+      const index=keys.indexOf(current),toolIndex=tools.indexOf(current),query=searchForm.querySelector('#sg-search-query'),submit=searchForm.querySelector('[type="submit"]');
+      const results=()=>focusTarget(entryCard(document.querySelector('#sg-search-results'))||document.querySelector('#sg-search-results .sg-search-recent-list button'));
+      if(index>=0){
+        searchKey=current;
+        if(key==='ArrowLeft'&&index%6)focusTarget(keys[index-1]);
+        else if(key==='ArrowRight'){if(index%6===5)results();else focusTarget(keys[index+1]);}
+        else if(key==='ArrowUp')focusTarget(index<6?query:keys[index-6]);
+        else if(key==='ArrowDown')focusTarget(keys[index+6]||tools[Math.floor(index%6/2)]);
+      }else if(toolIndex>=0){
+        if(key==='ArrowLeft')focusTarget(tools[toolIndex-1]);
+        else if(key==='ArrowRight'){if(toolIndex===tools.length-1)results();else focusTarget(tools[toolIndex+1]);}
+        else if(key==='ArrowUp')focusTarget(keys[30+toolIndex*2]);
+        else if(key==='ArrowDown')focusTarget(submit);
+      }else if(current===query){
+        if(key==='ArrowDown')focusSearchKeyboard();
+        else if(key==='ArrowUp')focusTarget(document.querySelector('.sg-nav-search')||navTarget());
+        else window.StreamGlassShell?.editSearch?.(key==='ArrowLeft'?'left':'right');
+      }else {
+        if(key==='ArrowUp')focusTarget(tools[0]);
+        else if(key==='ArrowRight'||key==='ArrowDown')results();
+        else if(key==='ArrowLeft')focusSearchKeyboard();
+      }
+      return true;
+    }
     if(searchForm){
       if(key==='ArrowUp')focusTarget(document.querySelector('#sg-view .sg-search-header a[href="#/board"]')||document.querySelector('.sg-nav-search')||navTarget());
       else if(key==='ArrowDown')focusTarget(entryCard(document.querySelector('#sg-search-results'))||document.querySelector('#sg-search-results .sg-search-recent-list button'));
@@ -302,16 +342,16 @@
       }else{
         rowFocus.set(list,current);
         const columns=Math.max(1,getComputedStyle(list).gridTemplateColumns.trim().split(/\s+/).length);
-        if(key==='ArrowUp')focusTarget(index<columns?document.querySelector('#sg-view #sg-search-input'):controls[index-columns]);
+        if(key==='ArrowUp')focusTarget(index<columns?(customSearch()?document.querySelector('.sg-nav-search'):document.querySelector('#sg-view #sg-search-input')):controls[index-columns]);
         else if(key==='ArrowDown')focusTarget(controls[index+columns]||clear);
-        else if(key==='ArrowLeft'&&index%columns)focusTarget(controls[index-1]);
+        else if(key==='ArrowLeft'){if(index%columns)focusTarget(controls[index-1]);else if(customSearch())focusSearchKeyboard();}
         else if(key==='ArrowRight'&&index%columns<columns-1)focusTarget(controls[index+1]);
       }
       return true;
     }
     const searchHeader=!dialog&&current&&current.closest('.sg-search-header');
     if(searchHeader){
-      if(key==='ArrowDown'||key==='ArrowRight')focusTarget(document.querySelector('#sg-view #sg-search-input'));
+      if(key==='ArrowDown'||key==='ArrowRight'){if(customSearch())focusSearchKeyboard();else focusTarget(document.querySelector('#sg-view #sg-search-input'));}
       else if(key==='ArrowUp')focusTarget(document.querySelector('.sg-nav-search')||navTarget());
       return true;
     }
@@ -361,6 +401,7 @@
       const items=[...rail.querySelectorAll('.sg-card')];
       const index=items.indexOf(current);
       if(key==='ArrowLeft'||key==='ArrowRight'){
+        if(key==='ArrowLeft'&&index===0&&rail.closest('#sg-search-results')&&customSearch())return focusSearchKeyboard();
         const next=items[index+(key==='ArrowRight'?1:-1)];
         focusTarget(next||(key==='ArrowRight'?rail.closest('.sg-row')?.querySelector('.sg-see-all'):null));
         return true; // A collection's own See All is the only destination beyond its end.
@@ -369,6 +410,7 @@
       const adjacent=rails[rails.indexOf(rail)+(key==='ArrowDown'?1:-1)];
       if(adjacent)return focusTarget(rememberedCard(adjacent));
       if(key==='ArrowDown')return true;
+      if(rail.closest('#sg-search-results')&&customSearch())return focusSearchKeyboard();
       return focusTarget((rail.closest('#sg-search-results')&&document.querySelector('#sg-view #sg-search-input'))||document.querySelector('.sg-hero .sg-primary')||navTarget());
     }
     const hero=!dialog&&current&&current.closest('.sg-hero');
@@ -430,6 +472,25 @@
       return;
     }
     if (player && player.active() && player.handleKey(e)) { consume(e); return; }
+    const keyboard=customSearch();
+    if(keyboard&&!document.querySelector('[role="dialog"][aria-modal="true"]')){
+      const editing=keyboard.contains(e.target),query=e.target?.id==='sg-search-query';
+      if((key==='Back'||key==='Escape')&&e.target?.closest('#sg-search-results')){consume(e);focusSearchKeyboard();return;}
+      // Physical keyboards share the same query model as remote key buttons.
+      // No focused native input is needed, even when LG's keyboard is absent.
+      if(editing&&!e.isComposing&&e.keyCode!==229){
+        let operation=null;
+        if((e.ctrlKey||e.metaKey)&&key.toLowerCase()==='a')operation='select-all';
+        else if(!e.ctrlKey&&!e.metaKey&&!e.altKey){
+          if(key==='Backspace')operation='backspace';
+          else if(key==='Delete')operation='delete';
+          else if(query&&['ArrowLeft','ArrowRight','Home','End'].includes(key))operation=key==='ArrowLeft'?'left':key==='ArrowRight'?'right':key.toLowerCase();
+          else if([...key].length===1)operation=key;
+        }
+        if(operation!==null){consume(e);window.StreamGlassShell?.editSearch?.(operation,{shift:e.shiftKey});return;}
+        if(query&&key==='Enter'){consume(e);keyboard.requestSubmit();return;}
+      }
+    }
     const field = e.target && typeof e.target.matches === 'function' && e.target.matches('input:not([type="checkbox"]):not([type="radio"]), textarea');
     if (field && e.target.id === 'sg-search-input' && (e.isComposing || e.keyCode === 229 || searchComposition.has(e.target))) return;
     if (key === 'Back' || key === 'Escape') {
@@ -475,6 +536,11 @@
       if (move(key)) consume(e);
     }
   }, true);
+  window.addEventListener('paste',event=>{
+    if(!customSearch()?.contains(event.target)||modal||(player&&player.active()))return;
+    const value=event.clipboardData?.getData('text/plain');if(!value)return;
+    consume(event);window.StreamGlassShell?.editSearch?.(value.replace(/[\r\n\t]+/g,' '),{text:true});
+  },true);
   // A remote may focus a field while moving through a form. Open the keyboard only
   // after OK; pointer users can click to edit normally.
   let pointerAt = -Infinity;
@@ -494,6 +560,7 @@
   document.addEventListener('compositionstart',event=>{if(event.target.id==='sg-search-input')searchComposition.add(event.target);});
   document.addEventListener('compositionend',event=>{if(event.target.id==='sg-search-input')searchComposition.delete(event.target);});
   window.addEventListener('focusin', (e) => {
+    if(e.target?.matches('.sg-search-keys button')){searchKey=e.target;searchKeyValue=e.target.dataset.key;}
     if (!e.target || typeof e.target.matches !== 'function' || !e.target.matches('input[type="text"], input[type="email"], input[type="password"], input[type="url"], input[type="search"], textarea')) return;
     if (!e.target.dataset.sgTyping && performance.now() - pointerAt > 700) {
       e.target.readOnly = true;
