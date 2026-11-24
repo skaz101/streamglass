@@ -86,6 +86,91 @@ test('close reports final state and tears down before callback', () => {
   assert.equal(result.hash, '#/player/test');
   assert.equal(result.ended, true);
 });
+test('close attempts source unload and completes teardown after native media failures', () => {
+  for (const failure of ['pause', 'removeAttribute', 'load']) {
+    const calls = [], diagnostics = [];
+    let sourcePresent = true, detached = false, closed = 0;
+    const player = new WebOSPlayer({log(event, fields) { diagnostics.push({event, fields}); }, onClose(result) {
+      closed++; assert.equal(player.active(), null); assert.equal(player.video, null); assert.ok(detached);
+      assert.equal(result.timeMs, 12000); assert.equal(result.durationMs, 60000);
+    }});
+    player.payload = {};
+    player.overlay = {remove() { detached = true; }};
+    player.video = {currentTime: 12, duration: 60, paused: false,
+      getAttributeNode() { return sourcePresent ? {} : null; }, removeAttributeNode() { sourcePresent = false; calls.push('removeAttributeNode'); }};
+    for (const method of ['pause', 'removeAttribute', 'load']) player.video[method] = () => {
+      calls.push(method);
+      if (method === failure) throw Error('Injected platform failure');
+      if (method === 'removeAttribute') sourcePresent = false;
+    };
+    assert.doesNotThrow(() => player.close({reason: 'hidden'}));
+    assert.ok(calls.includes('pause') && calls.includes('removeAttribute') && calls.includes('load'), 'Every media cleanup step is attempted after ' + failure);
+    assert.equal(sourcePresent, false, 'The old source is removed even if the convenience method fails');
+    assert.equal(closed, 1);
+    assert.deepEqual(diagnostics, [{event: 'media-release-failed', fields: {count: 1}}]);
+    player.close(); assert.equal(closed, 1, 'Repeated lifecycle events do not close twice');
+  }
+});
+test('subtitle cleanup failures do not prevent video source release', () => {
+  const calls = [], player = new WebOSPlayer();
+  const originalRevoke = URL.revokeObjectURL;
+  try {
+    URL.revokeObjectURL = () => { calls.push('revoke'); throw Error('Injected blob failure'); };
+    player.abort = {abort() { calls.push('abort'); throw Error('Injected abort failure'); }};
+    player.trackElement = {remove() { calls.push('track-remove'); throw Error('Injected track failure'); }, parentNode: {removeChild() { calls.push('track-detach'); }}};
+    player.externalTrack = {}; player.blobURL = 'blob:fixture';
+    player.video = {pause() { calls.push('pause'); }, removeAttribute() { calls.push('remove-src'); }, load() { calls.push('load'); }};
+    assert.doesNotThrow(() => player.releaseMedia());
+    assert.deepEqual(calls, ['abort', 'track-remove', 'track-detach', 'revoke', 'pause', 'remove-src', 'load']);
+    for (const name of ['abort', 'trackElement', 'externalTrack', 'blobURL']) assert.equal(player[name], null);
+  } finally { URL.revokeObjectURL = originalRevoke; }
+});
+test('failed source removal cannot reload the old stream during teardown', () => {
+  const calls = []; let closed = false;
+  const player = new WebOSPlayer({onClose() { closed = true; }});
+  player.payload = {}; player.overlay = {remove() { calls.push('detach'); }};
+  player.video = {currentTime: 0, duration: 60, pause() { calls.push('pause'); },
+    removeAttribute() { throw Error('Injected attribute failure'); }, getAttributeNode() { return {}; },
+    removeAttributeNode() { throw Error('Injected fallback failure'); }, load() { calls.push('reload-old-source'); }};
+  assert.doesNotThrow(() => player.close());
+  assert.deepEqual(calls, ['pause', 'detach']);
+  assert.ok(closed); assert.equal(player.video, null);
+});
+test('DOM removal, focus and diagnostic failures cannot interrupt close notification', () => {
+  let detached = false, closed = false;
+  const player = new WebOSPlayer({log() { throw Error('Injected logging failure'); }, onClose() { closed = true; assert.equal(player.active(), null); assert.ok(detached); }});
+  player.payload = {};
+  player.overlay = {remove() { throw Error('Injected remove failure'); }, parentNode: {removeChild() { detached = true; }}};
+  player.previousFocus = {isConnected: true, focus() { throw Error('Injected focus failure'); }};
+  player.video = {currentTime: 0, duration: 60, pause() {}, removeAttribute() {}, load() {}};
+  assert.doesNotThrow(() => player.close());
+  assert.ok(closed);
+  for (const name of ['video', 'overlay', 'previousFocus', 'abort', 'blobURL']) assert.equal(player[name], null);
+});
+test('an unreadable native checkpoint cannot block decoder cleanup', () => {
+  const calls = []; let result;
+  const player = new WebOSPlayer({onClose(value) { result = value; }});
+  player.payload = {};
+  player.overlay = {remove() { calls.push('detach'); }};
+  player.video = {get currentTime() { throw Error('Injected clock failure'); }, duration: 60,
+    pause() { calls.push('pause'); }, removeAttribute() { calls.push('remove-src'); }, load() { calls.push('load'); }};
+  assert.doesNotThrow(() => player.close());
+  assert.deepEqual(calls, ['pause', 'remove-src', 'load', 'detach']);
+  assert.equal(result.timeMs, 0); assert.equal(result.durationMs, 60000);
+});
+test('fatal errors release media even when the native checkpoint is unreadable', () => {
+  const calls = [], diagnostics = [];
+  const player = new WebOSPlayer({log(event, fields) { diagnostics.push({event, fields}); }});
+  player.overlay = {querySelectorAll() { return []; }, querySelector() { return {focus() {}}; }};
+  player.seekBar = {}; player.closeMenu = () => {}; player.message = () => {}; player.showControls = () => {};
+  player.video = {get currentTime() { throw Error('Injected clock failure'); }, duration: 60,
+    pause() { calls.push('pause'); }, removeAttribute() { calls.push('remove-src'); }, load() { calls.push('load'); }};
+  assert.doesNotThrow(() => player.fail('The stream could not play.', 3));
+  assert.deepEqual(calls, ['pause', 'remove-src', 'load']);
+  assert.deepEqual(player.failedState, {timeMs:0, durationMs:60000});
+  assert.equal(player.pendingError, 'The stream could not play.');
+  assert.deepEqual(diagnostics, [{event:'media-checkpoint-failed',fields:{count:1}}, {event:'playback-error',fields:{code:3}}]);
+});
 test('subtitle reader caps chunked responses without trusting Content-Length', async () => {
   for (const declared of [undefined, '1']) {
     let cancelled = false;

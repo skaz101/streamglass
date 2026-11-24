@@ -37,7 +37,7 @@
 #app .sg-hero-premium .sg-hero-score{color:#f1f1f1}
 :root:not([data-sg-platform=mobile]) #app .sg-hero-premium{height:54vh;min-height:390px;max-height:650px;margin-bottom:0;background:var(--cinema-bg,#080808)}
 :root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-react-hero-art{transform:none;object-position:72% 35%}
-:root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-hero-shade{background:linear-gradient(90deg,var(--cinema-bg,#080808) 0%,#080808e8 18%,#0808088c 41%,transparent 76%),linear-gradient(0deg,var(--cinema-bg,#080808) 0%,#080808a6 13%,transparent 42%)}
+:root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-hero-shade{background:linear-gradient(90deg,var(--cinema-bg,#080808) 0%,var(--cinema-bg,#080808) 18%,#0808088c 41%,transparent 76%),linear-gradient(0deg,var(--cinema-bg,#080808) 0%,#080808a6 13%,transparent 42%)}
 :root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-react-hero-copy{left:var(--dx-gutter,5vw);bottom:82px;width:43vw;max-width:760px;padding:0}
 :root:not([data-sg-platform=mobile]) #app .sg-hero-premium h1{font-family:Inter,Arial,sans-serif;font-size:clamp(38px,4.2vw,76px);font-weight:800;line-height:1.04;letter-spacing:-.045em;margin:0 0 20px;max-width:13ch;text-shadow:0 2px 22px #0005;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 :root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-react-hero-logo{display:block;width:auto;max-width:min(31vw,520px);height:120px;max-height:14vh;object-fit:contain;object-position:left bottom;margin:0 0 20px}
@@ -53,7 +53,10 @@
 :root[data-sg-platform=mobile] #app .sg-hero-premium .sg-hero-meta{justify-content:center;font-size:12px;gap:6px 10px}
 :root[data-sg-platform=mobile] #app .sg-hero-premium .sg-hero-meta>span:first-child{display:none}
 @media(max-height:800px){
- :root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-react-hero-copy{bottom:70px}
+ /* Keep the whole first landscape row, including its captions, in a 720p
+    viewport. The static shade above also conceals the backdrop's left edge. */
+ :root:not([data-sg-platform=mobile]) #app .sg-hero-premium{height:51vh;min-height:360px}
+ :root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-react-hero-copy{bottom:56px}
  :root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-react-hero-actions{margin-top:18px}
  :root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-react-hero-actions .sg-button{min-height:48px;padding:10px 20px}
 }
@@ -65,6 +68,11 @@
 /* Reserve the same readable phone title area before and after logo decoding. */
 :root[data-sg-platform=mobile] #app .sg-hero-premium .sg-hero-title{min-height:80px;display:flex;align-items:center;justify-content:center}
 :root[data-sg-platform=mobile] #app .sg-hero-premium .sg-hero-title h1{margin:10px auto}
+/* Logos share a bounded title slot with their text fallback. The TV logo's
+   earlier fixed height must not escape this slot and cover year/genre text. */
+:root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-hero-title{height:clamp(80px,10vh,112px);margin-bottom:18px;display:flex;align-items:center}
+:root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-hero-title h1{margin:0;font-size:clamp(32px,2.8vw,52px);max-width:16ch}
+:root:not([data-sg-platform=mobile]) #app .sg-hero-premium .sg-hero-title-ready .sg-react-hero-logo{inset:0;height:100%;max-height:100%;max-width:100%;margin:0;object-position:left center}
 /* Keep the old decoded layer opaque until the incoming layer covers it. Two
    opposing fades reveal black underneath and make each switch visibly dip. */
 #app .sg-hero-premium .sg-hero-art-leaving{animation:none;opacity:1}

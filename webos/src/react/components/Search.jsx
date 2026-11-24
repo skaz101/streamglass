@@ -7,6 +7,15 @@ function SearchIcon(){
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>;
 }
 
+export function SearchHint({mobile,query='',recent=[]}){
+  if(mobile||query)return <p className="sg-search-empty">{query?'Press Search to find this title.':'Search for a movie, series or anime.'}</p>;
+  if(!recent.length)return <div className="sg-search-welcome"><h2>What would you like to watch?</h2><p>Find a movie, series or anime by title.</p></div>;
+  return <section className="sg-search-recent" aria-labelledby="sg-search-recent-title"><h2 id="sg-search-recent-title">Recent searches</h2>
+    <div className="sg-search-recent-list">{recent.map(value=><button type="button" key={value.toLowerCase()} data-action="search-recent" data-query={value} title={value}><SearchIcon/><span>{value}</span></button>)}</div>
+    <button type="button" className="sg-search-history-clear" data-action="search-history-clear">Clear history</button>
+  </section>;
+}
+
 export default function Search({mobile,query=''}){
   return <section className="sg-page search-content sg-search-page">
     <header className="sg-search-header">

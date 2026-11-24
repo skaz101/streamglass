@@ -169,6 +169,22 @@ const os=require('node:os');
   await tv.waitForFunction(()=>document.querySelectorAll('.sg-react-hero-art').length===1);
   assert.equal(await tv.locator('.sg-hero-story').evaluate(node=>getComputedStyle(node).animationName),'none');
   assert.equal(await tv.locator('.sg-hero-art-warming').count(),0,'Reduced motion disables speculative artwork');
+  // Exercise the full cascade: the TV's old fixed logo height overrode the
+  // title-slot rule, covering the year and genres even with decoded artwork.
+  for(const file of ['shell.css','react/theme.css','react/components/hero.css','cinematic.css','tv.css']){
+    await tv.addStyleTag({content:(await fs.readFile(path.resolve(__dirname,'../src',file),'utf8')).replace(/^@(import|tailwind).*$/gm,'')});
+  }
+  for(const viewport of [{width:1280,height:720},{width:1920,height:1080}]){
+    await tv.setViewportSize(viewport);
+    await tv.evaluate(()=>replaceHeroItems([{id:'bounded-logo',type:'movie',name:'A very long featured movie title',background:'https://transition.invalid/four.svg',logo:'https://transition.invalid/slow-logo.svg',releaseInfo:'2026',genres:['Adventure','Drama'],description:'A familiar place and an unexpected story. A second line of synopsis remains readable beside the featured artwork.'}]));
+    await tv.locator('.sg-hero-title-ready').waitFor();
+    const geometry=await tv.evaluate(()=>{
+      const box=selector=>document.querySelector(selector).getBoundingClientRect();
+      const title=box('.sg-hero-title'),logo=box('.sg-react-hero-logo'),meta=box('.sg-hero-meta'),text=box('.sg-hero-title h1');
+      return {contained:logo.top>=title.top-1&&logo.bottom<=title.bottom+1,separated:logo.bottom<=meta.top-8,textFits:text.height<=title.height+1};
+    });
+    assert.deepEqual(geometry,{contained:true,separated:true,textFits:true},'TV title logos and two-line fallbacks stay above their metadata at '+viewport.width);
+  }
   await tv.close();
   // A transparent logo must be readable on small phones without moving Play
   // when its network request finishes.

@@ -1,5 +1,5 @@
 /*
- * StreamGlass webOS player, modified 2026-11-06.
+ * StreamGlass webOS player, modified 2026-11-15.
  * Copyright (C) 2026 contributors. GPL-3.0-or-later; see ../../LICENSE.
  * Uses public HTMLMediaElement APIs, including LG's documented audioTracks API.
  */
@@ -56,6 +56,14 @@
   function errorMessage(code) {
     return ({1: 'Playback was interrupted.', 2: 'The stream could not be downloaded. Check your connection or choose another link.', 3: 'The TV could not decode this stream. Choose a different video or audio format.', 4: 'The TV cannot play this link or format. Try another stream, such as H.264 with AAC audio.'})[code] || 'The stream could not play. Try another link.';
   }
+  function cleanupStep(operation) {
+    try { operation(); return 0; } catch (_) { return 1; }
+  }
+  function detachNode(node) {
+    const failed = cleanupStep(() => node.remove());
+    // A failed convenience method must not prevent the independent DOM removal.
+    return failed + (failed ? cleanupStep(() => { if (node.parentNode) node.parentNode.removeChild(node); }) : 0);
+  }
 
   class WebOSPlayer {
     constructor(options) {
@@ -70,6 +78,7 @@
       this.subtitleSequence = 0;
       this.abort = null;
       this.blobURL = null;
+      this.checkpoint = {timeMs: 0, durationMs: 0};
     }
     log(event, fields) {
       // No URLs, tokens, file names or account data are sent to the logger.
@@ -84,6 +93,7 @@
     progress() {
       if (!this.overlay) return;
       const duration = this.duration(), time = this.position();
+      this.checkpoint = {timeMs: time, durationMs: duration};
       this.time.textContent = formatTime(time / 1000) + ' / ' + (duration ? formatTime(duration / 1000) : '--:--');
       this.seekBar.value = duration ? clamp(time / duration * 1000, 0, 1000) : 0;
       this.seekBar.setAttribute('aria-valuetext', this.time.textContent);
@@ -102,6 +112,7 @@
       this.subtitleSequence = 0;
       this.subtitleChoice = 'off';
       this.resumeTarget = Math.max(0, Number(payload.startMs) || 0) / 1000;
+      this.checkpoint = {timeMs: Math.round(this.resumeTarget * 1000), durationMs: 0};
       this.resumePending = this.resumeTarget > 0;
       this.resumeAttempts = 0;
       this.preferredAudioApplied = false;
@@ -156,7 +167,7 @@
       on('seeked', () => this.progress());
       on('durationchange', () => this.progress());
       on('ended', () => { this.progress(); this.close({ended: true}); });
-      on('error', () => this.fail(errorMessage(this.video.error && this.video.error.code)));
+      on('error', () => { const code = this.video.error && this.video.error.code; this.fail(errorMessage(code), code); });
       on('timeupdate', () => this.updateSkip());
       if (this.video.audioTracks) this.video.audioTracks.addEventListener('addtrack', () => { if (current()) this.choosePreferredAudio(); });
       root.addEventListener('click', (event) => {
@@ -204,21 +215,29 @@
       if (error && error.name === 'NotAllowedError') {
         this.message('Press Play to start the stream.');
         this.showControls();
-      } else this.fail(errorMessage(this.video && this.video.error && this.video.error.code));
+      } else {
+        const code = this.video && this.video.error && this.video.error.code;
+        this.fail(errorMessage(code), code);
+      }
     }
-    fail(text) {
+    fail(text, code = 0) {
       if (!this.overlay || this.failedState) return;
-      this.failedState = {timeMs: this.position(), durationMs: this.duration()};
+      const checkpoint = {...this.checkpoint};
+      const snapshotFailures = cleanupStep(() => { checkpoint.timeMs = this.position(); }) + cleanupStep(() => { checkpoint.durationMs = this.duration(); });
+      this.failedState = checkpoint;
       this.pendingError = text;
       clearInterval(this.interval);
       this.releaseMedia();
+      if (snapshotFailures) cleanupStep(() => this.log('media-checkpoint-failed', {count: snapshotFailures}));
       this.closeMenu(false);
       this.seekBar.disabled = true;
       this.overlay.querySelectorAll('[data-action]').forEach((button) => { button.disabled = button.dataset.action !== 'close'; });
       this.overlay.querySelector('[data-action="close"]').focus();
       this.message(text);
       this.showControls();
-      this.log('playback-error', {message: text});
+      // Numeric MediaError codes are useful for diagnosis without exposing a
+      // stream URL, account details, or an exception's potentially sensitive text.
+      cleanupStep(() => this.log('playback-error', {code: Number.isInteger(code) && code >= 1 && code <= 4 ? code : 0}));
     }
     applyResume() {
       if (!this.resumePending || this.resumeAttempts >= 3 || !this.video) return;
@@ -456,32 +475,57 @@
     }
     close(details) {
       if (!this.overlay) return;
-      const result = Object.assign({timeMs: this.position(), durationMs: this.duration(), paused: true, ended: false, error: this.pendingError, hash: this.payload.hash, videoId: this.payload.videoId}, details || {});
+      const result = {...this.checkpoint, paused: true, ended: false, error: this.pendingError, hash: this.payload.hash, videoId: this.payload.videoId};
+      const snapshotFailures = cleanupStep(() => { result.timeMs = this.position(); }) + cleanupStep(() => { result.durationMs = this.duration(); });
+      Object.assign(result, details || {});
       // Release before invoking application code: a failing callback must never
       // leave a decoder or a network request alive in a suspended TV app.
       this.destroy();
+      if (snapshotFailures) cleanupStep(() => this.log('media-checkpoint-failed', {count: snapshotFailures}));
       if (typeof this.options.onClose === 'function') this.options.onClose(result);
     }
     releaseMedia() {
       ++this.subtitleSequence;
-      if (this.abort) this.abort.abort(); this.abort = null;
-      if (this.trackElement) this.trackElement.remove();
+      const abort = this.abort, track = this.trackElement, blobURL = this.blobURL, video = this.video;
+      // Clear references before invoking platform code. Each release operation
+      // is independent: a failure in pause must still attempt source unload.
+      this.abort = null; this.blobURL = null;
       this.trackElement = null; this.externalTrack = null;
-      if (this.blobURL) URL.revokeObjectURL(this.blobURL); this.blobURL = null;
-      if (this.video) { this.video.pause(); this.video.removeAttribute('src'); this.video.load(); }
+      let failures = 0;
+      if (abort) failures += cleanupStep(() => abort.abort());
+      if (track) failures += detachNode(track);
+      if (blobURL) failures += cleanupStep(() => URL.revokeObjectURL(blobURL));
+      if (video) {
+        failures += cleanupStep(() => video.pause());
+        const sourceFailure = cleanupStep(() => video.removeAttribute('src'));
+        failures += sourceFailure;
+        const fallbackFailure = sourceFailure ? cleanupStep(() => { const source = video.getAttributeNode('src'); if (source) video.removeAttributeNode(source); }) : 0;
+        failures += fallbackFailure;
+        // If both source-removal APIs fail, load() would reopen the old stream.
+        // Keep it paused and let destroy's independent DOM detachment proceed.
+        if (!fallbackFailure) failures += cleanupStep(() => video.load());
+      }
+      if (failures) cleanupStep(() => this.log('media-release-failed', {count: failures}));
     }
     destroy() {
       ++this.session;
+      const overlay = this.overlay, previousFocus = this.previousFocus;
+      // Mark inactive first so a release-triggered event cannot close twice.
+      this.overlay = null; this.previousFocus = null;
+      let failures = 0;
       clearInterval(this.interval); clearTimeout(this.hideTimer);
-      if (typeof document !== 'undefined' && this.visibilityHandler) document.removeEventListener('visibilitychange', this.visibilityHandler);
-      if (typeof window !== 'undefined' && this.pageHideHandler) window.removeEventListener('pagehide', this.pageHideHandler);
+      this.interval = null; this.hideTimer = null;
+      if (typeof document !== 'undefined' && this.visibilityHandler) failures += cleanupStep(() => document.removeEventListener('visibilitychange', this.visibilityHandler));
+      if (typeof window !== 'undefined' && this.pageHideHandler) failures += cleanupStep(() => window.removeEventListener('pagehide', this.pageHideHandler));
       this.visibilityHandler = null; this.pageHideHandler = null;
-      this.releaseMedia();
-      this.overlay && this.overlay.remove();
-      this.overlay = null; this.video = null; this.menu = null; this.externalTrack = null; this.trackElement = null;
+      failures += cleanupStep(() => this.releaseMedia());
+      if (overlay) failures += detachNode(overlay);
+      this.video = null; this.menu = null; this.externalTrack = null; this.trackElement = null;
+      this.abort = null; this.blobURL = null;
       this.failedState = null;
-      if (typeof document !== 'undefined') document.documentElement.classList.remove('webos-playing');
-      if (this.previousFocus && this.previousFocus.isConnected) this.previousFocus.focus();
+      if (typeof document !== 'undefined') failures += cleanupStep(() => document.documentElement.classList.remove('webos-playing'));
+      if (previousFocus) failures += cleanupStep(() => { if (previousFocus.isConnected) previousFocus.focus(); });
+      if (failures) cleanupStep(() => this.log('player-cleanup-failed', {count: failures}));
     }
   }
   const helpers = {directURL, subtitlesToVTT, formatTime, languageKey, errorMessage, readSubtitleResponse};

@@ -13,7 +13,7 @@ const {chromium} = require('playwright');
     const generated = spawnSync('ffmpeg', ['-v','error','-f','lavfi','-i','color=c=blue:s=640x360:r=25','-f','lavfi','-i','sine=frequency=440:sample_rate=48000','-t','15','-c:v','libx264','-pix_fmt','yuv420p','-c:a','aac','-movflags','+faststart',path.join(dir,'test.mp4')]);
     assert.equal(generated.status, 0, 'ffmpeg could not create test media: ' + generated.stderr);
     const video = fs.readFileSync(path.join(dir, 'test.mp4'));
-    const html = '<!doctype html><html><head><link rel="stylesheet" href="/player.css"></head><body><button id="previous">Previous</button><script src="/player.js"></script><script>window.progressEvents=[];window.closeEvents=[];window.player=new WebOSPlayer({onProgress:(...args)=>progressEvents.push(args),onClose:info=>closeEvents.push(info)});window.addEventListener("keydown",e=>{if(player.handleKey(e)){e.preventDefault();e.stopImmediatePropagation();}},true);</script></body></html>';
+    const html = '<!doctype html><html><head><link rel="stylesheet" href="/player.css"></head><body><button id="previous">Previous</button><script src="/player.js"></script><script>window.progressEvents=[];window.closeEvents=[];window.playerEvents=[];window.player=new WebOSPlayer({log:(event,fields)=>playerEvents.push({event,fields}),onProgress:(...args)=>progressEvents.push(args),onClose:info=>closeEvents.push(info)});window.addEventListener("keydown",e=>{if(player.handleKey(e)){e.preventDefault();e.stopImmediatePropagation();}},true);</script></body></html>';
     server = http.createServer((req, res) => {
       if (req.url === '/') { res.setHeader('Content-Type','text/html'); res.end(html); }
       else if (req.url === '/player.js' || req.url === '/player.css') {
@@ -102,16 +102,34 @@ const {chromium} = require('playwright');
       window.releasedVideo = player.video;
       player.selectSubtitle('external:0');
       window.errorPosition = player.position();
+      Object.defineProperty(player.video, 'error', {configurable:true, get:()=>({code:3})});
       player.video.dispatchEvent(new Event('error'));
       player.toggle();
     });
     await page.waitForFunction(() => releasedVideo.readyState === 0 && releasedVideo.networkState === HTMLMediaElement.NETWORK_EMPTY);
     await page.waitForTimeout(700);
-    assert.match(await page.locator('.webos-player-message').innerText(), /could not play/);
+    assert.match(await page.locator('.webos-player-message').innerText(), /could not decode/);
+    assert.deepEqual(await page.evaluate(() => playerEvents.findLast(event=>event.event==='playback-error')), {event:'playback-error',fields:{code:3}}, 'Media diagnostics retain the numeric error code without exception text');
     assert.equal(await page.evaluate(() => player.position() === errorPosition), true);
     assert.equal(await page.evaluate(() => player.video.querySelectorAll('track').length), 0);
     await page.evaluate(() => player.close());
     assert.equal(await page.evaluate(() => closeEvents.at(-1).timeMs === errorPosition), true);
+
+    // A malfunctioning native clock must not prevent fatal-error source release.
+    await page.evaluate(origin => player.play({url:origin+'/video.mp4'}), origin);
+    await page.waitForFunction(() => player.video && !player.video.paused && player.video.currentTime > 0);
+    await page.evaluate(() => {
+      window.releasedVideo = player.video;
+      player.seekTo(7); window.errorCheckpoint = player.position();
+      Object.defineProperty(player.video, 'currentTime', {configurable:true, get:()=>{throw Error('Injected native clock failure');}});
+      Object.defineProperty(player.video, 'error', {configurable:true, get:()=>({code:3})});
+      player.video.dispatchEvent(new Event('error'));
+    });
+    await page.waitForFunction(() => releasedVideo.readyState === 0 && releasedVideo.networkState === HTMLMediaElement.NETWORK_EMPTY);
+    assert.equal(await page.evaluate(() => player.position() === errorCheckpoint), true, 'The last readable checkpoint survives native clock failure');
+    assert.equal(await page.evaluate(() => releasedVideo.hasAttribute('src')), false);
+    assert.deepEqual(await page.evaluate(() => playerEvents.findLast(event=>event.event==='media-checkpoint-failed')), {event:'media-checkpoint-failed',fields:{count:1}});
+    await page.evaluate(() => player.close());
 
     // Autoplay denial remains recoverable and must not be treated as a decoder failure.
     await page.evaluate((origin) => {
@@ -159,8 +177,25 @@ const {chromium} = require('playwright');
     });
     await page.waitForFunction(() => releasedVideo.readyState === 0 && releasedVideo.networkState === HTMLMediaElement.NETWORK_EMPTY);
     assert.equal(await page.evaluate(() => player.active()), null);
+    // Fault injection establishes exception safety, not the cause of any LG
+    // firmware fault. Later release steps and DOM teardown must still run.
+    for (const method of ['pause', 'removeAttribute', 'load']) {
+      await page.evaluate(origin => player.play({url:origin+'/video.mp4'}), origin);
+      await page.waitForFunction(() => player.video && !player.video.paused && player.video.currentTime > 0);
+      const result = await page.evaluate(method => {
+        const video = player.video, original = video[method], before = closeEvents.length;
+        video[method] = () => { throw Error('Injected media method failure'); };
+        player.close({reason:'hidden'});
+        const result = {inactive:!player.active(),detached:!video.isConnected,sourceRemoved:!video.hasAttribute('src'),closed:closeEvents.length-before,diagnostic:playerEvents.findLast(event=>event.event==='media-release-failed')};
+        // In the load-failure fixture, restore the simulated native method so
+        // the test itself does not retain a paused decoder between iterations.
+        video[method] = original; video.load();
+        return result;
+      }, method);
+      assert.deepEqual(result, {inactive:true,detached:true,sourceRemoved:true,closed:1,diagnostic:{event:'media-release-failed',fields:{count:1}}}, method+' failure cannot strand the player');
+    }
     assert.deepEqual(errors, [], 'browser runtime exceptions');
-    console.log('PASS: native H.264/AAC play, saved-position resume, SRT captions, pause/seek/remote, subtitles off, pagehide/visibility source release, checkpoint preservation, hidden startup rejection, fatal error cleanup, recoverable autoplay, idempotent close, callback failure cleanup, stale-request cleanup, unsupported-header error.');
+    console.log('PASS: native H.264/AAC play, saved-position resume, SRT captions, pause/seek/remote, subtitles off, pagehide/visibility source release, checkpoint preservation, hidden startup rejection, fatal error cleanup, numeric media diagnostics, recoverable autoplay, idempotent close, callback failure cleanup, native-method failure cleanup, stale-request cleanup, unsupported-header error.');
   } finally {
     if (browser) await browser.close();
     if (server) await new Promise((resolve) => server.close(resolve));

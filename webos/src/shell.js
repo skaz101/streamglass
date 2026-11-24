@@ -72,13 +72,14 @@
   const cache = new Map(), cards = new Map(), screenMemory = new Map();
   let searchSession=null, recommendationController=null, recommendationSnapshot=null;
   let screenHash='', detailOrigin='#/board', previewTimer, previewSequence=0, interaction=0;
-  // Keep only the most recent TV Home while inspecting a title. Returning with
-  // Back restores the very same rails/images/focus instead of rebuilding them.
+  // Keep one TV Home during short visits to a title or another browsing tab.
+  // Returning restores its decoded artwork, carousel and position together.
   let cachedHome=null,homeCacheTimer;
   function homeModeKey(){try{return localStorage.getItem('streamglass-home-v1');}catch(_){return null;}}
   // Sync completion is also emitted for unchanged addons. Compare all
   // descriptors, including manifest changes and order, with the rendered view.
   function addonSnapshot(){return JSON.stringify(profile.addons||[]);}
+  function accountIdentity(){const auth=profile.auth;return auth?'user:'+String(auth.user?._id||auth.user?.id||auth.user?.email||'signed-in'):'anonymous';}
   function discardHome(){clearTimeout(homeCacheTimer);if(cachedHome){global.StreamGlassUI.unmount(cachedHome.node);cachedHome=null;}}
   function rememberScreen() {
     if(!screenHash||!view)return;
@@ -144,7 +145,7 @@
     if(recommendationController){recommendationController.abort();recommendationController=null;}
     clearInterval(heroTimer);heroTimer=null;clearTimeout(previewTimer);++previewSequence;
     if(host().beforeScreenChanged)host().beforeScreenChanged(route);
-    if(!host().mobile&&route==='detail'&&view.dataset.sgRoute==='board'){
+    if(!host().mobile&&['detail','search','picks','library','calendar'].includes(route)&&view.dataset.sgRoute==='board'&&view.sgAccountIdentity===accountIdentity()){
       discardHome();
       cachedHome={node:view,hash:view.dataset.sgHash,at:Date.now(),mode:homeModeKey()};
       homeCacheTimer=setTimeout(discardHome,120000);
@@ -155,7 +156,7 @@
       const node=view;node.sgRestoreContext={token:epoch,revision:interaction};
       global.StreamGlassUI.mount(node,{...html,onReady:()=>{if(view===node){const context=node.sgRestoreContext;restoreScreen(context.token,context.revision);}}});
     }else view.innerHTML=html;
-    view.dataset.sgRoute=route;view.dataset.sgHash=location.hash;view.sgAddonSnapshot=addonSnapshot();
+    view.dataset.sgRoute=route;view.dataset.sgHash=location.hash;view.sgAddonSnapshot=addonSnapshot();view.sgAccountIdentity=accountIdentity();
     view.scrollTop=0;doc.body.dataset.dxRoute=route;
     root.querySelectorAll('[data-nav]').forEach(node=>{const selected=node.dataset.nav===route;node.classList.toggle('selected',selected);if(selected)node.setAttribute('aria-current','page');else node.removeAttribute('aria-current');});
     if(host().screenChanged)host().screenChanged(route);
@@ -167,7 +168,11 @@
     if (node) {node.textContent=user?'Account':'Sign in';node.title=user?'Stremio account':'Sign in to Stremio';}
     if(host().accountChanged)host().accountChanged(!!user,user?{email:user.email,avatar:user.avatar}:null);
   }
-  async function refreshProfile() { const state=await core.getState('ctx');profile=state.profile||{};setAccount();return profile; }
+  async function refreshProfile() {
+    const state=await core.getState('ctx'),previousAccount=accountIdentity();profile=state.profile||{};
+    if(previousAccount!==accountIdentity()){discardHome();screenMemory.clear();}
+    setAccount();return profile;
+  }
   async function fetchJSON(url, useCache=true, signal=null) {
     const canonical=safeURL(url);
     if (!canonical) throw new Error('Invalid addon URL.');
@@ -238,7 +243,7 @@
     }
   };
   async function home(token,revision) {
-    if(cachedHome&&!host().mobile&&cachedHome.hash===location.hash&&Date.now()-cachedHome.at<120000&&cachedHome.mode===homeModeKey()&&cachedHome.node.sgAddonSnapshot===addonSnapshot()){
+    if(cachedHome&&!host().mobile&&cachedHome.hash===location.hash&&Date.now()-cachedHome.at<120000&&cachedHome.mode===homeModeKey()&&cachedHome.node.sgAddonSnapshot===addonSnapshot()&&cachedHome.node.sgAccountIdentity===accountIdentity()){
       const saved=cachedHome;cachedHome=null;clearTimeout(homeCacheTimer);
       cancelSearch();
       if(recommendationController){recommendationController.abort();recommendationController=null;}
@@ -264,8 +269,27 @@
   function currentSearch(session,revision) {
     return session===searchSession&&session.token===epoch&&session.revision===revision&&session.results.isConnected;
   }
+  const SEARCH_HISTORY_KEY='streamglass-search-v1';
+  function recentSearches() {
+    if(host().mobile)return [];
+    try {
+      const raw=localStorage.getItem(SEARCH_HISTORY_KEY)||'[]';if(raw.length>8192)return [];
+      const stored=JSON.parse(raw),seen=new Set();
+      if(!Array.isArray(stored))return [];
+      return stored.filter(value=>{
+        if(typeof value!=='string'||!value.trim()||value.length>160)return false;
+        const key=value.trim().toLowerCase();if(seen.has(key))return false;seen.add(key);return true;
+      }).slice(0,6).map(value=>value.trim());
+    }catch(_){return [];}
+  }
+  function rememberSearch(value) {
+    if(host().mobile)return;
+    const query=value.trim().slice(0,160);if(!query)return;
+    try {localStorage.setItem(SEARCH_HISTORY_KEY,JSON.stringify([query,...recentSearches().filter(item=>item.toLowerCase()!==query.toLowerCase())].slice(0,6)));}catch(_){}
+  }
   function searchHint(session) {
-    global.StreamGlassUI.clear(session.results);session.results.innerHTML='<p class="sg-search-empty">'+(session.query?'Press Search to find this title.':'Search for a movie, series or anime.')+'</p>';
+    global.StreamGlassUI.clear(session.results);
+    global.StreamGlassUI.region(session.results,{searchHint:{mobile:!!host().mobile,query:session.query,recent:recentSearches()}});
     session.results.setAttribute('aria-busy','false');
     session.results.inert=false;delete session.results.dataset.stale;
     session.status.textContent='';
@@ -275,6 +299,7 @@
     const query=session.input.value.trim();
     if(query===session.query)return false;
     session.query=query;
+    session.focusQuery=null;
     clearTimeout(session.timer);session.revision++;
     if(session.controller)session.controller.abort();
     session.requested=null;
@@ -304,6 +329,21 @@
       global.StreamGlassUI.clear(session.results);
       session.results.innerHTML='<div class="sg-search-loading" aria-hidden="true">'+Array.from({length:5},()=>'<span></span>').join('')+'</div>';
     }
+  }
+  function handoffSearch(session) {
+    if(session!==searchSession||session.focusQuery!==session.query||session.results.inert||!session.results.querySelector('.sg-card'))return;
+    // Consume the explicit submission once. A later addon must never pull focus
+    // back after the user has moved elsewhere or started another edit.
+    session.focusQuery=null;host().focusSearchResults?.();
+  }
+  function submitSearch(session) {
+    if(session!==searchSession||session.composing)return;
+    if(host().finishSearchEditing){if(host().finishSearchEditing()===false)return;}else session.input.blur();
+    updateSearchQuery(session);
+    session.focusQuery=session.query||null;rememberSearch(session.query);
+    const pending=runSearch(session);
+    handoffSearch(session); // A completed or progressive live query is ready now.
+    Promise.resolve(pending).catch(()=>notify('Search could not finish. Try again.'));
   }
   function runSearch(session) {
     if(session!==searchSession||session.token!==epoch||session.composing)return;
@@ -344,6 +384,7 @@
       }
       results.inert=false;delete results.dataset.stale;
       if(focused?.isConnected&&doc.activeElement===focused){const offset=focused.getBoundingClientRect().top-before;if(Math.abs(offset)>1)view.scrollTop+=offset;}
+      handoffSearch(session);
     }
     // Four concurrent requests at most, cancelled immediately when text changes.
     session.pending=(async()=>{await Promise.all(Array.from({length:Math.min(4,list.length)},async()=>{
@@ -687,6 +728,15 @@
     finally {restoreScreen(token,revision);}
   }
   async function action(name,node) {
+    if(name==='search-recent'&&searchSession){
+      searchSession.input.value=node.dataset.query||'';
+      searchSession.input.focus({preventScroll:true});
+      submitSearch(searchSession);return;
+    }
+    if(name==='search-history-clear'&&searchSession){
+      try {localStorage.removeItem(SEARCH_HISTORY_KEY);}catch(_){}
+      searchHint(searchSession);host().finishSearchEditing?.();searchSession.input.focus({preventScroll:true});return;
+    }
     if(name==='search-clear'&&searchSession){
       searchSession.input.value='';queueSearch();
       if(host().finishSearchEditing)host().finishSearchEditing();
@@ -723,6 +773,7 @@
     view=doc.getElementById('sg-view');
     root.addEventListener('click',event=>{
       const link=event.target.closest('a[href]');
+      if(link&&searchSession&&link.matches('.sg-card')&&searchSession.results.contains(link)&&!searchSession.results.inert)rememberSearch(searchSession.query);
       if(link&&link.getAttribute('href').startsWith('#/detail/')&&parseHash(location.hash).route!=='detail')detailOrigin=searchSession?'#/search?search='+encodeURIComponent(searchSession.query):(location.hash||'#/board');
       const actionNode=event.target.closest('[data-action]');if(actionNode){event.preventDefault();Promise.resolve(action(actionNode.dataset.action,actionNode)).catch(()=>notify('The action could not complete. Please try again.'));return;}
       const episode=event.target.closest('[data-video]');if(episode&&currentDetail){streams(currentDetail,episode.dataset.video).catch(()=>notify('Could not load streams.'));if(host().showStreams)host().showStreams();return;}
@@ -732,14 +783,7 @@
     root.addEventListener('submit',event=>{
       event.preventDefault();const form=event.target;
       if(form.id==='sg-search-form'&&searchSession){
-        const session=searchSession;if(session.composing)return;
-        // Finishing a search closes editing immediately. Results may already be
-        // loaded by live search, or still belong to the same in-flight request.
-        if(host().finishSearchEditing){if(host().finishSearchEditing()===false)return;}else session.input.blur();
-        const query=session.input.value.trim();
-        Promise.resolve(runSearch(session)).then(()=>{
-          if(searchSession===session&&session.query===query)host().focusSearchResults?.();
-        }).catch(()=>notify('Search could not finish. Try again.'));
+        submitSearch(searchSession);
       }
       if(form.id==='sg-login-form')login(form);
       if(form.id==='sg-addon-form')installAddon(form);
@@ -793,7 +837,7 @@
     const cancelPendingPlayback=()=>{if(!host().mobile)playbackGeneration++;};
     doc.addEventListener('visibilitychange',()=>{if(doc.hidden){cancelPendingPlayback();discardHome();}});
     global.addEventListener('pagehide',cancelPendingPlayback);
-    await core.init({appVersion:'0.8.2',shellVersion:'webos25'});global.core=core;global.services={core};
+    await core.init({appVersion:'0.8.3',shellVersion:'webos25'});global.core=core;global.services={core};
     core.on('event', event => {
       if (!event) return;
       const addonsChanged=/^(AddonsPulledFromAPI|AddonInstalled|AddonUninstalled|AddonUpgraded|UserLoggedOut)$/.test(event.event||'');

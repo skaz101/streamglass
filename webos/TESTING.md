@@ -8,6 +8,46 @@ TV shell, and the MIT-licensed Stremio core. It does not run the original
 DX.BI plugin or bundle the GPL-2.0-only Stremio Web application. Visual and
 feature parity with every desktop DX.BI feature is not claimed.
 
+## TV-wide playback recovery, 2026-11-15
+
+On this LG running webOS SDK 10.3.2, YouTube and Netflix lost picture and
+sound. StreamGlass 0.8.2 was not running while the failed YouTube playback
+was captured. The application manager identified YouTube as foreground,
+but the media service had no foreground app and the main video output
+was disconnected, muted, and zero-sized.
+
+The installed CleanYourTV 1.6.12 helper restarted the app manager (`sam`)
+after replacing Home, but its SDK 10 profile requested no media-service
+restarts afterward. This matches the failure and fix documented in
+[CleanYourTV issue 122](https://github.com/lasharor/cleanyourtv-WebOS/issues/122).
+The evidence points to that startup compatibility bug for this recurrence;
+it does not establish the cause of every earlier playback failure.
+
+The upstream SDK 10 Flutter/web Home rule was backported to
+`/media/developer/cleanyourtv/tvprofile.js`: restart `videooutputd`, then
+`umediaserver`, after `sam`. The other profile rules were unchanged,
+verified across 32 SDK/Home combinations. The original is backed up at
+`/media/developer/streamglass-repair-20261115/tvprofile.js.before` on the TV.
+This was a targeted helper patch, not a full CleanYourTV update or a
+StreamGlass installation; the installed app remained 0.8.2.
+
+Restarting those two media services restored picture and sound, confirmed
+by the user. A subsequent user-authorized normal TV restart reran the
+startup hook automatically. Its log recorded `sam` restarting at 46.97
+seconds, `videooutputd` active at 49.30 seconds, and `umediaserver` active
+at 49.70 seconds. Both services remained active and YouTube reopened.
+On 2026-11-23, the user confirmed playback was working perfectly and resumed
+interface development. This is user verification, not an automated hardware
+playback measurement.
+
+Separately, StreamGlass player teardown now attempts the remaining release
+steps if a native media method or subtitle cleanup throws. Fault-injection
+tests verify source removal, DOM detachment, close notification, and saved
+position preservation. The 55 unit tests, isolated H.264/AAC browser player
+tests, and packaged-app browser suite passed. These source changes were
+not installed on the TV during recovery and are not evidence for the cause
+of the TV-wide failure. The browser tests do not verify LG hardware decoding.
+
 ## What this build does and does not prove
 
 **Physical-TV verification is required.** A package that builds and passes

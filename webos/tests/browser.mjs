@@ -112,6 +112,7 @@ try {
   assert.deepEqual(searchRequests.slice(beforeSearch),['matrix','matrix'],'Typing a burst sends one query per catalog');
   assert.ok(await page.evaluate(()=>document.activeElement===window.liveInputNode&&document.querySelector('#sg-search-input')===window.liveInputNode&&!window.liveInputNode.readOnly),'Live results preserve editable focus and the same input node');
   assert.equal(await searchInput.evaluate(el=>el.selectionStart),6,'Caret remains at the end of the typed query');
+  assert.equal(await page.evaluate(()=>localStorage.getItem('streamglass-search-v1')),null,'Live typing alone does not record search history');
   assert.ok(await searchInput.evaluate(el=>el.getBoundingClientRect().left>=60),'Search field has TV-safe side padding');
   assert.ok(await page.locator('#sg-search-results .sg-card').first().evaluate(el=>el.getBoundingClientRect().left>=60),'First result aligns with search heading');
   await page.screenshot({path:path.join(shots,'live-search.png')});
@@ -147,6 +148,9 @@ try {
   for(const query of ['progressive','progressive-short']){
     await searchInput.click();await searchInput.fill(query);
     await page.waitForFunction(value=>document.querySelector('#sg-search-results .sg-card')?.textContent.includes(value+' Test Series'),query);
+    await searchInput.press('Enter');
+    await page.waitForFunction(()=>document.activeElement.matches('#sg-search-results .sg-card'));
+    assert.equal(await page.locator('#sg-search-results').getAttribute('aria-busy'),'true','Submit enters the first usable batch without waiting for the gated movie catalog');
     const seriesCard=await page.locator('#sg-search-results .sg-card').first().elementHandle();
     await seriesCard.focus();
     const seriesTop=await seriesCard.evaluate(el=>el.getBoundingClientRect().top);
@@ -158,9 +162,46 @@ try {
     else assert.ok(position.top>=position.viewTop&&position.bottom<=position.viewBottom&&Math.abs(position.scroll-position.maxScroll)<2,'Short result pages preserve the whole focused card within the available scroll range');
     await page.keyboard.press('ArrowUp');await page.keyboard.press('ArrowUp');
   }
+  await searchInput.click();await searchInput.fill('progressive-focus');await searchInput.press('Enter');
+  await page.waitForFunction(()=>document.activeElement.matches('#sg-search-results .sg-card')&&document.activeElement.textContent.includes('progressive-focus Test Series'));
+  assert.equal(await page.locator('#sg-search-results').getAttribute('aria-busy'),'true');
+  await page.keyboard.press('ArrowUp');
+  releaseMovieSearch();
+  await page.waitForFunction(()=>document.querySelector('#sg-search-results').getAttribute('aria-busy')==='false');
+  assert.ok(await searchInput.evaluate(el=>el===document.activeElement),'A late catalog never steals focus back after the submitted first batch');
   await page.locator('[data-action="search-clear"]').click();
   assert.equal(await searchInput.inputValue(),'');
   assert.ok(await searchInput.evaluate(el=>el===document.activeElement&&el.readOnly),'Clear leaves a navigable field, without reopening the TV keyboard');
+  assert.ok(await page.locator('[data-action="search-recent"]').count()>0,'Submitted searches are available on the empty TV screen');
+  assert.ok(await page.evaluate(()=>document.querySelector('#sg-search-input')===window.liveInputNode),'Recent searches do not replace the Search field');
+  await page.locator('[data-action="search-recent"][data-query="matrix"]').click();
+  await page.waitForFunction(()=>document.activeElement.matches('#sg-search-results .sg-card')&&document.activeElement.textContent.includes('matrix'));
+  assert.equal(await searchInput.inputValue(),'matrix','A recent search repeats the actual query');
+  await searchInput.click();await searchInput.fill('MATRIX');await searchInput.press('Enter');
+  await page.waitForFunction(()=>document.activeElement.matches('#sg-search-results .sg-card'));
+  assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('streamglass-search-v1')).filter(query=>query.toLowerCase()==='matrix').length),1,'History deduplicates case changes');
+  for(const query of ['Dune','Andor']){
+    await searchInput.click();await searchInput.fill(query);await searchInput.press('Enter');
+    await page.waitForFunction(query=>document.querySelector('#sg-search-results').getAttribute('aria-busy')==='false'&&document.querySelector('#sg-search-results .sg-card')?.textContent.includes(query),query);
+  }
+  assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('streamglass-search-v1')).length),6,'Search history retains at most six submitted queries');
+  const tvHistory=await page.evaluate(()=>localStorage.getItem('streamglass-search-v1'));
+  await page.evaluate(()=>{StreamGlassHost.mobile=true;});
+  await searchInput.click();await searchInput.fill('phone-only');await searchInput.press('Enter');
+  await page.waitForFunction(()=>document.querySelector('#sg-search-results').getAttribute('aria-busy')==='false'&&document.querySelector('#sg-search-results .sg-card')?.textContent.includes('phone-only'));
+  assert.equal(await page.evaluate(()=>localStorage.getItem('streamglass-search-v1')),tvHistory,'Mobile searches do not write TV history');
+  await page.evaluate(()=>{delete StreamGlassHost.mobile;});
+  await page.locator('[data-action="search-clear"]').click();
+  await page.waitForFunction(()=>{const recent=document.querySelector('.sg-search-recent');return recent&&Number(getComputedStyle(recent).opacity)===1;});
+  await page.screenshot({path:path.join(shots,'recent-searches.png')});
+  await page.setViewportSize({width:1280,height:720});
+  assert.ok(await page.locator('[data-action="search-history-clear"]').evaluate(node=>node.getBoundingClientRect().bottom<=innerHeight),'All six recent choices and Clear history fit the 720p TV screen');
+  await page.screenshot({path:path.join(shots,'recent-searches-720.png')});
+  await page.setViewportSize({width:1920,height:1080});
+  await page.locator('[data-action="search-history-clear"]').click();
+  assert.equal(await page.evaluate(()=>localStorage.getItem('streamglass-search-v1')),null,'Clear history removes the saved queries');
+  assert.equal(await page.locator('[data-action="search-recent"]').count(),0);
+  assert.ok(await searchInput.evaluate(el=>el===document.activeElement&&el.readOnly),'Clearing history returns navigable focus to the field');
   await searchInput.click();
   await searchInput.fill('');
   assert.equal(await page.locator('#sg-search-results .sg-card').count(),0,'Clearing removes results immediately');
@@ -192,6 +233,7 @@ try {
   await page.locator('[data-action="focus-streams"]').waitFor();await page.keyboard.press('Escape');
   await page.waitForFunction(()=>location.hash==='#/search?search=liveback'&&document.activeElement.classList.contains('sg-card'));
   assert.equal(await page.locator('#sg-search-input').inputValue(),'liveback','Back restores a live query without prior submit');
+  assert.ok(await page.evaluate(()=>JSON.parse(localStorage.getItem('streamglass-search-v1')).includes('liveback')),'Opening a live result records its query');
   // Leaving during the debounce must not send a search from the next page.
   await page.locator('#sg-search-input').click();await page.locator('#sg-search-input').fill('dontsend');
   await page.locator('[data-nav="board"]').click();await page.locator('.sg-card').first().waitFor();
@@ -413,7 +455,7 @@ try {
   for(const secret of ['secret-fixture-token','private-stream-token','test@example.invalid','fake-password','fixtures.invalid'])assert.ok(!exported.includes(secret),'No private values in diagnostic export');
   assert.ok(libraryWrites>0);assert.ok(addonWrites>0);
   assert.deepEqual(errors,[],'No JavaScript runtime errors in packaged app');
-  const summary={passed:true,engine:await browser.version(),protocol:'file:',mockedAccountAndAddons:true,localVideoPlayback:true,subtitleRendering:true,resume:true,pendingPlaybackCancelledOnHide:true,pagehideReleasesPlayer:true,closeDoesNotWaitForCloudSync:true,libraryWrites,addonWrites,remoteNavigation:true,liveSearch:true,searchSubmitEntersResults:true,searchHomeWithoutBack:true,searchSubmitReusesPendingRequests:true,searchResultsDeduplicated:true,searchResultFocusPreserved:true,staleResultsInactive:true,inputAndCaretPreserved:true,staleSearchSuppressed:true,compositionSafe:true,liveQueryRestored:true,roundedNavigationFocus:true,navReturnsToContent:true,localStreamScrolling:true,continueWatchingInsertion:true,railBoundary:true,rowFocusMemory:true,backRestoresCardAndScroll:true,searchOriginRestored:true,homeTypeFilter:true,vectorSearchIcon:true,recommendationsFromRealCoreProgress:true,recommendationsFromRealCoreWatched:true,recommendationExclusions:true,recommendationMetadataEnrichment:true,recommendationFilters:true,recommendationBackFocus:true,recommendationFailureRetry:true,recommendationCancellation:true,recommendationColdStart:true,sensitiveDiagnosticsExcluded:true,runtimeErrors:errors};
+  const summary={passed:true,engine:await browser.version(),protocol:'file:',mockedAccountAndAddons:true,localVideoPlayback:true,subtitleRendering:true,resume:true,pendingPlaybackCancelledOnHide:true,pagehideReleasesPlayer:true,closeDoesNotWaitForCloudSync:true,libraryWrites,addonWrites,remoteNavigation:true,liveSearch:true,searchSubmitEntersResults:true,searchFirstBatchHandoff:true,searchHistoryBounded:true,searchHistoryClear:true,mobileSearchHistoryUnchanged:true,searchHomeWithoutBack:true,searchSubmitReusesPendingRequests:true,searchResultsDeduplicated:true,searchResultFocusPreserved:true,staleResultsInactive:true,inputAndCaretPreserved:true,staleSearchSuppressed:true,compositionSafe:true,liveQueryRestored:true,roundedNavigationFocus:true,navReturnsToContent:true,localStreamScrolling:true,continueWatchingInsertion:true,railBoundary:true,rowFocusMemory:true,backRestoresCardAndScroll:true,searchOriginRestored:true,homeTypeFilter:true,vectorSearchIcon:true,recommendationsFromRealCoreProgress:true,recommendationsFromRealCoreWatched:true,recommendationExclusions:true,recommendationMetadataEnrichment:true,recommendationFilters:true,recommendationBackFocus:true,recommendationFailureRetry:true,recommendationCancellation:true,recommendationColdStart:true,sensitiveDiagnosticsExcluded:true,runtimeErrors:errors};
   await fs.writeFile(path.join(shots,'browser-results.json'),JSON.stringify(summary,null,2));
   console.log(JSON.stringify(summary,null,2));
 }finally{

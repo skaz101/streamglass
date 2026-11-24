@@ -1,7 +1,7 @@
 /* StreamGlass TV webOS adapter. Modified 2026-10-30. GPL-3.0-or-later. */
 (function () {
   'use strict';
-  const VERSION = '0.8.2';
+  const VERSION = '0.8.3';
   const APP_ID = 'com.streamglass.tv';
   const events = [];
   // Deliberately allow only numeric/boolean diagnostics. Never record account data,
@@ -220,9 +220,14 @@
     const box=next.getBoundingClientRect();
     const bounds=rail&&rail.getBoundingClientRect();
     const area=view&&view.contains(next)&&!next.closest('#sg-streams')?view.getBoundingClientRect():null;
+    const row=rail&&area&&rail.closest('.sg-row');
+    // A collection's heading belongs to the card destination. Aligning only
+    // the poster's top clips the category name when browsing upward.
+    const rowTop=row?row.getBoundingClientRect().top:box.top;
     const left=rail?rail.scrollLeft:0,top=(area||returnToTop)?view.scrollTop:0;
     const dx=bounds?(box.right>bounds.right-18?box.right-bounds.right+18:box.left<bounds.left+18?box.left-bounds.left-18:0):0;
-    const dy=returnToTop?-top:area?(box.bottom>area.bottom-24?box.bottom-area.bottom+24:box.top<area.top+24?box.top-area.top-24:0):0;
+    const topEdge=area?Math.max(rowTop,box.bottom-area.height+48):box.top;
+    const dy=returnToTop?-top:area?(box.bottom>area.bottom-24?box.bottom-area.bottom+24:topEdge<area.top+24?topEdge-area.top-24:0):0;
     const moveRail=rail&&(dx||scrolling.has(rail)),moveView=(area||returnToTop)&&(Math.abs(dy)>1||scrolling.has(view));
     next.focus({preventScroll:true});
     if(rail){
@@ -236,8 +241,19 @@
     return true;
   }
   function rememberedCard(rail) {
+    if(!rail||rail.closest('[hidden],[inert]'))return null;
     const previous=rowFocus.get(rail);
-    return previous&&previous.isConnected&&rail.contains(previous)?previous:rail.querySelector('.sg-card');
+    const available=card=>card&&card.isConnected&&rail.contains(card)&&!card.closest('[hidden],[inert]')&&!card.disabled&&card.getAttribute('aria-disabled')!=='true';
+    return available(previous)?previous:[...rail.querySelectorAll('.sg-card')].find(available);
+  }
+  function entryCard(scope) {
+    if(!scope)return null;
+    // Progressive Home rows include empty skeleton rails. They must never
+    // block access to a later collection that is already ready to browse.
+    for(const rail of scope.querySelectorAll('.sg-cards,.sg-grid')){
+      const card=rememberedCard(rail);if(card)return card;
+    }
+    return null;
   }
   function navTarget() {
     return document.querySelector('.sg-nav [data-nav].selected,.sg-nav [aria-current="page"]')||document.querySelector('.sg-nav a[href]');
@@ -269,10 +285,27 @@
     const searchForm=!dialog&&current&&current.closest('#sg-search-form');
     if(searchForm){
       if(key==='ArrowUp')focusTarget(document.querySelector('#sg-view .sg-search-header a[href="#/board"]')||document.querySelector('.sg-nav-search')||navTarget());
-      else if(key==='ArrowDown')focusTarget(document.querySelector('#sg-search-results .sg-card'));
+      else if(key==='ArrowDown')focusTarget(entryCard(document.querySelector('#sg-search-results'))||document.querySelector('#sg-search-results .sg-search-recent-list button'));
       else {
         const controls=[...searchForm.querySelectorAll(focusableSelector)].filter(visible);
         focusTarget(controls[controls.indexOf(current)+(key==='ArrowRight'?1:-1)]);
+      }
+      return true;
+    }
+    const recentSearches=!dialog&&current&&current.closest('.sg-search-recent');
+    if(recentSearches){
+      const list=recentSearches.querySelector('.sg-search-recent-list');
+      const controls=list?[...list.querySelectorAll('button')].filter(visible):[];
+      const index=controls.indexOf(current),clear=recentSearches.querySelector('[data-action="search-history-clear"]');
+      if(index<0){
+        if(key==='ArrowUp'||key==='ArrowLeft')focusTarget(rowFocus.get(list)||controls[controls.length-1]||document.querySelector('#sg-view #sg-search-input'));
+      }else{
+        rowFocus.set(list,current);
+        const columns=Math.max(1,getComputedStyle(list).gridTemplateColumns.trim().split(/\s+/).length);
+        if(key==='ArrowUp')focusTarget(index<columns?document.querySelector('#sg-view #sg-search-input'):controls[index-columns]);
+        else if(key==='ArrowDown')focusTarget(controls[index+columns]||clear);
+        else if(key==='ArrowLeft'&&index%columns)focusTarget(controls[index-1]);
+        else if(key==='ArrowRight'&&index%columns<columns-1)focusTarget(controls[index+1]);
       }
       return true;
     }
@@ -287,7 +320,7 @@
       const filters=[...filterStrip.querySelectorAll('a[href],button')].filter(visible);
       if(key==='ArrowLeft'||key==='ArrowRight')focusTarget(filters[filters.indexOf(current)+(key==='ArrowRight'?1:-1)]);
       else if(key==='ArrowUp')focusTarget(navTarget());
-      else if(key==='ArrowDown')focusTarget(document.querySelector('#sg-view .sg-hero .sg-primary,#sg-view .sg-cards .sg-card'));
+      else if(key==='ArrowDown')focusTarget(document.querySelector('#sg-view .sg-hero .sg-primary')||entryCard(document.querySelector('#sg-view')));
       return true;
     }
     const streamList=!dialog&&current&&current.closest('#sg-streams');
@@ -312,16 +345,27 @@
       if(key==='ArrowUp'||key==='ArrowLeft')return focusTarget(document.querySelector('[data-action="focus-streams"]'));
       if(key==='ArrowRight')return true;
     }
+    const seeAll=!dialog&&current&&current.closest('.sg-see-all');
+    if(seeAll){
+      const ownRail=seeAll.closest('.sg-row')?.querySelector('.sg-cards');
+      if(key==='ArrowLeft'||key==='ArrowDown')focusTarget(rememberedCard(ownRail));
+      else if(key==='ArrowUp'){
+        const rails=[...document.querySelectorAll('#sg-view .sg-cards')].filter(rememberedCard);
+        focusTarget(rememberedCard(rails[rails.indexOf(ownRail)-1])||document.querySelector('.sg-hero .sg-primary')||navTarget());
+      }
+      return true;
+    }
     const rail=!dialog&&current&&current.closest('.sg-cards');
     if(rail){
       rowFocus.set(rail,current);
       const items=[...rail.querySelectorAll('.sg-card')];
       const index=items.indexOf(current);
       if(key==='ArrowLeft'||key==='ArrowRight'){
-        focusTarget(items[index+(key==='ArrowRight'?1:-1)]);
-        return true; // Rail edges never spill into another row or an unrelated control.
+        const next=items[index+(key==='ArrowRight'?1:-1)];
+        focusTarget(next||(key==='ArrowRight'?rail.closest('.sg-row')?.querySelector('.sg-see-all'):null));
+        return true; // A collection's own See All is the only destination beyond its end.
       }
-      const rails=[...document.querySelectorAll('#sg-view .sg-cards')];
+      const rails=[...document.querySelectorAll('#sg-view .sg-cards')].filter(rememberedCard);
       const adjacent=rails[rails.indexOf(rail)+(key==='ArrowDown'?1:-1)];
       if(adjacent)return focusTarget(rememberedCard(adjacent));
       if(key==='ArrowDown')return true;
@@ -330,8 +374,8 @@
     const hero=!dialog&&current&&current.closest('.sg-hero');
     if(hero){
       if(key==='ArrowDown'){
-        const first=document.querySelector('#sg-view .sg-cards');
-        return first?focusTarget(rememberedCard(first)):true;
+        const first=entryCard(document.querySelector('#sg-view'));
+        return first?focusTarget(first):true;
       }
       if(key==='ArrowUp'){
         const filters=[...document.querySelectorAll('#sg-view .sg-home-filters a[href],#sg-view .sg-home-filters button')].filter(visible);

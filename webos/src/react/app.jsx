@@ -6,6 +6,7 @@ import {catalogRank,catalogTitle,dateKey,monthDays,releases} from './calendar.mj
 import './theme.css';
 import {Screens} from './screens';
 import Hero from './components/Hero';
+import {SearchHint} from './components/Search';
 import PullRefresh from './components/PullRefresh';
 import useRefresh from './hooks/useRefresh';
 import {readHomeMode} from './preferences.mjs';
@@ -148,10 +149,10 @@ class Boundary extends React.Component{
 window.StreamGlassUI={
   resolveCuratedMeta,
   mount(node,props){const {route,api,params}=props;const root=createRoot(node);roots.set(node,root);flushSync(()=>root.render(<Boundary>{route==='calendar'?<Calendar api={api}/>:route==='board'?<Home api={api} params={params} onReady={props.onReady}/>:<><PullRefresh mobile={api.mobile&&['picks','library','discover','search'].includes(route)} onRefresh={()=>api.refresh?.()}/><Screens {...props}/></>}</Boundary>));},
-  region(node,{items=[],rows,api,append=false}){
+  region(node,{items=[],rows,api,append=false,searchHint}){
     let state=regions.get(node);if(!state){state={root:createRoot(node),items:[]};regions.set(node,state);}
     state.items=append?[...state.items,...items]:items;
-    flushSync(()=>state.root.render(rows?<>{rows.map((row,index)=><Row key={index} {...row} api={api}/>)}</>:<>{state.items.map(meta=><Card key={`${meta.type}:${meta.id||meta._id}`} meta={meta} api={api}/>)}</>));
+    flushSync(()=>state.root.render(searchHint?<SearchHint {...searchHint}/>:rows?<>{rows.map((row,index)=><Row key={index} {...row} api={api}/>)}</>:<>{state.items.map(meta=><Card key={`${meta.type}:${meta.id||meta._id}`} meta={meta} api={api}/>)}</>));
   },
   clear(node){for(const [element,state] of regions){if(element===node||node.contains(element)){flushSync(()=>state.root.unmount());regions.delete(element);}}},
   unmount(node){this.clear(node);const root=roots.get(node);if(root){flushSync(()=>root.unmount());roots.delete(node);}}

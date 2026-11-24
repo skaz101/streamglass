@@ -37,6 +37,7 @@ async function verifyFullHeroReturn(browser,source) {
       await page.keyboard.press('ArrowUp');await page.keyboard.press('ArrowUp');
       assert.equal(await page.evaluate(()=>document.activeElement.id),'tv-play');
       await assertAtTop('Series → movies → Play restores the entire featured scene');
+      assert.ok(await page.evaluate(()=>document.querySelector('#tv-card-0-0').getBoundingClientRect().bottom<=document.querySelector('#sg-view').getBoundingClientRect().bottom-8),'The initial viewport includes the complete first title and caption, with breathing room');
 
       // Reach every Home filter using only the remote from the featured action.
       await page.keyboard.press('ArrowUp');
@@ -93,6 +94,50 @@ async function verifyFullHeroReturn(browser,source) {
         return {transform:style.transform,duration:style.transitionDuration};
       }));
       assert.ok(controls.every(style=>style.transform==='none'&&style.duration==='0s'),'Reduced motion disables top navigation and filter focus transforms');
+
+      // Real Home contains skeleton rails while catalogs load independently.
+      // Skip those and any stale/inert collection without trapping remote focus.
+      await page.evaluate(()=>{
+        const rails=document.querySelectorAll('.sg-cards');
+        window.firstRailHTML=rails[0].innerHTML;window.secondRailHTML=rails[1].innerHTML;
+        rails[0].innerHTML='<span class="sg-skeleton-tile"></span>';
+      });
+      await page.locator('#tv-play').focus();await page.keyboard.press('ArrowDown');
+      assert.equal(await page.evaluate(()=>document.activeElement.id),'tv-card-1-0','Hero Down skips an unloaded first rail');
+      await page.evaluate(()=>{
+        const rails=document.querySelectorAll('.sg-cards');rails[0].innerHTML=firstRailHTML;
+        rails[1].innerHTML='<span class="sg-skeleton-tile"></span>';rails[2].closest('.sg-row').inert=true;
+      });
+      await page.locator('#tv-card-0-0').focus();await page.keyboard.press('ArrowDown');
+      assert.equal(await page.evaluate(()=>document.activeElement.id),'tv-card-3-0','Down skips both unloaded and inert collections');
+      await page.keyboard.press('ArrowUp');
+      assert.equal(await page.evaluate(()=>document.activeElement.id),'tv-card-0-0','Up also skips unavailable collections');
+      await page.evaluate(()=>{const rails=document.querySelectorAll('.sg-cards');rails[1].innerHTML=secondRailHTML;rails[2].closest('.sg-row').inert=false;});
+
+      await page.emulateMedia({reducedMotion:'no-preference'});
+      await page.locator('#tv-card-3-0').focus();await page.keyboard.press('ArrowLeft');
+      await page.keyboard.press('ArrowUp');
+      assert.equal(await page.evaluate(()=>document.activeElement.id),'tv-card-2-0');
+      await page.waitForFunction(()=>{
+        const heading=document.activeElement.closest('.sg-row').querySelector('h2').getBoundingClientRect();
+        const view=document.querySelector('#sg-view').getBoundingClientRect(),card=document.activeElement.getBoundingClientRect();
+        return heading.top>=view.top&&card.bottom<=view.bottom;
+      },null,{timeout:2000});
+      assert.ok(await page.evaluate(()=>document.activeElement.closest('.sg-row').querySelector('h2').getBoundingClientRect().top>=document.querySelector('#sg-view').getBoundingClientRect().top),'Browsing upward keeps the destination category heading visible');
+
+      await page.evaluate(()=>{
+        document.querySelector('.sg-row-heading').insertAdjacentHTML('beforeend','<a class="sg-see-all" id="tv-see-all" href="#/discover?catalog=0">See All</a>');
+      });
+      await page.locator('#tv-card-0-7').focus();await page.keyboard.press('ArrowRight');
+      assert.equal(await page.evaluate(()=>document.activeElement.id),'tv-see-all','Right from the final title reaches its collection action');
+      await page.keyboard.press('ArrowRight');assert.equal(await page.evaluate(()=>document.activeElement.id),'tv-see-all','See All Right stays in the collection');
+      await page.keyboard.press('ArrowLeft');assert.equal(await page.evaluate(()=>document.activeElement.id),'tv-card-0-7','See All Left returns to the last title');
+      await page.keyboard.press('ArrowRight');await page.keyboard.press('ArrowDown');
+      assert.equal(await page.evaluate(()=>document.activeElement.id),'tv-card-0-7','See All Down enters its own remembered rail');
+      await page.keyboard.press('ArrowRight');await page.keyboard.press('ArrowUp');
+      assert.equal(await page.evaluate(()=>document.activeElement.id),'tv-play','See All Up from the first collection reaches the featured action');
+      await page.locator('#tv-card-0-7').focus();await page.keyboard.press('ArrowRight');await page.keyboard.press('Enter');
+      assert.equal(await page.evaluate(()=>location.hash),'#/discover?catalog=0','The full collection is reachable and activatable using only remote keys');
       assert.deepEqual(errors,[],'TV layout fixture has no runtime errors');
     }finally{await page.close();}
   }
@@ -210,6 +255,6 @@ async function verifyFullHeroReturn(browser,source) {
     assert.equal(await page.evaluate(()=>document.activeElement.id),'grid-4','Returning to a cached main preserves its remembered card');
     await verifyFullHeroReturn(browser,hostSource);
     assert.deepEqual(errors,[]);
-    console.log(JSON.stringify({passed:true,posters:800,heroArrowGeometryReads:heroReads,twelveRailArrowGeometryReads:railReads,gridArrowGeometryReads:gridReads,immediateFocus:true,rowMemory:true,heldKeys:true,horizontalReversal:true,reducedMotion:true,transitionCancellation:true,playIntent:true,streamSelection:true,cachedMainRestoration:true,fullHeroReturn:true,topNavAndFilterReturn:true,remoteFilterPath:true,headerAligned:true,headerBlurDisabled:true,reducedTopControlMotion:true,heroRowReversals:true,runtimeErrors:errors}));
+    console.log(JSON.stringify({passed:true,posters:800,heroArrowGeometryReads:heroReads,twelveRailArrowGeometryReads:railReads,gridArrowGeometryReads:gridReads,immediateFocus:true,rowMemory:true,heldKeys:true,horizontalReversal:true,reducedMotion:true,transitionCancellation:true,playIntent:true,streamSelection:true,cachedMainRestoration:true,fullHeroReturn:true,topNavAndFilterReturn:true,remoteFilterPath:true,headerAligned:true,headerBlurDisabled:true,reducedTopControlMotion:true,heroRowReversals:true,firstRailFullyVisible:true,loadingRailsSkipped:true,categoryHeadingsVisible:true,seeAllReachable:true,runtimeErrors:errors}));
   }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});
